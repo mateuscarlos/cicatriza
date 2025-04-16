@@ -7,6 +7,9 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { Tabs } from 'expo-router';
+import { IconSymbol } from '@/components/ui/IconSymbol';
+import { Colors } from '@/constants/Colors';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -29,10 +32,40 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
+      <Tabs
+        screenOptions={{
+          tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+          headerShown: false,
+        }}>
+        <Tabs.Screen
+          name="dashboard/index"
+          options={{
+            title: 'Dashboard',
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="patients/index"
+          options={{
+            title: 'Pacientes',
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="appointments/index"
+          options={{
+            title: 'Agendamentos',
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="calendar" color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="profile/index"
+          options={{
+            title: 'Perfil',
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="person" color={color} />,
+          }}
+        />
+      </Tabs>
       <StatusBar style="auto" />
     </ThemeProvider>
   );
