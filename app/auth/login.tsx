@@ -7,7 +7,8 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
-      <Button title="Entrar" onPress={() => router.push('/dashboard/index')} />
+      {/* Corrigindo o caminho para o Dashboard */}
+      <Button title="Entrar" onPress={() => router.push('/dashboard')} />
     </View>
   );
 }
