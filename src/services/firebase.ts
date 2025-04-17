@@ -1,19 +1,15 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 
-// Configurações do Firebase copiadas do console
 const firebaseConfig = {
-    apiKey: "AIzaSyBUJcTp9RaxXJ2aaLPhiZYuNfsxgnSJ-WQ",
+    apiKey: "AIzaSyDSHopObrg8qgYIPjt8WrvGxWeeX17cCdk",
     authDomain: "cicatriza-73116.firebaseapp.com",
-    projectId: "cicatriza-73116",
-    storageBucket: "cicatriza-73116.firebasestorage.app",
+    projectId: "cicatriza-10ff2",
+    storageBucket: "cicatriza-10ff2.firebasestorage.app",
     messagingSenderId: "245471573518",
-    appId: "1:245471573518:web:73ac7a11a0a0d546d26e5f",
+    appId: "1:357071264744:android:8db0220e645bbb5013a25d",
     measurementId: "G-6G2FXP97X3"
-  };
+};
 
-// Inicializar o Firebase
 const app = initializeApp(firebaseConfig);
-
-// Exportar o Firestore
 export const db = getFirestore(app);

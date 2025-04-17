@@ -15,6 +15,10 @@ export default function DashboardScreen() {
         title="Adicionar Paciente"
         onPress={() => router.push('/patients/add')}
       />
+      <Button
+        title="Testar Firebase"
+        onPress={() => router.push('/firebase-test')}
+      />
     </View>
   );
 }

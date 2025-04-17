@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "357071264744",
+    "project_id": "cicatriza-10ff2",
+    "storage_bucket": "cicatriza-10ff2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:357071264744:android:8db0220e645bbb5013a25d",
+        "android_client_info": {
+          "package_name": "com.mateuscarlosti.cicatriza"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSHopObrg8qgYIPjt8WrvGxWeeX17cCdk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

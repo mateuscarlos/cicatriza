@@ -1,26 +1,38 @@
 // types.ts
+import { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
 
+// Alias Timestamp for clarity if needed, or use FirebaseFirestoreTypes.Timestamp directly
+type Timestamp = FirebaseFirestoreTypes.Timestamp;
+
+// Interface para Paciente
 export interface Patient {
-    id: string;
+  id: string; // ID gerado pelo Firestore
+  name: string;
+  birthDate: string; // Ou Date, dependendo de como você armazena
+  age: number;
+  weight: number;
+  gender: string;
+  comorbidities: string[];
+  medications: string[];
+  allergies: string[];
+  smoker: boolean;
+  alcohol: boolean;
+  notes?: string; // Notas adicionais, opcional
+  createdAt?: Timestamp | string | FirebaseFirestoreTypes.FieldValue; // Data de criação do registro do paciente
+  updatedAt?: Timestamp | string | FirebaseFirestoreTypes.FieldValue; // Data da última atualização
+}
+
+  export interface UserData {
     name: string;
-    birthDate: string;
-    age: number;
-    weight: number;
-    gender: string;
-    nutritionalStatus: boolean;
-    mobility: boolean;
-    smoker: boolean;
-    cigarettesPerDay: number;
-    comorbidities: string[];
-    medications: string[];
-    createdAt: string;
+    email: string;
   }
   
-  export interface BodyPart {
-    name: string;
-    imageTag: string;
-    createdAt: string;
-  }
+ // Interface para representar uma Parte do Corpo associada a um Paciente
+export interface BodyPart {
+  name: string;
+  imageTag: string; // Tag ou identificador para a imagem associada
+  createdAt: FirebaseFirestoreTypes.FieldValue; // Data de criação do registro da parte do corpo
+}
   
   export interface Wound {
     type: string;
@@ -52,7 +64,7 @@ export interface Patient {
       nextVisit: string;
       mainObjective: string;
     };
-    createdAt: string;
+    createdAt: FirebaseFirestoreTypes.FieldValue | FirebaseFirestoreTypes.Timestamp; // Firestore server timestamp or Date object after fetch
     lastUpdated: string;
   }
   
@@ -64,36 +76,73 @@ export interface Patient {
       epithelialization: number;
     };
     exudate: {
-      level: string;
-      type: string;
+      level: {
+        dry: boolean;
+        low: boolean;
+        moderate: boolean;
+        high: boolean;
+      };
+      type: {
+        fino: boolean;
+        turvo: boolean;
+        espesso: boolean;
+        purulento: boolean;
+        claro: boolean;
+        rosa_vermelho: boolean;
+      };
       accumulated: boolean;
     };
     infection: {
-      local: string[];
-      systemic: string[];
+      local: {
+        aumento_da_dor: boolean;
+        eritrema: boolean;
+        edema: boolean;
+        calor_local: boolean;
+        aumento_exsudato: boolean;
+        atraso_cicatrização: boolean;
+        tecido_friavel: boolean;
+        odor: boolean;
+        descolamento: boolean;
+        biofilme: boolean;
+      };
+      systemic: {
+        aumento_eritema: boolean;
+        febre: boolean;
+        abccesos_pus: boolean;
+        rompimento: boolean;
+        celulite: boolean;
+        mal_estar: boolean;
+        aumento_leucocitos: boolean;
+        linfangite: boolean;
+      };
     };
-    observedAt: string;
+    observedAt: FirebaseFirestoreTypes.FieldValue | FirebaseFirestoreTypes.Timestamp; // Firestore server timestamp or Date object after fetch
   }
   
   export interface EdgeEvaluation {
-    features: string[];
-    extensionCm: number;
-    observedAt: string;
+    features: {
+      maceracao: boolean;
+      desidratacao: boolean;
+      deslocamento: boolean;
+      epíbole: boolean;
+      extensao: number; // cm
+    };
+    observedAt: FirebaseFirestoreTypes.FieldValue | FirebaseFirestoreTypes.Timestamp; // Firestore server timestamp or Date object after fetch
   }
   
   export interface PerilesionalSkinEvaluation {
-    maceraçãoCm: number;
-    escoriacaoCm: number;
-    xeroseCm: number;
-    hiperqueratoseCm: number;
-    caloCm: number;
-    eczemaCm: number;
-    observedAt: string;
+    maceracao: number;
+    escoriacao: number;
+    xerose: number;
+    hiperqueratose: number;
+    calo: number;
+    eczema: number;
+    observedAt: FirebaseFirestoreTypes.FieldValue | FirebaseFirestoreTypes.Timestamp; // Firestore server timestamp or Date object after fetch
   }
   
   export interface Prescription {
     title: string;
     content: string;
-    createdAt: string;
+    createdAt: FirebaseFirestoreTypes.FieldValue | FirebaseFirestoreTypes.Timestamp; // Firestore server timestamp or Date object after fetch
   }
   
