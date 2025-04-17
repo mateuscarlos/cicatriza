@@ -1,48 +1,53 @@
 import { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, FlatList, Button, StyleSheet } from 'react-native';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../src/services/firebase';
+import { useRouter } from 'expo-router';
+import { Patient } from '../../components/interfaces/interfaces.firestore'; // Importando o tipo Patient
 
-interface Patient {
-  id: string;
-  name: string; // Assuming 'name' exists in your Firestore data
-  age: number;  // Assuming 'age' exists in your Firestore data
-  // Add other patient fields as needed
-}
+// Define a type that includes the document ID along with Patient data
+type PatientWithId = Patient & { id: string };
 
 export default function PatientsScreen() {
-  const [patients, setPatients] = useState<Patient[]>([]);
+  const [patients, setPatients] = useState<PatientWithId[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchPatients = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, 'patients'));
-        const patientsData = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...(doc.data() as Omit<Patient, 'id'>), // Assert the type here
-        }));
+        const patientsData = querySnapshot.docs.map((doc) => {
+          const data = doc.data() as Patient;
+          // Ensure the document ID takes precedence over any 'id' field in the data
+          return { ...data, id: doc.id };
+        });
         setPatients(patientsData);
-      } catch (e) {
-        console.error('Erro ao buscar pacientes:', e);
+      } catch (error) {
+        console.error('Erro ao buscar pacientes:', error);
       }
     };
 
     fetchPatients();
-  }, []); // Add empty dependency array to run only once on mount
+  }, []);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Lista de Pacientes</Text>
+      <Text style={styles.title}>Pacientes</Text>
       <FlatList
         data={patients}
-        keyExtractor={(item: Patient) => item.id}
-        renderItem={({ item }: { item: Patient }) => (
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
           <View style={styles.patientCard}>
             <Text style={styles.patientName}>{item.name}</Text>
             <Text>Idade: {item.age}</Text>
+            <Button
+              title="Detalhes"
+              onPress={() => router.push(`/patients/details?id=${item.id}`)}
+            />
           </View>
         )}
       />
+      <Button title="Adicionar Paciente" onPress={() => router.push('/patients/add')} />
     </View>
   );
 }
