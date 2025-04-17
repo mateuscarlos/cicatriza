@@ -1,6 +1,7 @@
-import React from 'react';
+import * as React from 'react';
+import '../src/services/firebase';
 import { View, Button, StyleSheet, Alert } from 'react-native';
-import firestore from '@react-native-firebase/firestore';
+import { Timestamp } from 'firebase/firestore';
 import {
   createUser,
   addPatient,
@@ -32,8 +33,8 @@ const FirebaseTestScreen = () => {
         smoker: false,
         alcohol: false,
         notes: 'Paciente com histórico de feridas crônicas.',
-        createdAt: firestore.Timestamp.fromDate(new Date()),
-        updatedAt: firestore.Timestamp.fromDate(new Date()),
+        createdAt: Timestamp.fromDate(new Date()),
+        updatedAt: Timestamp.fromDate(new Date()),
       };
       const patientId = await addPatient(userId, patient);
       if (!patientId) {
@@ -42,7 +43,7 @@ const FirebaseTestScreen = () => {
       const bodyPart = {
         name: 'Perna Direita',
         imageTag: 'perna-direita',
-        createdAt: firestore.Timestamp.fromDate(new Date()),
+        createdAt: Timestamp.fromDate(new Date()),
       };
       const bodyPartId = await addBodyPart(userId, patientId, bodyPart);
       if (!bodyPartId) {
@@ -72,7 +73,7 @@ const FirebaseTestScreen = () => {
           nextVisit: '2025-04-20',
           mainObjective: 'Avaliar evolução da granulação.',
         },
-        createdAt: firestore.Timestamp.fromDate(new Date()),
+        createdAt: Timestamp.fromDate(new Date()),
         lastUpdated: new Date().toISOString(),
       };
       const woundId = await addWound(userId, patientId, bodyPartId, wound);
@@ -123,7 +124,7 @@ const FirebaseTestScreen = () => {
             linfangite: false,
           },
         },
-        observedAt: firestore.Timestamp.fromDate(new Date()),
+        observedAt: Timestamp.fromDate(new Date()),
       };
       await addBedEvaluation(userId, patientId, bodyPartId, woundId, bedEvaluation);
 
@@ -135,7 +136,7 @@ const FirebaseTestScreen = () => {
           epíbole: false,
           extensao: 2,
         },
-        observedAt: firestore.Timestamp.fromDate(new Date()),
+        observedAt: Timestamp.fromDate(new Date()),
       };
       await addEdgeEvaluation(userId, patientId, bodyPartId, woundId, edgeEvaluation);
 
@@ -146,14 +147,14 @@ const FirebaseTestScreen = () => {
         hiperqueratose: 0,
         calo: 0,
         eczema: 0,
-        observedAt: firestore.Timestamp.fromDate(new Date()),
+        observedAt: Timestamp.fromDate(new Date()),
       };
       await addPerilesionalSkinEvaluation(userId, patientId, bodyPartId, woundId, skinEvaluation);
 
       const prescription = {
         title: 'Curativo com hidrocolóide',
         content: 'Trocar o curativo a cada 3 dias.',
-        createdAt: firestore.Timestamp.fromDate(new Date()),
+        createdAt: Timestamp.fromDate(new Date()),
       };
       await addPrescription(userId, patientId, prescription);
 

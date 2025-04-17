@@ -1,4 +1,4 @@
-import firestore from '@react-native-firebase/firestore';
+import { getFirestore, collection, doc, setDoc, addDoc } from 'firebase/firestore';
 import {
   Patient,
   BodyPart,
@@ -9,6 +9,9 @@ import {
   Prescription,
 } from '../../components/interfaces/interfaces.firestore';
 
+// Initialize Firestore
+const firestore = getFirestore();
+
 // Função para criar um usuário
 interface UserData {
   name: string;
@@ -17,8 +20,8 @@ interface UserData {
 
 async function createUser(userId: string, userData: UserData): Promise<void> {
   try {
-    const userRef = firestore().collection('users').doc(userId);
-    await userRef.set(userData);
+    const userRef = doc(firestore, 'users', userId);
+    await setDoc(userRef, userData);
     console.log('Usuário criado com ID:', userId);
   } catch (error) {
     console.error('Erro ao criar usuário:', error);
@@ -28,11 +31,8 @@ async function createUser(userId: string, userData: UserData): Promise<void> {
 // Função para adicionar um paciente a um usuário
 async function addPatient(userId: string, patientData: Patient): Promise<string | undefined> {
   try {
-    const patientsCollectionRef = firestore()
-      .collection('users')
-      .doc(userId)
-      .collection('patients');
-    const docRef = await patientsCollectionRef.add(patientData);
+    const patientsCollectionRef = collection(firestore, 'users', userId, 'patients');
+    const docRef = await addDoc(patientsCollectionRef, patientData);
     console.log('Paciente adicionado com ID:', docRef.id);
     return docRef.id;
   } catch (error) {
@@ -43,13 +43,8 @@ async function addPatient(userId: string, patientData: Patient): Promise<string 
 // Função para adicionar uma parte do corpo a um paciente
 async function addBodyPart(userId: string, patientId: string, bodyPartData: BodyPart): Promise<string | undefined> {
   try {
-    const bodyPartsCollectionRef = firestore()
-      .collection('users')
-      .doc(userId)
-      .collection('patients')
-      .doc(patientId)
-      .collection('bodyParts');
-    const docRef = await bodyPartsCollectionRef.add(bodyPartData);
+    const bodyPartsCollectionRef = collection(firestore, 'users', userId, 'patients', patientId, 'bodyParts');
+    const docRef = await addDoc(bodyPartsCollectionRef, bodyPartData);
     console.log('Parte do corpo adicionada com ID:', docRef.id);
     return docRef.id;
   } catch (error) {
@@ -60,15 +55,8 @@ async function addBodyPart(userId: string, patientId: string, bodyPartData: Body
 // Função para adicionar uma ferida a uma parte do corpo
 async function addWound(userId: string, patientId: string, bodyPartId: string, woundData: Wound): Promise<string | undefined> {
   try {
-    const woundsCollectionRef = firestore()
-      .collection('users')
-      .doc(userId)
-      .collection('patients')
-      .doc(patientId)
-      .collection('bodyParts')
-      .doc(bodyPartId)
-      .collection('wounds');
-    const docRef = await woundsCollectionRef.add(woundData);
+    const woundsCollectionRef = collection(firestore, 'users', userId, 'patients', patientId, 'bodyParts', bodyPartId, 'wounds');
+    const docRef = await addDoc(woundsCollectionRef, woundData);
     console.log('Ferida adicionada com ID:', docRef.id);
     return docRef.id;
   } catch (error) {
@@ -85,17 +73,8 @@ async function addBedEvaluation(
   evaluationData: BedEvaluation
 ): Promise<void> {
   try {
-    const bedEvalCollectionRef = firestore()
-      .collection('users')
-      .doc(userId)
-      .collection('patients')
-      .doc(patientId)
-      .collection('bodyParts')
-      .doc(bodyPartId)
-      .collection('wounds')
-      .doc(woundId)
-      .collection('bedEvaluations');
-    const docRef = await bedEvalCollectionRef.add(evaluationData);
+    const bedEvalCollectionRef = collection(firestore, 'users', userId, 'patients', patientId, 'bodyParts', bodyPartId, 'wounds', woundId, 'bedEvaluations');
+    const docRef = await addDoc(bedEvalCollectionRef, evaluationData);
     console.log('Avaliação do leito da ferida adicionada com ID:', docRef.id);
   } catch (error) {
     console.error('Erro ao adicionar avaliação do leito:', error);
@@ -111,17 +90,8 @@ async function addEdgeEvaluation(
   evaluationData: EdgeEvaluation
 ): Promise<void> {
   try {
-    const edgeEvalCollectionRef = firestore()
-      .collection('users')
-      .doc(userId)
-      .collection('patients')
-      .doc(patientId)
-      .collection('bodyParts')
-      .doc(bodyPartId)
-      .collection('wounds')
-      .doc(woundId)
-      .collection('edgeEvaluations');
-    const docRef = await edgeEvalCollectionRef.add(evaluationData);
+    const edgeEvalCollectionRef = collection(firestore, 'users', userId, 'patients', patientId, 'bodyParts', bodyPartId, 'wounds', woundId, 'edgeEvaluations');
+    const docRef = await addDoc(edgeEvalCollectionRef, evaluationData);
     console.log('Avaliação da borda da ferida adicionada com ID:', docRef.id);
   } catch (error) {
     console.error('Erro ao adicionar avaliação da borda:', error);
@@ -137,17 +107,8 @@ async function addPerilesionalSkinEvaluation(
   evaluationData: PerilesionalSkinEvaluation
 ): Promise<void> {
   try {
-    const skinEvalCollectionRef = firestore()
-      .collection('users')
-      .doc(userId)
-      .collection('patients')
-      .doc(patientId)
-      .collection('bodyParts')
-      .doc(bodyPartId)
-      .collection('wounds')
-      .doc(woundId)
-      .collection('perilesionalSkinEvaluations');
-    const docRef = await skinEvalCollectionRef.add(evaluationData);
+    const skinEvalCollectionRef = collection(firestore, 'users', userId, 'patients', patientId, 'bodyParts', bodyPartId, 'wounds', woundId, 'perilesionalSkinEvaluations');
+    const docRef = await addDoc(skinEvalCollectionRef, evaluationData);
     console.log('Avaliação da pele perilesional adicionada com ID:', docRef.id);
   } catch (error) {
     console.error('Erro ao adicionar avaliação da pele perilesional:', error);
@@ -161,13 +122,8 @@ async function addPrescription(
   prescriptionData: Prescription
 ): Promise<void> {
   try {
-    const prescriptionsCollectionRef = firestore()
-      .collection('users')
-      .doc(userId)
-      .collection('patients')
-      .doc(patientId)
-      .collection('prescriptions');
-    const docRef = await prescriptionsCollectionRef.add(prescriptionData);
+    const prescriptionsCollectionRef = collection(firestore, 'users', userId, 'patients', patientId, 'prescriptions');
+    const docRef = await addDoc(prescriptionsCollectionRef, prescriptionData);
     console.log('Prescrição adicionada com ID:', docRef.id);
   } catch (error) {
     console.error('Erro ao adicionar prescrição:', error);

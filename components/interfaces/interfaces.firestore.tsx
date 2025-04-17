@@ -1,8 +1,8 @@
 // types.ts
-import { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
+import { Timestamp, FieldValue } from 'firebase/firestore';
 
-// Alias Timestamp for clarity if needed, or use FirebaseFirestoreTypes.Timestamp directly
-type Timestamp = FirebaseFirestoreTypes.Timestamp;
+// Alias Timestamp for clarity if needed
+type FirestoreTimestamp = Timestamp;
 
 // Interface para Paciente
 export interface Patient {
@@ -18,8 +18,8 @@ export interface Patient {
   smoker: boolean;
   alcohol: boolean;
   notes?: string; // Notas adicionais, opcional
-  createdAt?: Timestamp | string | FirebaseFirestoreTypes.FieldValue; // Data de criação do registro do paciente
-  updatedAt?: Timestamp | string | FirebaseFirestoreTypes.FieldValue; // Data da última atualização
+  createdAt?: Timestamp | string | FieldValue; // Data de criação do registro do paciente
+  updatedAt?: Timestamp | string | FieldValue; // Data da última atualização
 }
 
   export interface UserData {
@@ -31,7 +31,7 @@ export interface Patient {
 export interface BodyPart {
   name: string;
   imageTag: string; // Tag ou identificador para a imagem associada
-  createdAt: FirebaseFirestoreTypes.FieldValue; // Data de criação do registro da parte do corpo
+  createdAt: FieldValue; // Data de criação do registro da parte do corpo
 }
   
   export interface Wound {
@@ -64,7 +64,7 @@ export interface BodyPart {
       nextVisit: string;
       mainObjective: string;
     };
-    createdAt: FirebaseFirestoreTypes.FieldValue | FirebaseFirestoreTypes.Timestamp; // Firestore server timestamp or Date object after fetch
+    createdAt: FieldValue | Timestamp; // Firestore server timestamp or Date object after fetch
     lastUpdated: string;
   }
   
@@ -116,7 +116,7 @@ export interface BodyPart {
         linfangite: boolean;
       };
     };
-    observedAt: FirebaseFirestoreTypes.FieldValue | FirebaseFirestoreTypes.Timestamp; // Firestore server timestamp or Date object after fetch
+    observedAt: FieldValue | Timestamp; // Firestore server timestamp or Date object after fetch
   }
   
   export interface EdgeEvaluation {
@@ -127,7 +127,7 @@ export interface BodyPart {
       epíbole: boolean;
       extensao: number; // cm
     };
-    observedAt: FirebaseFirestoreTypes.FieldValue | FirebaseFirestoreTypes.Timestamp; // Firestore server timestamp or Date object after fetch
+    observedAt: FieldValue | Timestamp; // Firestore server timestamp or Date object after fetch
   }
   
   export interface PerilesionalSkinEvaluation {
@@ -137,12 +137,12 @@ export interface BodyPart {
     hiperqueratose: number;
     calo: number;
     eczema: number;
-    observedAt: FirebaseFirestoreTypes.FieldValue | FirebaseFirestoreTypes.Timestamp; // Firestore server timestamp or Date object after fetch
+    observedAt: FieldValue | Timestamp; // Firestore server timestamp or Date object after fetch
   }
   
   export interface Prescription {
     title: string;
     content: string;
-    createdAt: FirebaseFirestoreTypes.FieldValue | FirebaseFirestoreTypes.Timestamp; // Firestore server timestamp or Date object after fetch
+    createdAt: FieldValue | Timestamp; // Firestore server timestamp or Date object after fetch
   }
   

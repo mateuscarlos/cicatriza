@@ -2,29 +2,33 @@ import { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, ScrollView } from 'react-native';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../../src/services/firebase';
+import { Patient } from '../../components/interfaces/interfaces.firestore';
 
 export default function AddPatientScreen() {
-  const [patient, setPatient] = useState({
+  const [patient, setPatient] = useState<Patient>({
+    id: '',
     name: '',
     birthDate: '',
     age: 0,
     weight: 0,
     gender: '',
-    nutritionalStatus: false,
-    mobility: false,
+    comorbidities: [],
+    medications: [],
+    allergies: [],
     smoker: false,
-    cigarettesPerDay: 0,
-    comorbidities: '',
-    medications: '',
+    alcohol: false,
+    notes: '',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   });
 
   const handleAddPatient = async () => {
     try {
       const docRef = await addDoc(collection(db, 'patients'), {
         ...patient,
-        comorbidities: patient.comorbidities.split(',').map((item) => item.trim()),
-        medications: patient.medications.split(',').map((item) => item.trim()),
-        createdAt: new Date().toISOString(),
+        comorbidities: patient.comorbidities.map((item) => item.trim()),
+        medications: patient.medications.map((item) => item.trim()),
+        allergies: patient.allergies.map((item) => item.trim()),
       });
       console.log('Paciente adicionado com ID:', docRef.id);
       alert('Paciente adicionado com sucesso!');
@@ -37,18 +41,24 @@ export default function AddPatientScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Adicionar Paciente</Text>
+
+      <Text style={styles.label}>Nome</Text>
       <TextInput
         style={styles.input}
         placeholder="Nome"
         value={patient.name}
         onChangeText={(text) => setPatient({ ...patient, name: text })}
       />
+
+      <Text style={styles.label}>Data de Nascimento (YYYY-MM-DD)</Text>
       <TextInput
         style={styles.input}
-        placeholder="Data de Nascimento (YYYY-MM-DD)"
+        placeholder="Data de Nascimento"
         value={patient.birthDate}
         onChangeText={(text) => setPatient({ ...patient, birthDate: text })}
       />
+
+      <Text style={styles.label}>Idade</Text>
       <TextInput
         style={styles.input}
         placeholder="Idade"
@@ -56,31 +66,82 @@ export default function AddPatientScreen() {
         value={patient.age.toString()}
         onChangeText={(text) => setPatient({ ...patient, age: parseInt(text) || 0 })}
       />
+
+      <Text style={styles.label}>Peso (kg)</Text>
       <TextInput
         style={styles.input}
-        placeholder="Peso (kg)"
+        placeholder="Peso"
         keyboardType="numeric"
         value={patient.weight.toString()}
         onChangeText={(text) => setPatient({ ...patient, weight: parseFloat(text) || 0 })}
       />
+
+      <Text style={styles.label}>Gênero</Text>
       <TextInput
         style={styles.input}
         placeholder="Gênero"
         value={patient.gender}
         onChangeText={(text) => setPatient({ ...patient, gender: text })}
       />
+
+      <Text style={styles.label}>Comorbidades (separadas por vírgula)</Text>
       <TextInput
         style={styles.input}
-        placeholder="Comorbidades (separadas por vírgula)"
-        value={patient.comorbidities}
-        onChangeText={(text) => setPatient({ ...patient, comorbidities: text })}
+        placeholder="Comorbidades"
+        value={patient.comorbidities.join(', ')}
+        onChangeText={(text) =>
+          setPatient({ ...patient, comorbidities: text.split(',').map((item) => item.trim()) })
+        }
       />
+
+      <Text style={styles.label}>Medicações (separadas por vírgula)</Text>
       <TextInput
         style={styles.input}
-        placeholder="Medicações (separadas por vírgula)"
-        value={patient.medications}
-        onChangeText={(text) => setPatient({ ...patient, medications: text })}
+        placeholder="Medicações"
+        value={patient.medications.join(', ')}
+        onChangeText={(text) =>
+          setPatient({ ...patient, medications: text.split(',').map((item) => item.trim()) })
+        }
       />
+
+      <Text style={styles.label}>Alergias (separadas por vírgula)</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Alergias"
+        value={patient.allergies.join(', ')}
+        onChangeText={(text) =>
+          setPatient({ ...patient, allergies: text.split(',').map((item) => item.trim()) })
+        }
+      />
+
+      <Text style={styles.label}>Fumante</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Sim ou Não"
+        value={patient.smoker ? 'Sim' : 'Não'}
+        onChangeText={(text) =>
+          setPatient({ ...patient, smoker: text.toLowerCase() === 'sim' })
+        }
+      />
+
+      <Text style={styles.label}>Consome Álcool</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Sim ou Não"
+        value={patient.alcohol ? 'Sim' : 'Não'}
+        onChangeText={(text) =>
+          setPatient({ ...patient, alcohol: text.toLowerCase() === 'sim' })
+        }
+      />
+
+      <Text style={styles.label}>Notas Adicionais</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Notas"
+        value={patient.notes || ''}
+        onChangeText={(text) => setPatient({ ...patient, notes: text })}
+      />
+
       <Button title="Salvar Paciente" onPress={handleAddPatient} />
     </ScrollView>
   );
@@ -95,6 +156,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 16,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 4,
   },
   input: {
     borderWidth: 1,
