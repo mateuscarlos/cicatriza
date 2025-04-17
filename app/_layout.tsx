@@ -10,6 +10,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { Tabs } from 'expo-router';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -19,6 +20,7 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+  const { user } = useAuth() ?? {};
 
   useEffect(() => {
     if (loaded) {
@@ -32,40 +34,16 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Tabs
-        screenOptions={{
-          tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-          headerShown: false,
-        }}>
-        <Tabs.Screen
-          name="dashboard/index"
-          options={{
-            title: 'Dashboard',
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-          }}
-        />
-        <Tabs.Screen
-          name="patients/index"
-          options={{
-            title: 'Pacientes',
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-          }}
-        />
-        <Tabs.Screen
-          name="appointments/index"
-          options={{
-            title: 'Agendamentos',
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="calendar" color={color} />,
-          }}
-        />
-        <Tabs.Screen
-          name="profile/index"
-          options={{
-            title: 'Perfil',
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="person" color={color} />,
-          }}
-        />
-      </Tabs>
+      <Stack>
+        {user ? (
+          <>
+            <Stack.Screen name="dashboard/index" />
+            <Stack.Screen name="patients/index" />
+          </>
+        ) : (
+          <Stack.Screen name="auth/login" options={{ headerShown: false }} />
+        )}
+      </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
   );
