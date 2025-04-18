@@ -1,38 +1,35 @@
-import { View, Text, Button, StyleSheet } from 'react-native';
+import React from 'react';
 import { useRouter } from 'expo-router';
+import { YStack, H1, Button, Separator } from 'tamagui';
 
 export default function DashboardScreen() {
   const router = useRouter();
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Dashboard</Text>
+    <YStack flex={1} padding="$4" space="$4" justifyContent="center" alignItems="center">
+      <H1>Dashboard</H1>
+      <Separator />
       <Button
-        title="Ir para Pacientes"
+        size="$4"
+        theme="primary"
         onPress={() => router.push('/patients')}
-      />
+      >
+        Ir para Pacientes
+      </Button>
       <Button
-        title="Adicionar Paciente"
+        size="$4"
+        theme="secondary"
         onPress={() => router.push('/patients/add')}
-      />
+      >
+        Adicionar Paciente
+      </Button>
       <Button
-        title="Testar Firebase"
+        size="$4"
+        theme="primary"
         onPress={() => router.push('/firebase-test')}
-      />
-    </View>
+      >
+        Testar Firebase
+      </Button>
+    </YStack>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-});

@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../src/services/firebase';
 import { Patient } from '../../components/interfaces/interfaces.firestore';
+import { YStack, Input, Button, Label, H1, Separator } from 'tamagui';
 
 export default function EditPatientScreen() {
   const { id } = useLocalSearchParams();
@@ -13,7 +14,7 @@ export default function EditPatientScreen() {
   useEffect(() => {
     const fetchPatient = async () => {
       if (typeof id !== 'string') {
-        console.error('Invalid ID provided');
+        console.error('ID inválido');
         return;
       }
       try {
@@ -23,7 +24,6 @@ export default function EditPatientScreen() {
         if (docSnap.exists()) {
           setPatient(docSnap.data() as Patient);
         } else {
-          console.log('Paciente não encontrado!');
           Alert.alert('Erro', 'Paciente não encontrado!');
         }
       } catch (error) {
@@ -32,112 +32,51 @@ export default function EditPatientScreen() {
       }
     };
 
-    if (id) {
-      fetchPatient();
-    }
+    fetchPatient();
   }, [id]);
 
   const handleUpdatePatient = async () => {
     if (!patient || typeof id !== 'string') return;
 
-    Alert.alert(
-      'Confirmar Alterações',
-      'Tem certeza de que deseja salvar as alterações?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Salvar',
-          onPress: async () => {
-            try {
-              const docRef = doc(db, 'patients', id);
-              await updateDoc(docRef, { ...patient });
-
-              // Adicionando intervalo de 300ms antes de exibir o próximo alerta
-              setTimeout(() => {
-                Alert.alert('Sucesso', 'Paciente atualizado com sucesso!', [
-                  {
-                    text: 'OK',
-                    onPress: () => router.push('/patients'), // Redirecionar para a listagem
-                  },
-                ]);
-              }, 300);
-            } catch (error) {
-              console.error('Erro ao atualizar paciente:', error);
-              Alert.alert('Erro', 'Não foi possível salvar as alterações.');
-            }
-          },
-        },
-      ]
-    );
+    try {
+      const docRef = doc(db, 'patients', id);
+      await updateDoc(docRef, { ...patient });
+      Alert.alert('Sucesso', 'Paciente atualizado com sucesso!');
+      router.push(`/patients/details?id=${id}`);
+    } catch (error) {
+      console.error('Erro ao atualizar paciente:', error);
+      Alert.alert('Erro', 'Não foi possível salvar as alterações.');
+    }
   };
 
   if (!patient) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Carregando...</Text>
-      </View>
+      <YStack flex={1} justifyContent="center" alignItems="center">
+        <H1>Carregando...</H1>
+      </YStack>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Editar Paciente</Text>
-      <TextInput
-        style={styles.input}
+    <YStack flex={1} padding="$4" space="$4">
+      <H1>Editar Paciente</H1>
+      <Separator />
+      <Label htmlFor="name">Nome</Label>
+      <Input
+        id="name"
         placeholder="Nome"
         value={patient.name}
         onChangeText={(text) => setPatient({ ...patient, name: text })}
       />
-      <TextInput
-        style={styles.input}
+      <Label htmlFor="age">Idade</Label>
+      <Input
+        id="age"
         placeholder="Idade"
         keyboardType="numeric"
         value={patient.age.toString()}
         onChangeText={(text) => setPatient({ ...patient, age: parseInt(text) || 0 })}
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Peso"
-        keyboardType="numeric"
-        value={patient.weight.toString()}
-        onChangeText={(text) => setPatient({ ...patient, weight: parseFloat(text) || 0 })}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Comorbidades (separadas por vírgula)"
-        value={patient.comorbidities.join(', ')}
-        onChangeText={(text) =>
-          setPatient({ ...patient, comorbidities: text.split(',').map((item) => item.trim()) })
-        }
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Medicações (separadas por vírgula)"
-        value={patient.medications.join(', ')}
-        onChangeText={(text) =>
-          setPatient({ ...patient, medications: text.split(',').map((item) => item.trim()) })
-        }
-      />
-      <Button title="Salvar Alterações" onPress={handleUpdatePatient} />
-    </View>
+      <Button onPress={handleUpdatePatient}>Salvar Alterações</Button>
+    </YStack>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 8,
-    marginBottom: 16,
-  },
-});

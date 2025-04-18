@@ -1,26 +1,17 @@
-import { View, Text, Button, StyleSheet } from 'react-native';
+import React from 'react';
 import { useRouter } from 'expo-router';
+import { YStack, Input, Button, H1, Separator } from 'tamagui';
 
 export default function LoginScreen() {
   const router = useRouter();
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
-      {/* Corrigindo o caminho para o Dashboard */}
-      <Button title="Entrar" onPress={() => router.push('/dashboard')} />
-    </View>
+    <YStack flex={1} justifyContent="center" alignItems="center" padding="$4" space="$4">
+      <H1>Login</H1>
+      <Separator />
+      <Input placeholder="Email" />
+      <Input placeholder="Senha" secureTextEntry />
+      <Button onPress={() => router.push('/dashboard')}>Entrar</Button>
+    </YStack>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-});

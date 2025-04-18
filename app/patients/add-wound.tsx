@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ScrollView, Alert } from 'react-native';
+import { Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../../src/services/firebase';
 import { Wound } from '../../components/interfaces/interfaces.firestore';
+import { YStack, Input, Button, Label, H1, Separator } from 'tamagui';
 
 export default function AddWoundScreen() {
   const { id } = useLocalSearchParams();
@@ -45,7 +46,7 @@ export default function AddWoundScreen() {
       const woundsCollectionRef = collection(db, 'patients', id, 'wounds');
       await addDoc(woundsCollectionRef, wound);
       Alert.alert('Sucesso', 'Lesão cadastrada com sucesso!');
-      router.navigate(`/patients/details?id=${id}`);
+      router.push(`/patients/details?id=${id}`);
     } catch (error) {
       console.error('Erro ao cadastrar lesão:', error);
       Alert.alert('Erro', 'Não foi possível cadastrar a lesão.');
@@ -53,30 +54,31 @@ export default function AddWoundScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Cadastrar Lesão</Text>
-      <TextInput
-        style={styles.input}
+    <YStack flex={1} padding="$4" space="$4">
+      <H1>Cadastrar Lesão</H1>
+      <Separator />
+      <Label>Tipo de Lesão</Label>
+      <Input
         placeholder="Tipo de Lesão"
         value={wound.type}
         onChangeText={(text) => setWound({ ...wound, type: text })}
       />
-      <TextInput
-        style={styles.input}
+      <Label>Duração</Label>
+      <Input
         placeholder="Duração"
         value={wound.duration}
         onChangeText={(text) => setWound({ ...wound, duration: text })}
       />
-      <TextInput
-        style={styles.input}
+      <Label>Tratamentos Anteriores</Label>
+      <Input
         placeholder="Tratamentos Anteriores (separados por vírgula)"
         value={wound.previousTreatments.join(', ')}
         onChangeText={(text) =>
           setWound({ ...wound, previousTreatments: text.split(',').map((item) => item.trim()) })
         }
       />
-      <TextInput
-        style={styles.input}
+      <Label>Comprimento (mm)</Label>
+      <Input
         placeholder="Comprimento (mm)"
         keyboardType="numeric"
         value={wound.size.lengthMm.toString()}
@@ -84,44 +86,7 @@ export default function AddWoundScreen() {
           setWound({ ...wound, size: { ...wound.size, lengthMm: parseInt(text) || 0 } })
         }
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Largura (mm)"
-        keyboardType="numeric"
-        value={wound.size.widthMm.toString()}
-        onChangeText={(text) =>
-          setWound({ ...wound, size: { ...wound.size, widthMm: parseInt(text) || 0 } })
-        }
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Profundidade (mm)"
-        keyboardType="numeric"
-        value={wound.size.depthMm.toString()}
-        onChangeText={(text) =>
-          setWound({ ...wound, size: { ...wound.size, depthMm: parseInt(text) || 0 } })
-        }
-      />
-      <Button title="Salvar Lesão" onPress={handleSaveWound} />
-    </ScrollView>
+      <Button onPress={handleSaveWound}>Salvar Lesão</Button>
+    </YStack>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    padding: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 8,
-    marginBottom: 16,
-  },
-});
