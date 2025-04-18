@@ -3,6 +3,7 @@ import { View, Text, TextInput, Button, StyleSheet, ScrollView } from 'react-nat
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../../src/services/firebase';
 import { Patient } from '../../components/interfaces/interfaces.firestore';
+import { useRouter } from 'expo-router';
 
 export default function AddPatientScreen() {
   const [patient, setPatient] = useState<Patient>({
@@ -21,6 +22,8 @@ export default function AddPatientScreen() {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   });
+
+  const router = useRouter();
 
   const handleAddPatient = async () => {
     try {
@@ -143,6 +146,11 @@ export default function AddPatientScreen() {
       />
 
       <Button title="Salvar Paciente" onPress={handleAddPatient} />
+      <Button
+        title="Cadastrar Lesão"
+        onPress={() => router.push('/patients/add-wound')}
+        color="#007BFF"
+      />
     </ScrollView>
   );
 }
@@ -151,11 +159,13 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 16,
+    backgroundColor: '#f5f5f5',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 16,
+    color: '#333',
   },
   label: {
     fontSize: 16,
@@ -168,5 +178,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 8,
     marginBottom: 16,
+    backgroundColor: '#fff',
+  },
+  button: {
+    marginTop: 16,
+    backgroundColor: '#007BFF',
+    padding: 12,
+    borderRadius: 8,
+  },
+  buttonText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: 'bold',
   },
 });
