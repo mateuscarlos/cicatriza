@@ -66,7 +66,7 @@ export default function PatientDetailsScreen() {
       <Text>Medicações: {patient.medications.join(', ')}</Text>
       <Button
         title="Cadastrar Lesão"
-        onPress={() => router.push(`/patients/add-wound?id=${id}`)}
+        onPress={() => router.push(`/patients/bodyparts?id=${id}`)}
       />
     </View>
   );

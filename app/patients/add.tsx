@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, ScrollView, Alert } from 'react-native';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../../src/services/firebase';
 import { Patient } from '../../components/interfaces/interfaces.firestore';
@@ -25,7 +25,7 @@ export default function AddPatientScreen() {
 
   const router = useRouter();
 
-  const handleAddPatient = async () => {
+  const handleSavePatient = async (redirectTo: string) => {
     try {
       const docRef = await addDoc(collection(db, 'patients'), {
         ...patient,
@@ -34,10 +34,15 @@ export default function AddPatientScreen() {
         allergies: patient.allergies.map((item) => item.trim()),
       });
       console.log('Paciente adicionado com ID:', docRef.id);
-      alert('Paciente adicionado com sucesso!');
+      Alert.alert('Sucesso', 'Paciente adicionado com sucesso!');
+      if (redirectTo === 'bodyparts') {
+        router.push({ pathname: '/patients/bodyparts', query: { id: docRef.id } });
+      } else {
+        router.push('/patients');
+      }
     } catch (error) {
       console.error('Erro ao adicionar paciente:', error);
-      alert('Erro ao adicionar paciente.');
+      Alert.alert('Erro', 'Não foi possível adicionar o paciente.');
     }
   };
 
@@ -145,10 +150,10 @@ export default function AddPatientScreen() {
         onChangeText={(text) => setPatient({ ...patient, notes: text })}
       />
 
-      <Button title="Salvar Paciente" onPress={handleAddPatient} />
+      <Button title="Salvar Paciente" onPress={() => handleSavePatient('patients')} />
       <Button
-        title="Cadastrar Lesão"
-        onPress={() => router.push('/patients/add-wound')}
+        title="Adicionar Lesão"
+        onPress={() => handleSavePatient('bodyparts')}
         color="#007BFF"
       />
     </ScrollView>
@@ -179,16 +184,5 @@ const styles = StyleSheet.create({
     padding: 8,
     marginBottom: 16,
     backgroundColor: '#fff',
-  },
-  button: {
-    marginTop: 16,
-    backgroundColor: '#007BFF',
-    padding: 12,
-    borderRadius: 8,
-  },
-  buttonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: 'bold',
   },
 });
