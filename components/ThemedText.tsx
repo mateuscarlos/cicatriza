@@ -1,35 +1,29 @@
-import { Text, type TextProps, StyleSheet } from 'react-native';
+import React from 'react';
+import { Text, StyleSheet, TextStyle, TextProps } from 'react-native';
+import { useColorScheme } from '../hooks/useColorScheme';
 
-import { useThemeColor } from '@/hooks/useThemeColor';
+interface ThemedTextProps extends TextProps {
+  children: React.ReactNode;
+  type?: 'default' | 'defaultSemiBold' | 'title' | 'subtitle' | 'small' | 'link';
+  style?: TextStyle;
+}
 
-export type ThemedTextProps = TextProps & {
-  lightColor?: string;
-  darkColor?: string;
-  type?: 'default' | 'title' | 'defaultSemiBold' | 'subtitle' | 'link';
-};
-
-export function ThemedText({
-  style,
-  lightColor,
-  darkColor,
-  type = 'default',
-  ...rest
-}: ThemedTextProps) {
-  const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
-
+export function ThemedText({ children, type = 'default', style, ...otherProps }: ThemedTextProps) {
+  const colorScheme = useColorScheme();
+  
+  const baseStyle = {
+    color: colorScheme === 'dark' ? '#fff' : '#000',
+    ...styles[type],
+  };
+  
+  const linkStyle = type === 'link' ? {
+    color: colorScheme === 'dark' ? '#63a4ff' : '#0066cc',
+  } : {};
+  
   return (
-    <Text
-      style={[
-        { color },
-        type === 'default' ? styles.default : undefined,
-        type === 'title' ? styles.title : undefined,
-        type === 'defaultSemiBold' ? styles.defaultSemiBold : undefined,
-        type === 'subtitle' ? styles.subtitle : undefined,
-        type === 'link' ? styles.link : undefined,
-        style,
-      ]}
-      {...rest}
-    />
+    <Text style={[baseStyle, linkStyle, style]} {...otherProps}>
+      {children}
+    </Text>
   );
 }
 
@@ -44,17 +38,24 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
+    lineHeight: 34,
     fontWeight: 'bold',
-    lineHeight: 32,
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    lineHeight: 26,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  small: {
+    fontSize: 14,
+    lineHeight: 20,
   },
   link: {
-    lineHeight: 30,
     fontSize: 16,
-    color: '#0a7ea4',
+    lineHeight: 24,
+    textDecorationLine: 'underline',
   },
 });
