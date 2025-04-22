@@ -3,7 +3,7 @@ import { StyleSheet, View, ScrollView, TouchableOpacity, SafeAreaView } from 're
 import { useRouter } from 'expo-router';
 import { ThemedText } from '../components/ThemedText';
 import { ThemedView } from '../components/ThemedView';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 
 // Mock de dados para compromissos
 const mockAppointments = [
@@ -48,6 +48,10 @@ export default function HomeScreen() {
   const navigateToNewPatient = () => {
     router.push('/patient/register');
   };
+  
+  const navigateToModelViewer = () => {
+    router.push('/modelViewer');
+  };
 
   return (
     <SafeAreaView style={{flex: 1}}>
@@ -80,6 +84,17 @@ export default function HomeScreen() {
           </ScrollView>
         </View>
         
+        {/* Botão temporário para visualização do modelo 3D */}
+        <TouchableOpacity 
+          style={styles.testModelButton} 
+          onPress={navigateToModelViewer}
+        >
+          <Ionicons name="cube-outline" size={24} color="#fff" />
+          <ThemedText style={styles.testButtonText}>
+            Visualizar Modelo 3D
+          </ThemedText>
+        </TouchableOpacity>
+        
         <View style={styles.buttonsContainer}>
           <TouchableOpacity 
             style={styles.actionButton} 
@@ -109,7 +124,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingVertical: 16,
-    marginTop: 25, // Adicionado espaço extra no topo
+    marginTop: 25,
     marginBottom: 16,
   },
   calendarSection: {
@@ -130,17 +145,24 @@ const styles = StyleSheet.create({
   },
   appointmentItem: {
     flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    paddingVertical: 12,
+    backgroundColor: '#ffffff',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
   },
   appointmentTime: {
-    backgroundColor: '#e7f3ff',
-    borderRadius: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    justifyContent: 'center',
+    backgroundColor: '#E0E0E0',
+    borderRadius: 6,
+    padding: 8,
     marginRight: 12,
+    justifyContent: 'center',
+    minWidth: 60,
+    alignItems: 'center',
   },
   timeText: {
     fontWeight: 'bold',
@@ -155,17 +177,18 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   appointmentType: {
-    color: '#666',
     fontSize: 14,
+    color: '#555',
   },
   noAppointments: {
     textAlign: 'center',
-    color: '#888',
-    paddingVertical: 20,
+    marginTop: 20,
+    color: '#666',
   },
   buttonsContainer: {
     flexDirection: 'row',
-    gap: 10,
+    justifyContent: 'space-between',
+    marginBottom: 15,
   },
   actionButton: {
     backgroundColor: '#4285F4',
@@ -178,8 +201,33 @@ const styles = StyleSheet.create({
   },
   registerButton: {
     backgroundColor: '#34A853',
+    marginLeft: 10,
   },
   buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  // Estilos para o botão temporário de teste do modelo 3D
+  testModelButton: {
+    backgroundColor: '#9C27B0', // Cor roxa para destacar
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 8,
+    marginBottom: 15,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  testButtonText: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 16,

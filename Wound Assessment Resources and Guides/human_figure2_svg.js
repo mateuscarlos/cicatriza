@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
-import Svg, { Path, G, Circle } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 
 /**
  * Componente de silhueta humana interativa para seleção de áreas do corpo

@@ -12,7 +12,13 @@ const mockPatients = [
   { id: '5', name: 'Fernanda Lima', condition: 'Ferida Cirúrgica', lastVisit: '01/04/2025' },
 ];
 
-const PatientItem = ({ name, condition, lastVisit }) => (
+interface PatientItemProps {
+  name: string;
+  condition: string;
+  lastVisit: string;
+}
+
+const PatientItem = ({ name, condition, lastVisit }: PatientItemProps) => (
   <View style={styles.patientItem}>
     <ThemedText style={styles.patientName}>{name}</ThemedText>
     <ThemedText style={styles.patientCondition}>{condition}</ThemedText>
