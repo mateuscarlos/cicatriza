@@ -34,7 +34,7 @@ cicatriza/
 ### 1.2 Criar app Flutter
 ```bash
 flutter create cicatriza_app
-cd cicatriza_app
+cd cicatriza
 flutter pub add get_it freezed freezed_annotation json_serializable build_runner \
   flutter_bloc equatable dio envied envied_generator \
   intl shared_preferences url_launcher firebase_core firebase_auth cloud_firestore \

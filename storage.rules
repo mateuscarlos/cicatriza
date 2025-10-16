@@ -1,0 +1,130 @@
+rules_version = '2';
+
+/**
+ * Firebase Storage Security Rules — CICATRIZA
+ *
+ * Organização de paths:
+ * - Fotos/Vídeos (cliente): users/{uid}/patients/{pid}/wounds/{wid}/assessments/{aid}/photos/{fileId}
+ * - Exports (PDF/relatórios): users/{uid}/patients/{pid}/exports/{yyyy}/{mm}/{file}
+ * - Thumbnails (geradas por Functions): thumbs/{size}/users/{uid}/...
+ *
+ * Acesso:
+ * - Dono (uid == ownerId) sempre pode ler/escrever dentro de users/{uid}/...
+ * - Usuários com ACL (viewer/editor) no paciente {pid} podem LER mídias e exports do paciente.
+ * - Escrever mídia exige permissão de editor (owner|editor) no paciente.
+ * - Pasta "thumbs/" é somente-leitura para cliente (geradas por Functions/Admin).
+ *
+ * Validações:
+ * - Fotos: contentType image/*, tamanho <= 25MB.
+ * - Vídeos: contentType video/*, tamanho <= 200MB (ajuste se necessário).
+ * - Metadados obrigatórios no upload: ownerId, patientId, woundId, (assessmentId opcional).
+ */
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ============
+    // HELPERS
+    // ============
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isAuth() && request.auth.uid == uid;
+    }
+
+    // Acessa Firestore (banco default) para ler ACL do paciente.
+    function patientDoc(pid) {
+      return get(/databases/(default)/documents/patients/$(pid));
+    }
+
+    function myRoleOnPatient(pid) {
+      return patientDoc(pid).data.acl.roles[request.auth.uid];
+    }
+
+    function hasViewer(pid) {
+      return myRoleOnPatient(pid) in ['owner','editor','viewer'];
+    }
+
+    function hasEditor(pid) {
+      return myRoleOnPatient(pid) in ['owner','editor'];
+    }
+
+    // Regras de tipo/tamanho por contentType
+    function isImageUpload() {
+      return request.resource.contentType.matches('image/.*')
+        && request.resource.size <= 25 * 1024 * 1024; // 25MB
+    }
+
+    function isVideoUpload() {
+      return request.resource.contentType.matches('video/.*')
+        && request.resource.size <= 200 * 1024 * 1024; // 200MB
+    }
+
+    // Metadados obrigatórios na mídia
+    function hasRequiredMediaMetadata() {
+      return ('metadata' in request.resource) &&
+             ('ownerId' in request.resource.metadata) &&
+             ('patientId' in request.resource.metadata) &&
+             ('woundId' in request.resource.metadata);
+      // assessmentId é opcional (pode ser null quando mídias forem avulsas da avaliação)
+    }
+
+    // ============
+    // MÍDIA (cliente) — fotos e vídeos
+    // ============
+    match /users/{uid}/patients/{pid}/wounds/{wid}/assessments/{aid}/photos/{fileId} {
+
+      // Ler: dono OU quem tiver role viewer/editor/owner no paciente
+      allow read: if isOwner(uid) || (isAuth() && hasViewer(pid));
+
+      // Criar: dono OU editor no paciente, com metadados e validações de arquivo
+      allow create: if isAuth()
+        && (isOwner(uid) || hasEditor(pid))
+        && hasRequiredMediaMetadata()
+        && (isImageUpload() || isVideoUpload());
+
+      // Atualizar: dono OU editor no paciente (ex.: corrigir metadados)
+      allow update: if isAuth() && (isOwner(uid) || hasEditor(pid));
+
+      // Excluir: dono OU editor no paciente
+      allow delete: if isAuth() && (isOwner(uid) || hasEditor(pid));
+    }
+
+    // ============
+    // EXPORTS (PDFs/relatórios)
+    // ============
+    match /users/{uid}/patients/{pid}/exports/{yyyy}/{mm}/{file} {
+      // Ler: dono OU viewer/editor do paciente
+      allow read: if isOwner(uid) || (isAuth() && hasViewer(pid));
+
+      // Criar/Atualizar/Excluir: dono OU editor do paciente
+      allow write: if isAuth() && (isOwner(uid) || hasEditor(pid));
+    }
+
+    // ============
+    // THUMBNAILS (somente leitura no cliente)
+    // Geradas por Cloud Functions/Admin SDK (bypass das rules).
+    // ============
+    match /thumbs/{size}/users/{uid}/{allPaths=**} {
+      // Ler: dono OU viewer/editor do paciente *se* conseguirmos inferir o pid do caminho.
+      // Como o pid não está diretamente no caminho de thumbs, deixamos leitura para o dono
+      // e, opcionalmente, para todos autenticados que tenham ACL no paciente referenciado
+      // via download URL (token) — cenários comuns usam download tokens.
+      // Para simplificar e evitar falso-positivo, restringimos a leitura a:
+      allow read: if isOwner(uid) || isAuth();
+
+      // Escrita cliente: negada (somente Functions/Admin devem escrever)
+      allow write: if false;
+    }
+
+    // ============
+    // FALLBACK: qualquer outra rota sob users/{uid}/...
+    // (Se no futuro criarmos outras pastas)
+    // ============
+    match /users/{uid}/{allPaths=**} {
+      allow read, write: if isOwner(uid);
+    }
+  }
+}

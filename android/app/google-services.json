@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "48729747381",
+    "project_id": "cicatriza-dev-b1085",
+    "storage_bucket": "cicatriza-dev-b1085.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:48729747381:android:57192ff1f79b281c93b3fc",
+        "android_client_info": {
+          "package_name": "com.example.cicatriza"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "48729747381-cn889l89llsjs7spsrmg12v15d9h9m1n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDmbo3grB4WcrBswQ0HUNKvS7ylXFvbLgY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "48729747381-cn889l89llsjs7spsrmg12v15d9h9m1n.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
