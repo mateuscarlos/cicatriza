@@ -34,9 +34,7 @@ class LoginPage extends StatelessWidget {
               Text(
                 'Entre com sua conta para continuar',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withOpacity(0.7),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -103,9 +101,7 @@ class LoginPage extends StatelessWidget {
                 child: Text(
                   'Ao continuar, você concorda com nossos Termos de Uso e Política de Privacidade',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.6),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   textAlign: TextAlign.center,
                 ),
