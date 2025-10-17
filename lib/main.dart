@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/di/injection_container.dart';
 import 'core/theme/app_theme.dart';
 import 'core/routing/app_router.dart';
-import 'presentation/blocs/auth_bloc.dart';
-import 'presentation/blocs/auth_event.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inicializar Firebase
-  await Firebase.initializeApp();
+  // TODO: Inicializar Firebase quando os emuladores estiverem funcionando
+  // Por enquanto, pular Firebase para testar UI-UX
+  print('Iniciando Cicatriza - Modo desenvolvimento (sem Firebase)');
 
-  // Inicializar Dependency Injection
-  await initDependencies();
+  // Inicializar Dependency Injection simplificado
+  try {
+    await initDependencies();
+    print('Dependências inicializadas com sucesso');
+  } catch (e) {
+    print('Erro ao inicializar dependências: $e');
+  }
 
   runApp(const CicatrizaApp());
 }
@@ -25,20 +27,14 @@ class CicatrizaApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider<AuthBloc>(
-          create: (context) => sl<AuthBloc>()..add(AuthCheckRequested()),
-        ),
-      ],
-      child: MaterialApp.router(
-        title: 'Cicatriza',
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.system,
-        routerConfig: AppRouter.router,
-        debugShowCheckedModeBanner: false,
-      ),
+    // TODO: Reativar BlocProvider quando AuthBloc estiver funcionando
+    return MaterialApp.router(
+      title: 'Cicatriza',
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
+      routerConfig: AppRouter.router,
+      debugShowCheckedModeBanner: false,
     );
   }
 }

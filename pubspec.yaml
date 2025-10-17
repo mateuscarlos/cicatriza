@@ -44,6 +44,7 @@ dependencies:
   go_router: ^16.2.5
   firebase_storage: ^13.0.3
   google_fonts: ^6.1.0  # Para usar a fonte Inter dos mockups
+  flutter_svg: ^2.0.9  # Para renderizar logos SVG
 
 dev_dependencies:
   flutter_test:
@@ -69,6 +70,11 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/logos/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

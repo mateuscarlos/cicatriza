@@ -1,12 +1,4 @@
 import 'package:get_it/get_it.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import '../../domain/repositories/auth_repository.dart';
-import '../../domain/repositories/user_profile_repository.dart';
-import '../../data/repositories/auth_repository_impl.dart';
-import '../../data/repositories/user_profile_repository_impl.dart';
-import '../../presentation/blocs/auth_bloc.dart';
 
 /// Service Locator para Dependency Injection
 final GetIt sl = GetIt.instance;
@@ -17,9 +9,23 @@ Future<void> initDependencies() async {
   // Firebase Services
   // ============================================================================
 
-  sl.registerLazySingleton<FirebaseAuth>(() => FirebaseAuth.instance);
-  sl.registerLazySingleton<FirebaseFirestore>(() => FirebaseFirestore.instance);
-  sl.registerLazySingleton<FirebaseStorage>(() => FirebaseStorage.instance);
+  // TODO: Reativar Firebase quando emuladores estiverem funcionando
+  // Por enquanto, desabilitar para testar UI-UX
+  /*
+  try {
+    sl.registerLazySingleton<FirebaseAuth>(() => FirebaseAuth.instance);
+    sl.registerLazySingleton<FirebaseFirestore>(
+      () => FirebaseFirestore.instance,
+    );
+    sl.registerLazySingleton<FirebaseStorage>(() => FirebaseStorage.instance);
+    print('Firebase services registrados com sucesso');
+  } catch (e) {
+    print('Erro ao registrar Firebase services: $e');
+    // Continua sem Firebase para desenvolvimento
+  }
+  */
+
+  print('Firebase temporariamente desabilitado para desenvolvimento UI-UX');
 
   // ============================================================================
   // Data Sources (Firebase)
@@ -29,9 +35,11 @@ Future<void> initDependencies() async {
   // Em M1, será criada uma camada de DataSources separada
 
   // ============================================================================
-  // Repositories
+  // Repositories (temporariamente desabilitado)
   // ============================================================================
 
+  // TODO: Reativar quando Firebase estiver funcionando
+  /*
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(firebaseAuth: sl(), firestore: sl()),
   );
@@ -39,6 +47,7 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<UserProfileRepository>(
     () => UserProfileRepositoryImpl(firestore: sl()),
   );
+  */
 
   // ============================================================================
   // Use Cases
@@ -49,10 +58,11 @@ Future<void> initDependencies() async {
   // sl.registerLazySingleton(() => GetUserProfileUseCase(sl()));
 
   // ============================================================================
-  // BLoCs
+  // BLoCs (temporariamente desabilitado)
   // ============================================================================
 
-  sl.registerFactory<AuthBloc>(() => AuthBloc(authRepository: sl()));
+  // TODO: Reativar quando repositories estiverem funcionando
+  // sl.registerFactory<AuthBloc>(() => AuthBloc(authRepository: sl()));
 
   // TODO: Implementar em M1
   // sl.registerFactory<PatientsBloc>(() => PatientsBloc(sl()));

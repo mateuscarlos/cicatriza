@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 /// Página de splash screen
 class SplashPage extends StatefulWidget {
@@ -26,7 +28,7 @@ class _SplashPageState extends State<SplashPage> {
     if (mounted) {
       // TODO: Navegar baseado no estado de autenticação
       // Por enquanto, sempre vai para login
-      // context.goToLogin();
+      context.go('/login');
     }
   }
 
@@ -38,22 +40,43 @@ class _SplashPageState extends State<SplashPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Logo/Ícone da aplicação
-            Icon(
-              Icons.healing,
-              size: 120,
-              color: Theme.of(context).colorScheme.onPrimary,
+            // Logo da aplicação
+            Container(
+              width: 150,
+              height: 150,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.9),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 20,
+                    spreadRadius: 5,
+                  ),
+                ],
+              ),
+              child: SvgPicture.asset(
+                'assets/logos/logo_cicatriza.svg',
+                width: 110,
+                height: 110,
+                fit: BoxFit.contain,
+                colorFilter: ColorFilter.mode(
+                  Theme.of(context).colorScheme.primary,
+                  BlendMode.srcIn,
+                ),
+              ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
 
             // Nome da aplicação
             Text(
               'CICATRIZA',
-              style: TextStyle(
-                fontSize: 32,
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                fontSize: 36,
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).colorScheme.onPrimary,
-                letterSpacing: 2,
+                letterSpacing: 3,
               ),
             ),
             const SizedBox(height: 8),
