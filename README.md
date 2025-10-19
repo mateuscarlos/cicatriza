@@ -39,21 +39,93 @@ flutter pub get
    - Adicione seus arquivos `google-services.json` e `GoogleService-Info.plist`
    - Configure as chaves de API necessárias
 
-## Executando o Projeto
+## Instruções de instalação por sistema operacional
 
-### Debug
+As instruções a seguir cobrem instalação do Flutter, JDK 21 e variáveis de ambiente em Windows, macOS e Linux.
 
-```bash
-flutter run
+### Windows
+
+1. Instale o Flutter seguindo as instruções oficiais: [Windows install guide](https://docs.flutter.dev/get-started/install/windows)
+2. Instale o JDK 21 (Temurin/Adoptium ou outro fornecedor). Por exemplo, baixe o ZIP e extraia em `C:\jdk-21` ou use o instalador.
+3. Configure a variável de sistema `JAVA_HOME` apontando para o diretório do JDK (ex: `C:\jdk-21`).
+   - Abra "Editar variáveis de ambiente do sistema" → Variáveis de ambiente → Novo (ou editar `JAVA_HOME`) → selecione o caminho do JDK
+   - Adicione `%JAVA_HOME%\bin` ao `Path` se necessário.
+4. Opcional: copie `.vscode/settings.json.example` para `.vscode/settings.json` e atualize os caminhos se preferir configurações por workspace.
+
+Comandos úteis (PowerShell):
+
+```powershell
+# Exemplo para setar JAVA_HOME temporariamente na sessão
+$env:JAVA_HOME = 'C:\jdk-21'
+$env:Path = "$env:JAVA_HOME\\bin;" + $env:Path
+flutter doctor
 ```
 
-### Build para Produção
+### macOS
+
+1. Instale o Flutter seguindo: [macOS install guide](https://docs.flutter.dev/get-started/install/macos)
+2. Instale o JDK 21 (por exemplo usando Homebrew + Temurin):
+
+```bash
+brew install --cask temurin
+# ou para um JDK 21 específico, instale a versão correta e aponte o JAVA_HOME
+```
+
+3. Configure `JAVA_HOME` adicionando ao seu shell profile (ex: `~/.zshrc`):
+
+```bash
+export JAVA_HOME=$(/usr/libexec/java_home -v21)
+export PATH="$JAVA_HOME/bin:$PATH"
+```
+
+4. Verifique com:
+
+```bash
+java -version
+flutter doctor
+```
+
+### Linux (Debian/Ubuntu exemplo)
+
+1. Instale o Flutter: [Linux install guide](https://docs.flutter.dev/get-started/install/linux)
+2. Instale o JDK 21 (Temurin recomendado):
+
+```bash
+#wget https://github.com/adoptium/temurin21-binaries/releases/latest/download/OpenJDK21U-jdk_x64_linux_hotspot_21.0.8_9.tar.gz
+sudo tar -xzf OpenJDK21U-jdk_x64_linux_hotspot_21.0.8_9.tar.gz -C /opt/
+sudo ln -s /opt/jdk-21.0.8+9 /opt/jdk21
+```
+
+3. Configure `JAVA_HOME` (ex: `~/.bashrc` ou `~/.profile`):
+
+```bash
+export JAVA_HOME="/opt/jdk21"
+export PATH="$JAVA_HOME/bin:$PATH"
+```
+
+4. Verifique com:
+
+```bash
+java -version
+flutter doctor
+```
+
+## Executando e buildando o projeto
+
+Após instalar e configurar as ferramentas, execute:
+
+```bash
+flutter pub get
+flutter run            # para rodar em modo debug
+```
+
+Builds de produção:
 
 ```bash
 # Android
 flutter build apk --release
 
-# iOS (apenas no macOS)
+# iOS (apenas macOS com Xcode configurado)
 flutter build ios --release
 ```
 
