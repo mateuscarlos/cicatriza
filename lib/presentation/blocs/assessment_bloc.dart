@@ -59,12 +59,16 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
       errors['depthCm'] = 'Profundidade deve ser maior que 0';
     }
 
-    if (notes != null && notes.isNotEmpty) {
-      if (notes.length > 2000) {
+    if (notes?.trim().isNotEmpty == true) {
+      if (notes!.length > 2000) {
         errors['notes'] = 'Observações devem ter no máximo 2000 caracteres';
       }
 
-      final containsHtmlTags = RegExp(r'<[^>]+>').hasMatch(notes);
+      // Use a more robust HTML sanitization check
+      import 'package:html/parser.dart' as html_parser;
+
+      final parsedNotes = html_parser.parse(notes);
+      final containsHtmlTags = parsedNotes.body!.children.isNotEmpty;
       if (containsHtmlTags) {
         errors['notes'] =
             'Observações não podem conter marcações HTML ou scripts';

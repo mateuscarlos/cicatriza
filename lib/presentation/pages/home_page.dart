@@ -67,7 +67,7 @@ class HomePage extends StatelessWidget {
                     title: 'Avaliações',
                     subtitle: 'Nova avaliação',
                     onTap: () {
-                      Navigator.pushNamed(context, AppRoutes.patients);
+                      Navigator.pushNamed(context, AppRoutes.assessments);
                     },
                   ),
 
