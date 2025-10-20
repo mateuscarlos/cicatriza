@@ -247,7 +247,7 @@ class _AssessmentCreatePageState extends State<AssessmentCreatePage> {
                         labelText: 'Leito da ferida',
                         border: OutlineInputBorder(),
                       ),
-                      value: _woundBed,
+                      initialValue: _woundBed,
                       items: const [
                         DropdownMenuItem(
                           value: 'vermelho',
@@ -273,7 +273,7 @@ class _AssessmentCreatePageState extends State<AssessmentCreatePage> {
                         labelText: 'Exsudato',
                         border: OutlineInputBorder(),
                       ),
-                      value: _exudate,
+                      initialValue: _exudate,
                       items: const [
                         DropdownMenuItem(
                           value: 'ausente',
@@ -302,7 +302,7 @@ class _AssessmentCreatePageState extends State<AssessmentCreatePage> {
                         labelText: 'Bordas/Periferia',
                         border: OutlineInputBorder(),
                       ),
-                      value: _periphery,
+                      initialValue: _periphery,
                       items: const [
                         DropdownMenuItem(
                           value: 'integra',

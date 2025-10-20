@@ -524,7 +524,7 @@ class _CreateWoundDialogState extends State<_CreateWoundDialog> {
             const SizedBox(height: 16),
 
             DropdownButtonFormField<String>(
-              value: _selectedStatus,
+              initialValue: _selectedStatus,
               decoration: const InputDecoration(
                 labelText: 'Status inicial',
                 border: OutlineInputBorder(),
