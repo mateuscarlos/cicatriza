@@ -1,6 +1,9 @@
+import 'dart:ui';
+
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:firebase_core/firebase_core.dart';
 
 import 'core/di/injection_container.dart';
 import 'core/theme/app_theme.dart';
@@ -12,17 +15,28 @@ import 'presentation/blocs/assessment_bloc.dart';
 import 'domain/repositories/patient_repository_manual.dart';
 import 'domain/repositories/wound_repository_manual.dart';
 import 'domain/repositories/assessment_repository_manual.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inicializar Firebase
+  // Inicializar Firebase e Crashlytics
   try {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     AppLogger.info('Firebase inicializado com sucesso');
+
+    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
+    AppLogger.info('Crashlytics configurado com sucesso');
   } catch (e, stackTrace) {
     AppLogger.error(
-      'Erro ao inicializar Firebase',
+      'Erro ao inicializar Firebase/Crashlytics',
       error: e,
       stackTrace: stackTrace,
     );
