@@ -106,7 +106,21 @@ class _WoundsListPageState extends State<WoundsListPage> {
 
           // Lista de feridas
           Expanded(
-            child: BlocBuilder<WoundBloc, WoundState>(
+            child: BlocConsumer<WoundBloc, WoundState>(
+              listener: (context, state) {
+                if (state is WoundOperationSuccessState) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(state.message),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                  // Recarregar lista após operação bem-sucedida
+                  context.read<WoundBloc>().add(
+                    LoadWoundsByPatientEvent(widget.patient.id),
+                  );
+                }
+              },
               builder: (context, state) {
                 if (state is WoundLoadingState) {
                   return const Center(child: CircularProgressIndicator());
@@ -192,7 +206,7 @@ class _WoundsListPageState extends State<WoundsListPage> {
                           onTap: () {
                             Navigator.pushNamed(
                               context,
-                              '/assessment/create',
+                              '/assessments/list',
                               arguments: {
                                 'patient': widget.patient,
                                 'wound': wound,
@@ -510,7 +524,7 @@ class _CreateWoundDialogState extends State<_CreateWoundDialog> {
             const SizedBox(height: 16),
 
             DropdownButtonFormField<String>(
-              value: _selectedStatus,
+              initialValue: _selectedStatus,
               decoration: const InputDecoration(
                 labelText: 'Status inicial',
                 border: OutlineInputBorder(),

@@ -39,7 +39,7 @@ class GoogleIconPainter extends CustomPainter {
     canvas.drawCircle(
       Offset(size.width / 2, size.height / 2),
       size.width * 0.4,
-      paint..color = Colors.red.withOpacity(0.8),
+      paint..color = Colors.red.withValues(alpha: 0.8),
     );
 
     // Desenhar detalhes coloridos do Google

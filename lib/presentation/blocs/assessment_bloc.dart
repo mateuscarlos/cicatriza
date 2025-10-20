@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../core/utils/app_logger.dart';
 import '../../domain/entities/assessment_manual.dart';
 import '../../domain/repositories/assessment_repository_manual.dart';
 import 'assessment_event.dart';
@@ -32,6 +33,7 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
     required double lengthCm,
     required double widthCm,
     required double depthCm,
+    String? notes,
   }) {
     final errors = <String, String>{};
     final now = DateTime.now();
@@ -55,6 +57,18 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
     }
     if (depthCm <= 0) {
       errors['depthCm'] = 'Profundidade deve ser maior que 0';
+    }
+
+    if (notes != null && notes.isNotEmpty) {
+      if (notes.length > 2000) {
+        errors['notes'] = 'Observações devem ter no máximo 2000 caracteres';
+      }
+
+      final containsHtmlTags = RegExp(r'<[^>]+>').hasMatch(notes);
+      if (containsHtmlTags) {
+        errors['notes'] =
+            'Observações não podem conter marcações HTML ou scripts';
+      }
     }
 
     return errors;
@@ -122,6 +136,7 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
       lengthCm: event.lengthCm,
       widthCm: event.widthCm,
       depthCm: event.depthCm,
+      notes: event.notes,
     );
 
     emit(AssessmentValidationState(errors: errors, isValid: errors.isEmpty));
@@ -133,6 +148,8 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
     Emitter<AssessmentState> emit,
   ) async {
     try {
+      AppLogger.info('[AssessmentBloc] 🔵 Iniciando criação de avaliação');
+
       // Primeiro valida os dados
       final errors = _validateAssessmentData(
         date: event.date,
@@ -140,13 +157,16 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
         lengthCm: event.lengthCm,
         widthCm: event.widthCm,
         depthCm: event.depthCm,
+        notes: event.notes,
       );
 
       if (errors.isNotEmpty) {
+        AppLogger.warning('[AssessmentBloc] ❌ Validação falhou: $errors');
         emit(AssessmentValidationState(errors: errors, isValid: false));
         return;
       }
 
+      AppLogger.info('[AssessmentBloc] ✅ Validação passou');
       final currentAssessments = _getCurrentAssessments();
 
       emit(
@@ -156,6 +176,10 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
           selectedAssessment: _getCurrentSelectedAssessment(),
           currentWoundId: event.woundId,
         ),
+      );
+
+      AppLogger.info(
+        '[AssessmentBloc] 📝 Criando assessment no repositório...',
       );
 
       final newAssessment = AssessmentManual.create(
@@ -172,12 +196,20 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
         notes: event.notes,
       );
 
+      AppLogger.info('[AssessmentBloc] 💾 Salvando no repositório...');
       final createdAssessment = await _assessmentRepository.createAssessment(
         newAssessment,
       );
 
+      AppLogger.info(
+        '[AssessmentBloc] ✅ Assessment criado: ${createdAssessment.id}',
+      );
+
       final updatedAssessments = [createdAssessment, ...currentAssessments];
 
+      AppLogger.info(
+        '[AssessmentBloc] 📤 Emitindo AssessmentOperationSuccessState',
+      );
       emit(
         AssessmentOperationSuccessState(
           assessments: updatedAssessments,
@@ -186,7 +218,13 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
           currentWoundId: event.woundId,
         ),
       );
-    } catch (e) {
+      AppLogger.info('[AssessmentBloc] ✅ Estado de sucesso emitido!');
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        '[AssessmentBloc] ❌ Erro ao criar avaliação',
+        error: e,
+        stackTrace: stackTrace,
+      );
       emit(
         AssessmentErrorState(
           message: 'Erro ao criar avaliação: $e',
@@ -211,6 +249,7 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
         lengthCm: event.assessment.lengthCm ?? 0.0,
         widthCm: event.assessment.widthCm ?? 0.0,
         depthCm: event.assessment.depthCm ?? 0.0,
+        notes: event.assessment.notes,
       );
 
       if (errors.isNotEmpty) {

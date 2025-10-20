@@ -4,14 +4,27 @@ import '../../domain/entities/wound_manual.dart';
 import '../../presentation/pages/pages.dart';
 
 class AppRoutes {
+  static const String login = '/login';
   static const String home = '/';
   static const String patients = '/patients';
   static const String wounds = '/wounds';
+  static const String assessmentsList = '/assessments/list';
   static const String assessmentCreate = '/assessment/create';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
+      case login:
+        return MaterialPageRoute(
+          builder: (_) => const LoginPage(),
+          settings: settings,
+        );
+
       case home:
+        return MaterialPageRoute(
+          builder: (_) => const HomePage(),
+          settings: settings,
+        );
+
       case patients:
         return MaterialPageRoute(
           builder: (_) => const PacientesListPage(),
@@ -25,6 +38,20 @@ class AppRoutes {
         }
         return MaterialPageRoute(
           builder: (_) => WoundsListPage(patient: patient),
+          settings: settings,
+        );
+
+      case assessmentsList:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final patient = args?['patient'] as PatientManual?;
+        final wound = args?['wound'] as WoundManual?;
+
+        if (patient == null || wound == null) {
+          return _errorRoute('Dados incompletos para listagem de avaliações');
+        }
+
+        return MaterialPageRoute(
+          builder: (_) => AssessmentsListPage(patient: patient, wound: wound),
           settings: settings,
         );
 
@@ -72,7 +99,7 @@ class AppRoutes {
                 onPressed: () {
                   Navigator.pushNamedAndRemoveUntil(
                     context,
-                    AppRoutes.patients,
+                    AppRoutes.home,
                     (route) => false,
                   );
                 },

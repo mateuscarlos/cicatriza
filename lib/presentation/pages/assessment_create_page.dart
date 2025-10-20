@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../core/utils/app_logger.dart';
 import '../../domain/entities/patient_manual.dart';
 import '../../domain/entities/wound_manual.dart';
 import '../blocs/assessment_bloc.dart';
@@ -58,19 +59,50 @@ class _AssessmentCreatePageState extends State<AssessmentCreatePage> {
   }
 
   void _saveAssessment() {
-    if (_formKey.currentState!.validate()) {
-      context.read<AssessmentBloc>().add(
-        CreateAssessmentEvent(
-          woundId: widget.wound.id,
-          date: _assessmentDate,
-          painScale: _painLevel,
-          lengthCm: _length ?? 0.0,
-          widthCm: _width ?? 0.0,
-          depthCm: _depth ?? 0.0,
-          woundBed: _woundBed,
-          exudateType: _exudate,
-          edgeAppearance: _periphery,
-          notes: _notes,
+    AppLogger.info('[AssessmentCreatePage] 🔘 Botão salvar clicado');
+    AppLogger.info('[AssessmentCreatePage] Validando formulário...');
+
+    try {
+      if (_formKey.currentState!.validate()) {
+        AppLogger.info('[AssessmentCreatePage] ✅ Validação passou!');
+        AppLogger.info(
+          '[AssessmentCreatePage] Dados: length=$_length, width=$_width, depth=$_depth, pain=$_painLevel',
+        );
+
+        final bloc = context.read<AssessmentBloc>();
+        AppLogger.info('[AssessmentCreatePage] BLoC encontrado: $bloc');
+
+        bloc.add(
+          CreateAssessmentEvent(
+            woundId: widget.wound.id,
+            date: _assessmentDate,
+            painScale: _painLevel,
+            lengthCm: _length ?? 0.0,
+            widthCm: _width ?? 0.0,
+            depthCm: _depth ?? 0.0,
+            woundBed: _woundBed,
+            exudateType: _exudate,
+            edgeAppearance: _periphery,
+            notes: _notes,
+          ),
+        );
+        AppLogger.info(
+          '[AssessmentCreatePage] 📤 Evento CreateAssessmentEvent disparado',
+        );
+      } else {
+        AppLogger.warning('[AssessmentCreatePage] ❌ Validação falhou!');
+      }
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        '[AssessmentCreatePage] ❌❌ ERRO CRÍTICO',
+        error: e,
+        stackTrace: stackTrace,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao salvar: $e'),
+          backgroundColor: Colors.red,
         ),
       );
     }
@@ -96,15 +128,34 @@ class _AssessmentCreatePageState extends State<AssessmentCreatePage> {
 
       body: BlocListener<AssessmentBloc, AssessmentState>(
         listener: (context, state) {
+          AppLogger.info(
+            '[AssessmentCreatePage] 📢 Estado recebido: ${state.runtimeType}',
+          );
+
           if (state is AssessmentOperationSuccessState) {
+            AppLogger.info(
+              '[AssessmentCreatePage] ✅ Sucesso! Mensagem: ${state.message}',
+            );
+
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
+              const SnackBar(
+                content: Text('✅ Avaliação salva com sucesso!'),
                 backgroundColor: Colors.green,
+                duration: Duration(seconds: 3),
               ),
             );
-            Navigator.pop(context);
+
+            AppLogger.info(
+              '[AssessmentCreatePage] 🔙 Navegando de volta para detalhes do paciente...',
+            );
+            // Volta para a tela de feridas do paciente (1 tela para trás)
+            Navigator.of(context).pop(true);
+            AppLogger.info('[AssessmentCreatePage] ✅ Navegação concluída!');
           } else if (state is AssessmentErrorState) {
+            AppLogger.error(
+              '[AssessmentCreatePage] ❌ Erro ao salvar avaliação: ${state.message}',
+            );
+
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
@@ -202,7 +253,7 @@ class _AssessmentCreatePageState extends State<AssessmentCreatePage> {
                         labelText: 'Leito da ferida',
                         border: OutlineInputBorder(),
                       ),
-                      value: _woundBed,
+                      initialValue: _woundBed,
                       items: const [
                         DropdownMenuItem(
                           value: 'vermelho',
@@ -228,7 +279,7 @@ class _AssessmentCreatePageState extends State<AssessmentCreatePage> {
                         labelText: 'Exsudato',
                         border: OutlineInputBorder(),
                       ),
-                      value: _exudate,
+                      initialValue: _exudate,
                       items: const [
                         DropdownMenuItem(
                           value: 'ausente',
@@ -257,7 +308,7 @@ class _AssessmentCreatePageState extends State<AssessmentCreatePage> {
                         labelText: 'Bordas/Periferia',
                         border: OutlineInputBorder(),
                       ),
-                      value: _periphery,
+                      initialValue: _periphery,
                       items: const [
                         DropdownMenuItem(
                           value: 'integra',

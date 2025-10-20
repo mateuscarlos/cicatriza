@@ -37,190 +37,225 @@ class _PacientesListPageState extends State<PacientesListPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    return BlocConsumer<PatientBloc, PatientState>(
+      listenWhen: (previous, current) =>
+          current is PatientOperationSuccessState ||
+          current is PatientErrorState,
+      listener: (context, state) {
+        if (state is PatientOperationSuccessState) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.message)));
+          context.read<PatientBloc>().add(const LoadPatientsEvent());
+        } else if (state is PatientErrorState && state.patients.isNotEmpty) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.message)));
+        }
+      },
+      builder: (context, state) {
+        final theme = Theme.of(context);
+        final isOperationInProgress = state is PatientOperationInProgressState;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pacientes'),
-        backgroundColor: theme.colorScheme.primary,
-        foregroundColor: theme.colorScheme.onPrimary,
-        actions: [
-          IconButton(
-            icon: Icon(_showArchived ? Icons.visibility : Icons.visibility_off),
-            onPressed: () {
-              setState(() {
-                _showArchived = !_showArchived;
-              });
-            },
-            tooltip: _showArchived
-                ? 'Ocultar arquivados'
-                : 'Mostrar arquivados',
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              context.read<PatientBloc>().add(const LoadPatientsEvent());
-            },
-            tooltip: 'Atualizar lista',
-          ),
-        ],
-      ),
-
-      body: Column(
-        children: [
-          // Barra de pesquisa
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Pesquisar pacientes...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          context.read<PatientBloc>().add(
-                            const LoadPatientsEvent(),
-                          );
-                        },
-                      )
-                    : null,
-                border: const OutlineInputBorder(),
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Pacientes'),
+            backgroundColor: theme.colorScheme.primary,
+            foregroundColor: theme.colorScheme.onPrimary,
+            actions: [
+              IconButton(
+                icon: Icon(
+                  _showArchived ? Icons.visibility : Icons.visibility_off,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _showArchived = !_showArchived;
+                  });
+                },
+                tooltip: _showArchived
+                    ? 'Ocultar arquivados'
+                    : 'Mostrar arquivados',
               ),
-              onChanged: (query) {
-                if (query.trim().isNotEmpty) {
-                  context.read<PatientBloc>().add(SearchPatientsEvent(query));
-                } else {
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: () {
                   context.read<PatientBloc>().add(const LoadPatientsEvent());
-                }
-              },
-            ),
+                },
+                tooltip: 'Atualizar lista',
+              ),
+            ],
           ),
-
-          // Lista de pacientes
-          Expanded(
-            child: BlocBuilder<PatientBloc, PatientState>(
-              builder: (context, state) {
-                if (state is PatientLoadingState) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (state is PatientErrorState) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: theme.colorScheme.error,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Erro ao carregar pacientes',
-                          style: theme.textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          state.message,
-                          style: theme.textTheme.bodyMedium,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () {
-                            context.read<PatientBloc>().add(
-                              const LoadPatientsEvent(),
-                            );
-                          },
-                          child: const Text('Tentar novamente'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                if (state is PatientLoadedState) {
-                  final patients = _showArchived
-                      ? state.patients
-                      : state.patients.where((p) => !p.archived).toList();
-
-                  if (patients.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.people_outline,
-                            size: 64,
-                            color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            _searchController.text.isNotEmpty
-                                ? 'Nenhum paciente encontrado'
-                                : 'Nenhum paciente cadastrado',
-                            style: theme.textTheme.titleLarge,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _searchController.text.isNotEmpty
-                                ? 'Tente ajustar os termos de busca'
-                                : 'Cadastre o primeiro paciente',
-                            style: theme.textTheme.bodyMedium,
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  return RefreshIndicator(
-                    onRefresh: () async {
+          body: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Pesquisar pacientes...',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _searchController.clear();
+                              context.read<PatientBloc>().add(
+                                const LoadPatientsEvent(),
+                              );
+                            },
+                          )
+                        : null,
+                    border: const OutlineInputBorder(),
+                  ),
+                  onChanged: (query) {
+                    if (query.trim().isNotEmpty) {
+                      context.read<PatientBloc>().add(
+                        SearchPatientsEvent(query),
+                      );
+                    } else {
                       context.read<PatientBloc>().add(
                         const LoadPatientsEvent(),
                       );
-                    },
-                    child: ListView.builder(
-                      itemCount: patients.length,
-                      itemBuilder: (context, index) {
-                        final patient = patients[index];
-                        return _PatientListTile(
-                          patient: patient,
-                          onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              '/wounds',
-                              arguments: patient,
-                            );
-                          },
-                          onArchive: () {
-                            context.read<PatientBloc>().add(
-                              ArchivePatientEvent(patient.id),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  );
-                }
-
-                return const SizedBox();
-              },
-            ),
+                    }
+                  },
+                ),
+              ),
+              Expanded(
+                child: Stack(
+                  children: [
+                    _buildPatientsContent(context, theme, state),
+                    if (isOperationInProgress)
+                      Container(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        child: const Center(child: CircularProgressIndicator()),
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: _showCreatePatientDialog,
+            tooltip: 'Adicionar paciente',
+            child: const Icon(Icons.person_add),
+          ),
+        );
+      },
+    );
+  }
 
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showCreatePatientDialog,
-        tooltip: 'Adicionar paciente',
-        child: const Icon(Icons.person_add),
+  Widget _buildPatientsContent(
+    BuildContext context,
+    ThemeData theme,
+    PatientState state,
+  ) {
+    if (state is PatientLoadingState) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (state is PatientErrorState && state.patients.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: theme.colorScheme.error),
+            const SizedBox(height: 16),
+            Text(
+              'Erro ao carregar pacientes',
+              style: theme.textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              state.message,
+              style: theme.textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                context.read<PatientBloc>().add(const LoadPatientsEvent());
+              },
+              child: const Text('Tentar novamente'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final patients = _extractPatients(state);
+    if (patients == null) {
+      return const SizedBox();
+    }
+
+    final visiblePatients = _showArchived
+        ? patients
+        : patients.where((p) => !p.archived).toList();
+
+    if (visiblePatients.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.people_outline,
+              size: 64,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _searchController.text.isNotEmpty
+                  ? 'Nenhum paciente encontrado'
+                  : 'Nenhum paciente cadastrado',
+              style: theme.textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _searchController.text.isNotEmpty
+                  ? 'Tente ajustar os termos de busca'
+                  : 'Cadastre o primeiro paciente',
+              style: theme.textTheme.bodyMedium,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        context.read<PatientBloc>().add(const LoadPatientsEvent());
+      },
+      child: ListView.builder(
+        itemCount: visiblePatients.length,
+        itemBuilder: (context, index) {
+          final patient = visiblePatients[index];
+          return _PatientListTile(
+            patient: patient,
+            onTap: () {
+              Navigator.pushNamed(context, '/wounds', arguments: patient);
+            },
+            onArchive: () {
+              context.read<PatientBloc>().add(ArchivePatientEvent(patient.id));
+            },
+          );
+        },
       ),
     );
+  }
+
+  List<PatientManual>? _extractPatients(PatientState state) {
+    if (state is PatientLoadedState) {
+      return state.patients;
+    }
+    if (state is PatientOperationInProgressState) {
+      return state.patients;
+    }
+    if (state is PatientOperationSuccessState) {
+      return state.patients;
+    }
+    if (state is PatientErrorState && state.patients.isNotEmpty) {
+      return state.patients;
+    }
+    return null;
   }
 }
 
@@ -262,15 +297,9 @@ class _PatientListTile extends StatelessWidget {
                 : null,
           ),
         ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('ID: ${patient.id}'),
-            Text(
-              'Idade: ${_calculateAge(patient.birthDate)} anos',
-              style: theme.textTheme.bodySmall,
-            ),
-          ],
+        subtitle: Text(
+          'Idade: ${_calculateAge(patient.birthDate)} anos',
+          style: theme.textTheme.bodySmall,
         ),
         trailing: PopupMenuButton<String>(
           onSelected: (value) {

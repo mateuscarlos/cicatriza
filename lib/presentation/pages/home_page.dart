@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/routing/app_routes.dart';
+
 /// Página inicial após login
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -55,8 +57,7 @@ class HomePage extends StatelessWidget {
                     title: 'Pacientes',
                     subtitle: 'Gerenciar pacientes',
                     onTap: () {
-                      // TODO: Navegar para página de pacientes
-                      // context.goToPatients();
+                      Navigator.pushNamed(context, AppRoutes.patients);
                     },
                   ),
 
@@ -66,7 +67,7 @@ class HomePage extends StatelessWidget {
                     title: 'Avaliações',
                     subtitle: 'Nova avaliação',
                     onTap: () {
-                      // TODO: Navegar para nova avaliação
+                      Navigator.pushNamed(context, AppRoutes.patients);
                     },
                   ),
 
@@ -76,7 +77,11 @@ class HomePage extends StatelessWidget {
                     title: 'Agenda',
                     subtitle: 'Agendamentos',
                     onTap: () {
-                      // TODO: Navegar para agenda
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Agenda em desenvolvimento'),
+                        ),
+                      );
                     },
                   ),
 
@@ -86,7 +91,11 @@ class HomePage extends StatelessWidget {
                     title: 'Relatórios',
                     subtitle: 'Análises e dados',
                     onTap: () {
-                      // TODO: Navegar para relatórios
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Relatórios em desenvolvimento'),
+                        ),
+                      );
                     },
                   ),
                 ],
@@ -94,20 +103,6 @@ class HomePage extends StatelessWidget {
             ),
           ],
         ),
-      ),
-
-      // FAB para nova avaliação rápida
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // TODO: Navegar para nova avaliação rápida
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Nova avaliação - Em desenvolvimento'),
-            ),
-          );
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Nova Avaliação'),
       ),
     );
   }

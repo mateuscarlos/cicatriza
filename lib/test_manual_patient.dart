@@ -1,7 +1,8 @@
+import 'core/utils/app_logger.dart';
 import 'domain/entities/patient_manual.dart';
 
 void testManualPatient() {
-  print('Testando PatientManual...');
+  AppLogger.info('Testando PatientManual...');
 
   // Teste de criação
   final patient = PatientManual.create(
@@ -11,17 +12,17 @@ void testManualPatient() {
     email: 'joao@example.com',
   );
 
-  print('Paciente criado: $patient');
+  AppLogger.info('Paciente criado: $patient');
 
   // Teste de JSON
   final json = patient.toJson();
-  print('JSON: $json');
+  AppLogger.info('JSON: $json');
 
   final patientFromJson = PatientManual.fromJson(json);
-  print('Paciente do JSON: $patientFromJson');
+  AppLogger.info('Paciente do JSON: $patientFromJson');
 
-  print('Pacientes são iguais: ${patient == patientFromJson}');
-  print('PatientManual funcionando corretamente!');
+  AppLogger.info('Pacientes são iguais: ${patient == patientFromJson}');
+  AppLogger.info('PatientManual funcionando corretamente!');
 }
 
 void main() {

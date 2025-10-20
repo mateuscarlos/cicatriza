@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/patient_manual.dart';
 import '../../domain/repositories/patient_repository_manual.dart';
+import '../../core/utils/app_logger.dart';
 import 'patient_event.dart';
 import 'patient_state.dart';
 
@@ -21,6 +22,7 @@ class PatientBloc extends Bloc<PatientEvent, PatientState> {
     on<ArchivePatientEvent>(_onArchivePatient);
     on<SelectPatientEvent>(_onSelectPatient);
     on<ClearSearchEvent>(_onClearSearch);
+    on<_PatientsUpdatedEvent>(_onPatientsUpdated);
   }
 
   /// Carrega todos os pacientes e inicia stream de atualizações
@@ -276,6 +278,42 @@ class PatientBloc extends Bloc<PatientEvent, PatientState> {
           ),
         );
       }
+    }
+  }
+
+  Future<void> _onPatientsUpdated(
+    _PatientsUpdatedEvent event,
+    Emitter<PatientState> emit,
+  ) async {
+    if (state is! PatientLoadedState) return;
+
+    try {
+      final currentState = state as PatientLoadedState;
+      final query = currentState.searchQuery ?? '';
+      final latestPatients = await _patientRepository.searchPatients(query);
+      final currentSelected = currentState.selectedPatient;
+
+      PatientManual? updatedSelected;
+      if (currentSelected != null) {
+        for (final patient in latestPatients) {
+          if (patient.id == currentSelected.id) {
+            updatedSelected = patient;
+            break;
+          }
+        }
+      }
+
+      emit(
+        currentState.copyWith(
+          patients: latestPatients,
+          selectedPatient: updatedSelected,
+          clearSelectedPatient:
+              currentSelected != null && updatedSelected == null,
+        ),
+      );
+    } catch (e) {
+      // Mantém o estado atual mas registra o erro para investigação.
+      AppLogger.error('Erro ao atualizar pacientes via stream', error: e);
     }
   }
 

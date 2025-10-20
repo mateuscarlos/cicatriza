@@ -1,3 +1,4 @@
+// ignore_for_file: non_abstract_class_inherits_abstract_member
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'assessment.freezed.dart';

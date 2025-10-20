@@ -133,26 +133,36 @@ export const onStorageFinalize = onObjectFinalized(async (event) => {
  */
 async function updateAttachmentsCount(storagePath: string): Promise<void> {
   try {
-    // Extrair IDs do path: users/{uid}/patients/{pid}/wounds/{wid}/assessments/{aid}/photos/{file}
+    // Espera caminhos do tipo:
+    // users/{uid}/patients/{pid}/wounds/{wid}/assessments/{aid}/photos/{file}
     const pathParts = storagePath.split("/");
     
-    if (pathParts.length < 8 || pathParts[2] !== "patients" || pathParts[4] !== "wounds" || pathParts[6] !== "assessments") {
+    if (
+      pathParts.length < 10 ||
+      pathParts[0] !== "users" ||
+      pathParts[2] !== "patients" ||
+      pathParts[4] !== "wounds" ||
+      pathParts[6] !== "assessments" ||
+      pathParts[8] !== "photos"
+    ) {
       logger.warn("Path de mídia não reconhecido", { storagePath });
       return;
     }
 
-    const [, , , patientId, , woundId, , assessmentId] = pathParts;
+    const [, userId, , patientId, , woundId, , assessmentId] = pathParts;
+
+    const assessmentMediaPath = `users/${userId}/patients/${patientId}/wounds/${woundId}/assessments/${assessmentId}/media`;
 
     // Contar arquivos na subcoleção media do assessment
-    const mediaCollection = admin.firestore()
-      .collection(`patients/${patientId}/wounds/${woundId}/assessments/${assessmentId}/media`);
+    const mediaCollection = admin.firestore().collection(assessmentMediaPath);
     
     const mediaSnapshot = await mediaCollection.get();
     const attachmentsCount = mediaSnapshot.size;
 
     // Atualizar o documento do assessment
-    const assessmentRef = admin.firestore()
-      .doc(`patients/${patientId}/wounds/${woundId}/assessments/${assessmentId}`);
+    const assessmentRef = admin
+      .firestore()
+      .doc(`users/${userId}/patients/${patientId}/wounds/${woundId}/assessments/${assessmentId}`);
 
     await assessmentRef.update({
       attachmentsCount,
@@ -160,6 +170,9 @@ async function updateAttachmentsCount(storagePath: string): Promise<void> {
     });
 
     logger.info("Contador de anexos atualizado", {
+      userId,
+      patientId,
+      woundId,
       assessmentId,
       attachmentsCount,
     });
