@@ -47,8 +47,9 @@ dependencies:
   flutter_svg: ^2.0.9  # Para renderizar logos SVG
   freezed_annotation: ^3.0.0
   json_annotation: ^4.9.0
-  isar: ^3.1.0+1
-  isar_flutter_libs: ^3.1.0+1
+  # Isar temporariamente desabilitado para MVP1
+  # isar: ^3.1.0+1
+  # isar_flutter_libs: ^3.1.0+1
   image_picker: ^1.2.0
   flutter_image_compress: ^2.4.0
   dio: ^5.9.0

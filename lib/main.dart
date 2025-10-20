@@ -59,7 +59,7 @@ class CicatrizaApp extends StatelessWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.system,
-        initialRoute: AppRoutes.patients,
+        initialRoute: AppRoutes.login,
         onGenerateRoute: AppRoutes.generateRoute,
         debugShowCheckedModeBanner: false,
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../core/routing/app_routes.dart';
 
 /// Página de login com Google e Microsoft
 class LoginPage extends StatelessWidget {
@@ -16,33 +17,10 @@ class LoginPage extends StatelessWidget {
               const Spacer(),
 
               // Logo e título
-              Container(
+              SvgPicture.asset(
+                'assets/logos/logo_cicatriza.svg',
                 width: 100,
                 height: 100,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withOpacity(0.2),
-                      blurRadius: 15,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-                child: SvgPicture.asset(
-                  'assets/logos/logo_cicatriza.svg',
-                  width: 76,
-                  height: 76,
-                  fit: BoxFit.contain,
-                  colorFilter: ColorFilter.mode(
-                    Theme.of(context).colorScheme.primary,
-                    BlendMode.srcIn,
-                  ),
-                ),
               ),
               const SizedBox(height: 24),
 
@@ -72,19 +50,13 @@ class LoginPage extends StatelessWidget {
                 height: 56,
                 child: OutlinedButton.icon(
                   onPressed: () {
-                    // TODO: Implementar login Google via AuthBloc
-                    _showSnackBar(context, 'Login Google será implementado');
+                    // MVP: Navegar direto para pacientes
+                    Navigator.pushReplacementNamed(context, AppRoutes.patients);
                   },
-                  icon: Container(
+                  icon: SvgPicture.asset(
+                    'assets/logos/google-logo.svg',
                     width: 24,
                     height: 24,
-                    padding: const EdgeInsets.all(2),
-                    child: SvgPicture.asset(
-                      'assets/logos/google-logo.svg',
-                      width: 20,
-                      height: 20,
-                      fit: BoxFit.contain,
-                    ),
                   ),
                   label: const Text(
                     'Entrar com Google',
@@ -105,39 +77,43 @@ class LoginPage extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              // Botão Login Microsoft
+              // Divisor "ou"
+              Row(
+                children: [
+                  Expanded(child: Divider(color: Colors.grey.shade300)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'ou',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  Expanded(child: Divider(color: Colors.grey.shade300)),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // Botão Login com E-mail
               SizedBox(
                 width: double.infinity,
                 height: 56,
-                child: OutlinedButton.icon(
+                child: ElevatedButton.icon(
                   onPressed: () {
-                    // TODO: Implementar login Microsoft via AuthBloc
-                    _showSnackBar(context, 'Login Microsoft será implementado');
+                    // MVP: Navegar direto para pacientes
+                    Navigator.pushReplacementNamed(context, AppRoutes.patients);
                   },
-                  icon: Container(
-                    width: 24,
-                    height: 24,
-                    padding: const EdgeInsets.all(2),
-                    child: SvgPicture.asset(
-                      'assets/logos/microsoft.svg',
-                      width: 20,
-                      height: 20,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
+                  icon: const Icon(Icons.email_outlined),
                   label: const Text(
-                    'Entrar com Microsoft',
+                    'Entrar com E-mail',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                   ),
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black87,
-                    side: BorderSide(color: Colors.grey.shade300, width: 1.5),
+                  style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    elevation: 2,
-                    shadowColor: Colors.black.withOpacity(0.1),
                   ),
                 ),
               ),
@@ -161,12 +137,6 @@ class LoginPage extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  void _showSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
     );
   }
 }

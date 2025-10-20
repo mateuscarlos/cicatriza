@@ -4,6 +4,7 @@ import '../../domain/entities/wound_manual.dart';
 import '../../presentation/pages/pages.dart';
 
 class AppRoutes {
+  static const String login = '/login';
   static const String home = '/';
   static const String patients = '/patients';
   static const String wounds = '/wounds';
@@ -11,6 +12,12 @@ class AppRoutes {
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
+      case login:
+        return MaterialPageRoute(
+          builder: (_) => const LoginPage(),
+          settings: settings,
+        );
+
       case home:
       case patients:
         return MaterialPageRoute(
