@@ -58,19 +58,47 @@ class _AssessmentCreatePageState extends State<AssessmentCreatePage> {
   }
 
   void _saveAssessment() {
-    if (_formKey.currentState!.validate()) {
-      context.read<AssessmentBloc>().add(
-        CreateAssessmentEvent(
-          woundId: widget.wound.id,
-          date: _assessmentDate,
-          painScale: _painLevel,
-          lengthCm: _length ?? 0.0,
-          widthCm: _width ?? 0.0,
-          depthCm: _depth ?? 0.0,
-          woundBed: _woundBed,
-          exudateType: _exudate,
-          edgeAppearance: _periphery,
-          notes: _notes,
+    print('[AssessmentCreatePage] 🔘 Botão salvar clicado');
+    print('[AssessmentCreatePage] Validando formulário...');
+
+    try {
+      if (_formKey.currentState!.validate()) {
+        print('[AssessmentCreatePage] ✅ Validação passou!');
+        print(
+          '[AssessmentCreatePage] Dados: length=$_length, width=$_width, depth=$_depth, pain=$_painLevel',
+        );
+
+        final bloc = context.read<AssessmentBloc>();
+        print('[AssessmentCreatePage] BLoC encontrado: $bloc');
+
+        bloc.add(
+          CreateAssessmentEvent(
+            woundId: widget.wound.id,
+            date: _assessmentDate,
+            painScale: _painLevel,
+            lengthCm: _length ?? 0.0,
+            widthCm: _width ?? 0.0,
+            depthCm: _depth ?? 0.0,
+            woundBed: _woundBed,
+            exudateType: _exudate,
+            edgeAppearance: _periphery,
+            notes: _notes,
+          ),
+        );
+        print(
+          '[AssessmentCreatePage] 📤 Evento CreateAssessmentEvent disparado',
+        );
+      } else {
+        print('[AssessmentCreatePage] ❌ Validação falhou!');
+      }
+    } catch (e, stackTrace) {
+      print('[AssessmentCreatePage] ❌❌ ERRO CRÍTICO: $e');
+      print('[AssessmentCreatePage] StackTrace: $stackTrace');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao salvar: $e'),
+          backgroundColor: Colors.red,
         ),
       );
     }
@@ -96,15 +124,37 @@ class _AssessmentCreatePageState extends State<AssessmentCreatePage> {
 
       body: BlocListener<AssessmentBloc, AssessmentState>(
         listener: (context, state) {
+          print(
+            '[AssessmentCreatePage] 📢 Estado recebido: ${state.runtimeType}',
+          );
+
           if (state is AssessmentOperationSuccessState) {
+            print(
+              '[AssessmentCreatePage] ✅ Sucesso! Mensagem: ${state.message}',
+            );
+
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
                 backgroundColor: Colors.green,
+                duration: const Duration(seconds: 2),
               ),
             );
-            Navigator.pop(context);
+
+            print(
+              '[AssessmentCreatePage] 🔙 Navegando de volta para pacientes...',
+            );
+            // Volta para a tela de pacientes (2 telas para trás: assessment -> wounds -> patients)
+            Navigator.of(context).popUntil((route) {
+              print(
+                '[AssessmentCreatePage] Verificando rota: ${route.settings.name}',
+              );
+              return route.settings.name == '/patients' || route.isFirst;
+            });
+            print('[AssessmentCreatePage] ✅ Navegação concluída!');
           } else if (state is AssessmentErrorState) {
+            print('[AssessmentCreatePage] ❌ Erro: ${state.message}');
+
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
