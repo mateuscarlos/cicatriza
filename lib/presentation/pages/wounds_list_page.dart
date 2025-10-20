@@ -206,7 +206,7 @@ class _WoundsListPageState extends State<WoundsListPage> {
                           onTap: () {
                             Navigator.pushNamed(
                               context,
-                              '/assessment/create',
+                              '/assessments/list',
                               arguments: {
                                 'patient': widget.patient,
                                 'wound': wound,

@@ -133,6 +133,8 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
     Emitter<AssessmentState> emit,
   ) async {
     try {
+      print('[AssessmentBloc] 🔵 Iniciando criação de avaliação');
+
       // Primeiro valida os dados
       final errors = _validateAssessmentData(
         date: event.date,
@@ -143,10 +145,12 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
       );
 
       if (errors.isNotEmpty) {
+        print('[AssessmentBloc] ❌ Validação falhou: $errors');
         emit(AssessmentValidationState(errors: errors, isValid: false));
         return;
       }
 
+      print('[AssessmentBloc] ✅ Validação passou');
       final currentAssessments = _getCurrentAssessments();
 
       emit(
@@ -157,6 +161,10 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
           currentWoundId: event.woundId,
         ),
       );
+
+      print('[AssessmentBloc] 📝 Criando assessment no repositório...');
+
+      print('[AssessmentBloc] 📝 Criando assessment no repositório...');
 
       final newAssessment = AssessmentManual.create(
         woundId: event.woundId,
@@ -172,12 +180,16 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
         notes: event.notes,
       );
 
+      print('[AssessmentBloc] 💾 Salvando no repositório...');
       final createdAssessment = await _assessmentRepository.createAssessment(
         newAssessment,
       );
 
+      print('[AssessmentBloc] ✅ Assessment criado: ${createdAssessment.id}');
+
       final updatedAssessments = [createdAssessment, ...currentAssessments];
 
+      print('[AssessmentBloc] 📤 Emitindo AssessmentOperationSuccessState');
       emit(
         AssessmentOperationSuccessState(
           assessments: updatedAssessments,
@@ -186,7 +198,9 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
           currentWoundId: event.woundId,
         ),
       );
+      print('[AssessmentBloc] ✅ Estado de sucesso emitido!');
     } catch (e) {
+      print('[AssessmentBloc] ❌ Erro ao criar avaliação: $e');
       emit(
         AssessmentErrorState(
           message: 'Erro ao criar avaliação: $e',

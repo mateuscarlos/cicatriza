@@ -134,23 +134,18 @@ class _AssessmentCreatePageState extends State<AssessmentCreatePage> {
             );
 
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
+              const SnackBar(
+                content: Text('✅ Avaliação salva com sucesso!'),
                 backgroundColor: Colors.green,
-                duration: const Duration(seconds: 2),
+                duration: Duration(seconds: 3),
               ),
             );
 
             print(
-              '[AssessmentCreatePage] 🔙 Navegando de volta para pacientes...',
+              '[AssessmentCreatePage] 🔙 Navegando de volta para detalhes do paciente...',
             );
-            // Volta para a tela de pacientes (2 telas para trás: assessment -> wounds -> patients)
-            Navigator.of(context).popUntil((route) {
-              print(
-                '[AssessmentCreatePage] Verificando rota: ${route.settings.name}',
-              );
-              return route.settings.name == '/patients' || route.isFirst;
-            });
+            // Volta para a tela de feridas do paciente (1 tela para trás)
+            Navigator.of(context).pop();
             print('[AssessmentCreatePage] ✅ Navegação concluída!');
           } else if (state is AssessmentErrorState) {
             print('[AssessmentCreatePage] ❌ Erro: ${state.message}');
