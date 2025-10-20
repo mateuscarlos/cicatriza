@@ -35,26 +35,28 @@ service firebase.storage {
     }
 
     // Acessa Firestore (banco default) para ler ACL do paciente.
-    function patientDoc(pid) {
-      return get(/databases/(default)/documents/patients/$(pid));
+    function patientDoc(uid, pid) {
+      return get(/databases/(default)/documents/users/$(uid)/patients/$(pid));
     }
 
-    function myRoleOnPatient(pid) {
-      return patientDoc(pid).data.acl.roles[request.auth.uid];
+    function hasRole(uid, pid, roles) {
+      let patient = patientDoc(uid, pid);
+      let role = patient.data.acl.roles[request.auth.uid];
+      return role != null && roles.hasAny([role]);
     }
 
-    function hasViewer(pid) {
-      return myRoleOnPatient(pid) in ['owner','editor','viewer'];
+    function hasViewer(uid, pid) {
+      return hasRole(uid, pid, ['owner','editor','viewer']);
     }
 
-    function hasEditor(pid) {
-      return myRoleOnPatient(pid) in ['owner','editor'];
+    function hasEditor(uid, pid) {
+      return hasRole(uid, pid, ['owner','editor']);
     }
 
     // Regras de tipo/tamanho por contentType
     function isImageUpload() {
       return request.resource.contentType.matches('image/.*')
-        && request.resource.size <= 25 * 1024 * 1024; // 25MB
+        && request.resource.size <= 10 * 1024 * 1024; // 10MB
     }
 
     function isVideoUpload() {
@@ -63,12 +65,12 @@ service firebase.storage {
     }
 
     // Metadados obrigatórios na mídia
-    function hasRequiredMediaMetadata() {
+    function hasRequiredMediaMetadata(uid, pid, wid, aid) {
       return ('metadata' in request.resource) &&
-             ('ownerId' in request.resource.metadata) &&
-             ('patientId' in request.resource.metadata) &&
-             ('woundId' in request.resource.metadata);
-      // assessmentId é opcional (pode ser null quando mídias forem avulsas da avaliação)
+             request.resource.metadata.ownerId == uid &&
+             request.resource.metadata.patientId == pid &&
+             request.resource.metadata.woundId == wid &&
+             request.resource.metadata.assessmentId == aid;
     }
 
     // ============
@@ -77,19 +79,20 @@ service firebase.storage {
     match /users/{uid}/patients/{pid}/wounds/{wid}/assessments/{aid}/photos/{fileId} {
 
       // Ler: dono OU quem tiver role viewer/editor/owner no paciente
-      allow read: if isOwner(uid) || (isAuth() && hasViewer(pid));
+      allow read: if isOwner(uid) || (isAuth() && hasViewer(uid, pid));
 
       // Criar: dono OU editor no paciente, com metadados e validações de arquivo
       allow create: if isAuth()
-        && (isOwner(uid) || hasEditor(pid))
-        && hasRequiredMediaMetadata()
+  && (isOwner(uid) || hasEditor(uid, pid))
+  && hasRequiredMediaMetadata(uid, pid, wid, aid)
         && (isImageUpload() || isVideoUpload());
 
       // Atualizar: dono OU editor no paciente (ex.: corrigir metadados)
-      allow update: if isAuth() && (isOwner(uid) || hasEditor(pid));
+      allow update: if isAuth() && (isOwner(uid) || hasEditor(uid, pid))
+        && hasRequiredMediaMetadata(uid, pid, wid, aid);
 
       // Excluir: dono OU editor no paciente
-      allow delete: if isAuth() && (isOwner(uid) || hasEditor(pid));
+      allow delete: if isAuth() && (isOwner(uid) || hasEditor(uid, pid));
     }
 
     // ============
@@ -97,10 +100,10 @@ service firebase.storage {
     // ============
     match /users/{uid}/patients/{pid}/exports/{yyyy}/{mm}/{file} {
       // Ler: dono OU viewer/editor do paciente
-      allow read: if isOwner(uid) || (isAuth() && hasViewer(pid));
+  allow read: if isOwner(uid) || (isAuth() && hasViewer(uid, pid));
 
       // Criar/Atualizar/Excluir: dono OU editor do paciente
-      allow write: if isAuth() && (isOwner(uid) || hasEditor(pid));
+  allow write: if isAuth() && (isOwner(uid) || hasEditor(uid, pid));
     }
 
     // ============
@@ -113,7 +116,7 @@ service firebase.storage {
       // e, opcionalmente, para todos autenticados que tenham ACL no paciente referenciado
       // via download URL (token) — cenários comuns usam download tokens.
       // Para simplificar e evitar falso-positivo, restringimos a leitura a:
-      allow read: if isOwner(uid) || isAuth();
+  allow read: if isOwner(uid);
 
       // Escrita cliente: negada (somente Functions/Admin devem escrever)
       allow write: if false;

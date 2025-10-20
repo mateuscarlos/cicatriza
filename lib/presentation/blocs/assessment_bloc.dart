@@ -33,6 +33,7 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
     required double lengthCm,
     required double widthCm,
     required double depthCm,
+    String? notes,
   }) {
     final errors = <String, String>{};
     final now = DateTime.now();
@@ -56,6 +57,18 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
     }
     if (depthCm <= 0) {
       errors['depthCm'] = 'Profundidade deve ser maior que 0';
+    }
+
+    if (notes != null && notes.isNotEmpty) {
+      if (notes.length > 2000) {
+        errors['notes'] = 'Observações devem ter no máximo 2000 caracteres';
+      }
+
+      final containsHtmlTags = RegExp(r'<[^>]+>').hasMatch(notes);
+      if (containsHtmlTags) {
+        errors['notes'] =
+            'Observações não podem conter marcações HTML ou scripts';
+      }
     }
 
     return errors;
@@ -123,6 +136,7 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
       lengthCm: event.lengthCm,
       widthCm: event.widthCm,
       depthCm: event.depthCm,
+      notes: event.notes,
     );
 
     emit(AssessmentValidationState(errors: errors, isValid: errors.isEmpty));
@@ -143,6 +157,7 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
         lengthCm: event.lengthCm,
         widthCm: event.widthCm,
         depthCm: event.depthCm,
+        notes: event.notes,
       );
 
       if (errors.isNotEmpty) {
@@ -234,6 +249,7 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
         lengthCm: event.assessment.lengthCm ?? 0.0,
         widthCm: event.assessment.widthCm ?? 0.0,
         depthCm: event.assessment.depthCm ?? 0.0,
+        notes: event.assessment.notes,
       );
 
       if (errors.isNotEmpty) {

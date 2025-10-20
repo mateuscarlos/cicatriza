@@ -1,11 +1,13 @@
 import 'package:get_it/get_it.dart';
-import '../../data/repositories/patient_repository_mock.dart';
+import '../../data/repositories/patient_repository_offline.dart';
 import '../../data/repositories/wound_repository_mock.dart';
 import '../../data/repositories/assessment_repository_mock.dart';
+import '../../data/datasources/local/offline_database.dart';
 import '../../domain/repositories/patient_repository_manual.dart';
 import '../../domain/repositories/wound_repository_manual.dart';
 import '../../domain/repositories/assessment_repository_manual.dart';
 import '../utils/app_logger.dart';
+import '../services/connectivity_service.dart';
 import '../../presentation/blocs/patient_bloc.dart';
 import '../../presentation/blocs/wound_bloc.dart';
 import '../../presentation/blocs/assessment_bloc.dart';
@@ -49,7 +51,12 @@ Future<void> initDependencies() async {
   // Repositories (Mock para MVP)
   // ============================================================================
 
-  sl.registerLazySingleton<PatientRepository>(() => PatientRepositoryMock());
+  sl.registerLazySingleton<OfflineDatabase>(() => OfflineDatabase.instance);
+  sl.registerLazySingleton<ConnectivityService>(() => ConnectivityService());
+
+  sl.registerLazySingleton<PatientRepository>(
+    () => PatientRepositoryOffline(database: sl(), connectivityService: sl()),
+  );
   sl.registerLazySingleton<WoundRepository>(() => WoundRepositoryMock());
   sl.registerLazySingleton<AssessmentRepository>(
     () => AssessmentRepositoryMock(),

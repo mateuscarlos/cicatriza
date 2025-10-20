@@ -31,12 +31,18 @@ class _AssessmentsListPageState extends State<AssessmentsListPage> {
     );
   }
 
-  void _navigateToNewAssessment() {
-    Navigator.pushNamed(
+  Future<void> _navigateToNewAssessment() async {
+    final result = await Navigator.pushNamed(
       context,
       '/assessment/create',
       arguments: {'patient': widget.patient, 'wound': widget.wound},
     );
+
+    if (result == true && mounted) {
+      context.read<AssessmentBloc>().add(
+        LoadAssessmentsByWoundEvent(widget.wound.id),
+      );
+    }
   }
 
   @override
@@ -235,19 +241,15 @@ class _AssessmentsListPageState extends State<AssessmentsListPage> {
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 32, right: 16),
-        child: FloatingActionButton.extended(
+        child: FloatingActionButton(
           onPressed: _navigateToNewAssessment,
-          icon: const Icon(Icons.add),
-          label: const Text(
-            'Nova Avaliação',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          elevation: 6,
-          backgroundColor: theme.colorScheme.primary,
+          tooltip: 'Nova avaliação',
           foregroundColor: theme.colorScheme.onPrimary,
+          backgroundColor: theme.colorScheme.primary,
+          child: const Icon(Icons.add),
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endContained,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }

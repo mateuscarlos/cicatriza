@@ -101,6 +101,7 @@ class ValidateAssessmentEvent extends AssessmentEvent {
   final double lengthCm;
   final double widthCm;
   final double depthCm;
+  final String? notes;
 
   const ValidateAssessmentEvent({
     required this.date,
@@ -108,5 +109,6 @@ class ValidateAssessmentEvent extends AssessmentEvent {
     required this.lengthCm,
     required this.widthCm,
     required this.depthCm,
+    this.notes,
   });
 }

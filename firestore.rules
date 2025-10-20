@@ -1,333 +1,161 @@
 rules_version = '2';
 
 /**
- * Firestore Security Rules — CICATRIZA
- * Escopo por usuário (ownerId) + ACL por paciente (roles: owner|editor|viewer).
- * Validações críticas nos writes de Wounds/Assessments.
- *
- * Observação: Regras não conseguem validar datas relativas ao "agora" com precisão.
- * Validar lógicas avançadas (ex.: nextReview > hoje) no App/Cloud Functions.
+ * Firestore Security Rules — Cicatriza (M1)
+ * Estrutura hierárquica: users/{uid}/patients/{pid}/wounds/{wid}/assessments/{aid}/media/{mid}
+ * Controle de acesso baseado em ownerId e ACL (owner/editor/viewer) no documento do paciente.
+ * Validações essenciais conforme requisitos clínicos do marco 1.
  */
 
 service cloud.firestore {
   match /databases/{db}/documents {
 
-    // =========================
-    // Helpers (funções comuns)
-    // =========================
+    // --------------------------------------------------------------
+    // Helpers gerais
+    // --------------------------------------------------------------
     function isAuth() {
       return request.auth != null;
     }
 
-    function isOwnerDoc(res) {
-      return res.data.ownerId == request.auth.uid;
+    function isOwner(uid) {
+      return isAuth() && request.auth.uid == uid;
     }
 
-    // Recupera doc do paciente para verificar ACL herdada
-    function patientDoc(pid) {
-      return get(/databases/$(database)/documents/patients/$(pid));
+    function numberBetween(value, min, max) {
+      return (value is int || value is float) && value >= min && value <= max;
     }
 
-    // Retorna role do usuário no paciente (ou string vazia)
-    function myRoleOnPatient(pid) {
-      return patientDoc(pid).data.acl.roles[request.auth.uid];
+    function positiveNumber(value) {
+      return (value is int || value is float) && value > 0;
     }
 
-    function hasViewer(pid) {
-      return myRoleOnPatient(pid) in ['owner', 'editor', 'viewer'];
+    function optionalCleanString(data, field, maxLen) {
+      return !(field in data) || (
+        data[field] is string &&
+        data[field].size() <= maxLen &&
+        !data[field].matches('.*<[^>]+>.*')
+      );
     }
 
-    function hasEditor(pid) {
-      return myRoleOnPatient(pid) in ['owner', 'editor'];
+    function patientHasRole(uid, pid, roles) {
+      let patient = get(/databases/$(db)/documents/users/$(uid)/patients/$(pid));
+      let role = patient.data.acl.roles[request.auth.uid];
+      return role != null && roles.hasAny([role]);
     }
 
-    function hasOwner(pid) {
-      return myRoleOnPatient(pid) == 'owner';
+    function validatePatient(data, uid) {
+      return data.ownerId == uid &&
+        ('acl' in data) &&
+        ('roles' in data.acl) &&
+        data.acl.roles[uid] == 'owner' &&
+        data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
+        data.nameLowercase is string && data.nameLowercase.size() > 0 &&
+        data.updatedAt != null;
     }
 
-    // Validadores numéricos simples
-    function numberBetween(n, min, max) {
-      return n is int || n is float
-        && n >= min && n <= max;
+    function validateWound(data, uid, pid) {
+      return data.ownerId == uid &&
+        data.patientId == pid &&
+        data.type is string && data.type.size() > 0 &&
+        data.location is string && data.location.size() > 0 &&
+        data.status is string && data.status.size() > 0 &&
+        data.updatedAt != null &&
+        optionalCleanString(data, 'locationDescription', 500) &&
+        optionalCleanString(data, 'causeDescription', 500) &&
+        optionalCleanString(data, 'notes', 2000);
     }
 
-    function optNumberBetween(obj, field, min, max) {
-      return !(field in obj) || numberBetween(obj[field], min, max);
+    function validateAssessment(data, uid, pid, wid) {
+      return data.ownerId == uid &&
+        data.patientId == pid &&
+        data.woundId == wid &&
+        data.date != null &&
+        numberBetween(data.painScale, 0, 10) &&
+        positiveNumber(data.lengthCm) &&
+        positiveNumber(data.widthCm) &&
+        positiveNumber(data.depthCm) &&
+        optionalCleanString(data, 'notes', 2000);
     }
 
-    // Soma de percentuais (granulation + epithelial + slough + necrotic == 100)
-    function validTissueSum(tissuePct) {
-      return
-        ('granulation' in tissuePct) && ('epithelial' in tissuePct) &&
-        ('slough' in tissuePct) && ('necrotic' in tissuePct) &&
-        (tissuePct.granulation + tissuePct.epithelial + tissuePct.slough + tissuePct.necrotic) == 100 &&
-        numberBetween(tissuePct.granulation, 0, 100) &&
-        numberBetween(tissuePct.epithelial, 0, 100) &&
-        numberBetween(tissuePct.slough, 0, 100) &&
-        numberBetween(tissuePct.necrotic, 0, 100);
+    function validateMedia(data, uid, pid, wid, aid) {
+      return data.ownerId == uid &&
+        data.patientId == pid &&
+        data.woundId == wid &&
+        data.assessmentId == aid &&
+        data.storagePath is string &&
+        ['image', 'video'].hasAny([data.type]);
     }
 
-    // Validação de "sizeMm" = { length, width, depth }
-    function validSizeMm(sizeMm) {
-      return ('length' in sizeMm) && ('width' in sizeMm) && ('depth' in sizeMm) &&
-             numberBetween(sizeMm.length, 0, 1000) &&
-             numberBetween(sizeMm.width, 0, 1000) &&
-             numberBetween(sizeMm.depth, 0, 200);
-    }
-
-    // Valida enum por string
-    function inEnum(val, allowed) {
-      return val is string && allowed.hasAny([val]);
-    }
-
-    // =========================
-    // Validação de documentos
-    // =========================
-
-    // Wound
-    function validateWound(newData) {
-      // Campos mínimos
-      return
-        ('ownerId' in newData) &&
-        ('patientId' in newData) &&
-        ('type' in newData) &&
-        ('sizeMm' in newData) &&
-        ('painLevel' in newData) &&
-
-        // Tipos/intervalos
-        inEnum(newData.type, ['ulcera_venosa','lpp','queimadura','cirurgica','outros']) &&
-        validSizeMm(newData.sizeMm) &&
-        numberBetween(newData.painLevel, 0, 10) &&
-
-        // Campos opcionais com intervalos razoáveis
-        !( 'onsetDuration' in newData ) ||
-          (
-            ('value' in newData.onsetDuration) &&
-            ('unit' in newData.onsetDuration) &&
-            numberBetween(newData.onsetDuration.value, 0, 3650) &&
-            inEnum(newData.onsetDuration.unit, ['days','weeks','months'])
-          ) &&
-
-        !( 'status' in newData ) || inEnum(newData.status, ['na','melhorando','estagnada','piorando']) &&
-
-        // Localização (opcional mas, se presente, deve ser coerente)
-        !( 'location' in newData ) ||
-          (
-            ('bodyMapZone' in newData.location) &&
-            optNumberBetween(newData.location, 'x', 0, 1) &&
-            optNumberBetween(newData.location, 'y', 0, 1)
-          );
-    }
-
-    // Assessment
-    function validateAssessment(newData) {
-      return
-        // Campos obrigatórios mínimos
-        ('ownerId' in newData) &&
-        ('patientId' in newData) &&
-        ('woundId' in newData) &&
-        ('date' in newData) && // formato validado no app
-        ('woundBed' in newData) &&
-        ('woundEdge' in newData) &&
-        ('periwoundSkin' in newData) &&
-        ('sizeMm' in newData) &&
-        ('painLevel' in newData) &&
-        ('woundStatus' in newData) &&
-
-        // sizeMm + painLevel
-        validSizeMm(newData.sizeMm) &&
-        numberBetween(newData.painLevel, 0, 10) &&
-
-        // woundStatus enum
-        inEnum(newData.woundStatus, ['primeira_avaliacao','piorando','estagnada','melhorando','na']) &&
-
-        // woundBed.tissuePct soma == 100
-        ('tissuePct' in newData.woundBed) &&
-        validTissueSum(newData.woundBed.tissuePct) &&
-
-        // woundBed.exudate
-        ('exudate' in newData.woundBed) &&
-        ('level' in newData.woundBed.exudate) &&
-        inEnum(newData.woundBed.exudate.level, ['dry','low','medium','high']) &&
-        !( 'type' in newData.woundBed.exudate ) ||
-           inEnum(newData.woundBed.exudate.type, ['clear','cloudy','purulent','pink_red','thick','thin']) &&
-
-        // woundBed.infection (se hasInfection true, permitir lista de sinais)
-        !( 'infection' in newData.woundBed ) ||
-          (
-            ('hasInfection' in newData.woundBed.infection) &&
-            ( newData.woundBed.infection.hasInfection is bool ) &&
-            ( !( 'signs' in newData.woundBed.infection ) ||
-              ( newData.woundBed.infection.signs.size() <= 12 ) // limite razoável
-            )
-          ) &&
-
-        // managementGoals (opcional; se existir, validar valores)
-        !( 'managementGoals' in newData ) ||
-          (
-            newData.managementGoals is list &&
-            newData.managementGoals.size() <= 10 &&
-            // cada item precisa estar no enum
-            newData.managementGoals.hasOnly(['remove_nonviable','manage_exudate','manage_bacterial_load','rehydrate_bed','protect_gran_epith','protect_periwound'])
-          ) &&
-
-        // treatmentChoice (se presente, exigir dressingType e rationale)
-        !( 'treatmentChoice' in newData ) ||
-          (
-            ('dressingType' in newData.treatmentChoice) &&
-            ('rationale' in newData.treatmentChoice)
-          ) &&
-
-        // attachmentsCount (se presente)
-        !( 'attachmentsCount' in newData ) ||
-          numberBetween(newData.attachmentsCount, 0, 50);
-    }
-
-    // =========================
-    // USERS
-    // =========================
+    // --------------------------------------------------------------
+    // Users e subcoleções
+    // --------------------------------------------------------------
     match /users/{uid} {
-      allow read, write: if isAuth() && uid == request.auth.uid;
-    }
+      allow read, create, update, delete: if isOwner(uid);
 
-    // =========================
-    // PATIENTS (root)
-    // =========================
-    match /patients/{pid} {
-      // Criar: usuário autenticado e ownerId == auth.uid
-      allow create: if isAuth() &&
-        request.resource.data.ownerId == request.auth.uid &&
-        ('acl' in request.resource.data) &&
-        ( 'roles' in request.resource.data.acl ) &&
-        ( request.resource.data.acl.roles[request.auth.uid] == 'owner' );
+      match /patients/{pid} {
+        allow create: if isOwner(uid) && validatePatient(request.resource.data, uid);
 
-      // Ler: owner ou quem tem role (viewer/editor/owner)
-      allow read: if isAuth() &&
-        ( isOwnerDoc(resource) || hasViewer(pid) );
+        allow read: if isAuth() && (
+          isOwner(uid) ||
+          (let role = resource.data.acl.roles[request.auth.uid]; role != null && ['owner', 'editor', 'viewer'].hasAny([role]))
+        );
 
-      // Atualizar/Excluir: owner ou editor
-      allow update, delete: if isAuth() &&
-        ( isOwnerDoc(resource) || hasEditor(pid) );
+        allow update, delete: if isAuth() && (
+          isOwner(uid) ||
+          (let role = resource.data.acl.roles[request.auth.uid]; role != null && ['owner', 'editor'].hasAny([role]))
+        ) && validatePatient(request.resource.data, uid);
 
-      // ==============
-      // WOUNDS
-      // ==============
-      match /wounds/{wid} {
-        // Ler: viewer+
-        allow read: if isAuth() && ( isOwnerDoc(patientDoc(pid)) || hasViewer(pid) );
+        match /wounds/{wid} {
+          allow create: if isAuth() && patientHasRole(uid, pid, ['owner', 'editor']) &&
+            validateWound(request.resource.data, uid, pid);
 
-        // Criar/Atualizar/Excluir: editor+
-        allow create: if isAuth() &&
-          hasEditor(pid) &&
-          validateWound(request.resource.data) &&
-          // ownerId deve ser do autor da operação
-          request.resource.data.ownerId == request.auth.uid &&
-          // vínculo correto ao paciente
-          request.resource.data.patientId == pid;
+          allow read: if isAuth() && (
+            isOwner(uid) || patientHasRole(uid, pid, ['owner', 'editor', 'viewer'])
+          );
 
-        allow update: if isAuth() &&
-          hasEditor(pid) &&
-          validateWound(request.resource.data) &&
-          // ownerId e patientId não podem mudar para outro
-          request.resource.data.ownerId == resource.data.ownerId &&
-          request.resource.data.patientId == pid;
+          allow update, delete: if isAuth() && patientHasRole(uid, pid, ['owner', 'editor']) &&
+            validateWound(request.resource.data, uid, pid);
 
-        allow delete: if isAuth() && hasEditor(pid);
+          match /assessments/{aid} {
+            allow create: if isAuth() && patientHasRole(uid, pid, ['owner', 'editor']) &&
+              validateAssessment(request.resource.data, uid, pid, wid);
 
-        // ============
-        // ASSESSMENTS
-        // ============
-        match /assessments/{aid} {
-          // Ler: viewer+
-          allow read: if isAuth() && ( isOwnerDoc(patientDoc(pid)) || hasViewer(pid) );
+            allow read: if isAuth() && (
+              isOwner(uid) || patientHasRole(uid, pid, ['owner', 'editor', 'viewer'])
+            );
 
-          // Criar/Atualizar: editor+ com validações
-          allow create: if isAuth() &&
-            hasEditor(pid) &&
-            validateAssessment(request.resource.data) &&
-            request.resource.data.ownerId == request.auth.uid &&
-            request.resource.data.patientId == pid &&
-            request.resource.data.woundId == wid;
+            allow update, delete: if isAuth() && patientHasRole(uid, pid, ['owner', 'editor']) &&
+              validateAssessment(request.resource.data, uid, pid, wid);
 
-          allow update: if isAuth() &&
-            hasEditor(pid) &&
-            validateAssessment(request.resource.data) &&
-            // ownerId/patientId/woundId não mudam
-            request.resource.data.ownerId == resource.data.ownerId &&
-            request.resource.data.patientId == pid &&
-            request.resource.data.woundId == wid;
+            match /media/{mid} {
+              allow create: if isAuth() && patientHasRole(uid, pid, ['owner', 'editor']) &&
+                validateMedia(request.resource.data, uid, pid, wid, aid);
 
-          allow delete: if isAuth() && hasEditor(pid);
-        }
+              allow read: if isAuth() && (
+                isOwner(uid) || patientHasRole(uid, pid, ['owner', 'editor', 'viewer'])
+              );
 
-        // =====
-        // MEDIA
-        // =====
-        match /media/{mid} {
-          // Ler: viewer+
-          allow read: if isAuth() && ( isOwnerDoc(patientDoc(pid)) || hasViewer(pid) );
-
-          // Criar/Atualizar/Excluir: editor+
-          allow create: if isAuth() &&
-            hasEditor(pid) &&
-            // ownerId e vínculos corretos
-            request.resource.data.ownerId == request.auth.uid &&
-            request.resource.data.patientId == pid &&
-            request.resource.data.woundId == wid &&
-            // campos mínimos
-            ('type' in request.resource.data) &&
-            inEnum(request.resource.data.type, ['image','video']) &&
-            ('storagePath' in request.resource.data);
-
-          allow update: if isAuth() &&
-            hasEditor(pid) &&
-            request.resource.data.ownerId == resource.data.ownerId &&
-            request.resource.data.patientId == pid &&
-            request.resource.data.woundId == wid;
-
-          allow delete: if isAuth() && hasEditor(pid);
+              allow update, delete: if isAuth() && patientHasRole(uid, pid, ['owner', 'editor']) &&
+                validateMedia(request.resource.data, uid, pid, wid, aid);
+            }
+          }
         }
       }
     }
 
-    // =========================
-    // APPOINTMENTS
-    // =========================
-    match /appointments/{id} {
-      allow read, create: if isAuth() &&
-        request.resource.data.ownerId == request.auth.uid;
-
-      allow update, delete: if isAuth() &&
-        isOwnerDoc(resource);
-    }
-
-    // =========================
-    // TRANSFERS
-    // =========================
+    // --------------------------------------------------------------
+    // Collections globais auxiliares
+    // --------------------------------------------------------------
     match /transfers/{id} {
-      // Criar: qualquer auth; validações detalhadas no App/Functions
       allow create: if isAuth();
-
-      // Ler/Atualizar: somente envolvidos (fromUserId ou toUserId)
-      allow read, update: if isAuth() &&
-        (request.auth.uid in [resource.data.fromUserId, resource.data.toUserId]);
-
-      // Exclusão: apenas quem criou (fromUserId)
-      allow delete: if isAuth() &&
-        request.auth.uid == resource.data.fromUserId;
+      allow read, update: if isAuth() && request.auth.uid in [resource.data.fromUserId, resource.data.toUserId];
+      allow delete: if isAuth() && request.auth.uid == resource.data.fromUserId;
     }
 
-    // =========================
-    // (Opcional) AUDIT EVENTS
-    // =========================
-    match /auditEvents/{eid} {
-      // Somente o ator ou o dono do recurso auditado (recomendado ajustar conforme necessidade)
-      allow read: if isAuth() && (
-        request.auth.uid == resource.data.actorId ||
-        request.auth.uid == resource.data.ownerId
-      );
-      allow create: if isAuth(); // criado por Functions
-      allow update, delete: if false; // imutável
+    match /auditEvents/{id} {
+      allow create: if isAuth();
+      allow read: if isAuth() && request.auth.uid in [resource.data.actorId, resource.data.ownerId];
+      allow update, delete: if false;
     }
   }
 }

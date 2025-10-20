@@ -51,7 +51,7 @@ class LoginPage extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: () {
                     // MVP: Navegar direto para pacientes
-                    Navigator.pushReplacementNamed(context, AppRoutes.patients);
+                    Navigator.pushReplacementNamed(context, AppRoutes.home);
                   },
                   icon: SvgPicture.asset(
                     'assets/logos/google-logo.svg',
@@ -103,7 +103,7 @@ class LoginPage extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: () {
                     // MVP: Navegar direto para pacientes
-                    Navigator.pushReplacementNamed(context, AppRoutes.patients);
+                    Navigator.pushReplacementNamed(context, AppRoutes.home);
                   },
                   icon: const Icon(Icons.email_outlined),
                   label: const Text(

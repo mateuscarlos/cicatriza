@@ -20,6 +20,11 @@ class AppRoutes {
         );
 
       case home:
+        return MaterialPageRoute(
+          builder: (_) => const HomePage(),
+          settings: settings,
+        );
+
       case patients:
         return MaterialPageRoute(
           builder: (_) => const PacientesListPage(),
@@ -94,7 +99,7 @@ class AppRoutes {
                 onPressed: () {
                   Navigator.pushNamedAndRemoveUntil(
                     context,
-                    AppRoutes.patients,
+                    AppRoutes.home,
                     (route) => false,
                   );
                 },

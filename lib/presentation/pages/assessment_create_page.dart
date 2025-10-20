@@ -149,7 +149,7 @@ class _AssessmentCreatePageState extends State<AssessmentCreatePage> {
               '[AssessmentCreatePage] 🔙 Navegando de volta para detalhes do paciente...',
             );
             // Volta para a tela de feridas do paciente (1 tela para trás)
-            Navigator.of(context).pop();
+            Navigator.of(context).pop(true);
             AppLogger.info('[AssessmentCreatePage] ✅ Navegação concluída!');
           } else if (state is AssessmentErrorState) {
             AppLogger.error(
