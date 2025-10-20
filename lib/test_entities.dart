@@ -1,3 +1,4 @@
+import 'core/utils/app_logger.dart';
 import 'domain/entities/patient.dart';
 import 'domain/entities/wound.dart';
 
@@ -9,7 +10,7 @@ void testEntities() {
     notes: 'Paciente teste',
   );
 
-  print('Patient created: ${patient.name}');
+  AppLogger.info('Patient created: ${patient.name}');
 
   // Test Wound creation
   final wound = Wound.create(
@@ -20,5 +21,5 @@ void testEntities() {
     notes: 'Ferida teste',
   );
 
-  print('Wound created with type: ${wound.type}');
+  AppLogger.info('Wound created with type: ${wound.type}');
 }

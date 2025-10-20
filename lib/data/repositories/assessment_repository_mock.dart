@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import '../../core/utils/app_logger.dart';
 import '../../domain/entities/assessment_manual.dart';
 import '../../domain/repositories/assessment_repository_manual.dart';
 
@@ -34,13 +35,14 @@ class AssessmentRepositoryMock implements AssessmentRepository {
             (json) => _assessmentFromJson(json as Map<String, dynamic>),
           ),
         );
-        print(
+        AppLogger.info(
           '[AssessmentRepository] ✅ Carregadas ${_assessments.length} avaliações do armazenamento local',
         );
       }
     } catch (e) {
-      print(
-        '[AssessmentRepository] ❌ Erro ao carregar do armazenamento local: $e',
+      AppLogger.error(
+        '[AssessmentRepository] ❌ Erro ao carregar do armazenamento local',
+        error: e,
       );
     }
   }
@@ -51,12 +53,13 @@ class AssessmentRepositoryMock implements AssessmentRepository {
       final prefs = await SharedPreferences.getInstance();
       final jsonList = _assessments.map((a) => _assessmentToJson(a)).toList();
       await prefs.setString(_storageKey, jsonEncode(jsonList));
-      print(
+      AppLogger.info(
         '[AssessmentRepository] ✅ Salvas ${_assessments.length} avaliações no armazenamento local',
       );
     } catch (e) {
-      print(
-        '[AssessmentRepository] ❌ Erro ao salvar no armazenamento local: $e',
+      AppLogger.error(
+        '[AssessmentRepository] ❌ Erro ao salvar no armazenamento local',
+        error: e,
       );
     }
   }
@@ -112,13 +115,15 @@ class AssessmentRepositoryMock implements AssessmentRepository {
     // 2. Tenta sincronizar com Firestore se online
     final isOnline = await _hasConnection();
     if (isOnline) {
-      print(
+      AppLogger.info(
         '[AssessmentRepository] 🌐 Online - Sincronizando com Firestore...',
       );
       // TODO: Implementar sync com Firestore quando Firebase estiver configurado
       // await _firestore.collection('assessments').doc(newAssessment.id).set(...)
     } else {
-      print('[AssessmentRepository] 📴 Offline - Avaliação salva localmente');
+      AppLogger.info(
+        '[AssessmentRepository] 📴 Offline - Avaliação salva localmente',
+      );
     }
 
     return newAssessment;

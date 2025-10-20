@@ -1,9 +1,9 @@
 import 'package:cicatriza/data/repositories/assessment_repository_mock.dart';
 import 'package:cicatriza/data/repositories/patient_repository_mock.dart';
 import 'package:cicatriza/data/repositories/wound_repository_mock.dart';
-import 'package:cicatriza/domain/repositories/assessment_repository.dart';
-import 'package:cicatriza/domain/repositories/patient_repository.dart';
-import 'package:cicatriza/domain/repositories/wound_repository.dart';
+import 'package:cicatriza/domain/repositories/assessment_repository_manual.dart';
+import 'package:cicatriza/domain/repositories/patient_repository_manual.dart';
+import 'package:cicatriza/domain/repositories/wound_repository_manual.dart';
 import 'package:cicatriza/presentation/blocs/assessment_bloc.dart';
 import 'package:cicatriza/presentation/blocs/patient_bloc.dart';
 import 'package:cicatriza/presentation/blocs/wound_bloc.dart';

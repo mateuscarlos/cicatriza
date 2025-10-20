@@ -1,8 +1,9 @@
+import 'core/utils/app_logger.dart';
 import 'domain/entities/patient.dart';
 
 void main() {
   try {
-    print('Testando Patient com freezed em runtime...');
+    AppLogger.info('Testando Patient com freezed em runtime...');
 
     // Teste 1: Criar um paciente
     final patient = Patient.create(
@@ -13,22 +14,22 @@ void main() {
       notes: 'Paciente com diabetes tipo 2',
     );
 
-    print('✅ Paciente criado: $patient');
+    AppLogger.info('✅ Paciente criado: $patient');
 
     // Teste 2: Converter para JSON
     final json = patient.toJson();
-    print('✅ JSON gerado: $json');
+    AppLogger.info('✅ JSON gerado: $json');
 
     // Teste 3: Criar a partir de JSON
     final patientFromJson = Patient.fromJson(json);
-    print('✅ Paciente do JSON: $patientFromJson');
+    AppLogger.info('✅ Paciente do JSON: $patientFromJson');
 
     // Teste 4: Testar copyWith
     final updatedPatient = patient.copyWith(
       phone: '11999888777',
       notes: 'Paciente com diabetes tipo 2 - Atualizado',
     );
-    print('✅ Paciente atualizado: $updatedPatient');
+    AppLogger.info('✅ Paciente atualizado: $updatedPatient');
 
     // Teste 5: Testar igualdade
     final samePatient = Patient.create(
@@ -38,12 +39,16 @@ void main() {
       email: 'maria@example.com',
       notes: 'Paciente com diabetes tipo 2',
     );
-    print('✅ Igualdade: ${patient == samePatient}');
+    AppLogger.info('✅ Igualdade: ${patient == samePatient}');
 
-    print('\n🎉 TODOS OS TESTES PASSARAM! Freezed funciona em runtime!');
+    AppLogger.info(
+      '\n🎉 TODOS OS TESTES PASSARAM! Freezed funciona em runtime!',
+    );
   } catch (e, stackTrace) {
-    print('❌ Erro durante os testes:');
-    print('Erro: $e');
-    print('Stack trace: $stackTrace');
+    AppLogger.error(
+      '❌ Erro durante os testes de Patient',
+      error: e,
+      stackTrace: stackTrace,
+    );
   }
 }

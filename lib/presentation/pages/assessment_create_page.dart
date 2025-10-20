@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../core/utils/app_logger.dart';
 import '../../domain/entities/patient_manual.dart';
 import '../../domain/entities/wound_manual.dart';
 import '../blocs/assessment_bloc.dart';
@@ -58,18 +59,18 @@ class _AssessmentCreatePageState extends State<AssessmentCreatePage> {
   }
 
   void _saveAssessment() {
-    print('[AssessmentCreatePage] 🔘 Botão salvar clicado');
-    print('[AssessmentCreatePage] Validando formulário...');
+    AppLogger.info('[AssessmentCreatePage] 🔘 Botão salvar clicado');
+    AppLogger.info('[AssessmentCreatePage] Validando formulário...');
 
     try {
       if (_formKey.currentState!.validate()) {
-        print('[AssessmentCreatePage] ✅ Validação passou!');
-        print(
+        AppLogger.info('[AssessmentCreatePage] ✅ Validação passou!');
+        AppLogger.info(
           '[AssessmentCreatePage] Dados: length=$_length, width=$_width, depth=$_depth, pain=$_painLevel',
         );
 
         final bloc = context.read<AssessmentBloc>();
-        print('[AssessmentCreatePage] BLoC encontrado: $bloc');
+        AppLogger.info('[AssessmentCreatePage] BLoC encontrado: $bloc');
 
         bloc.add(
           CreateAssessmentEvent(
@@ -85,15 +86,18 @@ class _AssessmentCreatePageState extends State<AssessmentCreatePage> {
             notes: _notes,
           ),
         );
-        print(
+        AppLogger.info(
           '[AssessmentCreatePage] 📤 Evento CreateAssessmentEvent disparado',
         );
       } else {
-        print('[AssessmentCreatePage] ❌ Validação falhou!');
+        AppLogger.warning('[AssessmentCreatePage] ❌ Validação falhou!');
       }
     } catch (e, stackTrace) {
-      print('[AssessmentCreatePage] ❌❌ ERRO CRÍTICO: $e');
-      print('[AssessmentCreatePage] StackTrace: $stackTrace');
+      AppLogger.error(
+        '[AssessmentCreatePage] ❌❌ ERRO CRÍTICO',
+        error: e,
+        stackTrace: stackTrace,
+      );
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -124,12 +128,12 @@ class _AssessmentCreatePageState extends State<AssessmentCreatePage> {
 
       body: BlocListener<AssessmentBloc, AssessmentState>(
         listener: (context, state) {
-          print(
+          AppLogger.info(
             '[AssessmentCreatePage] 📢 Estado recebido: ${state.runtimeType}',
           );
 
           if (state is AssessmentOperationSuccessState) {
-            print(
+            AppLogger.info(
               '[AssessmentCreatePage] ✅ Sucesso! Mensagem: ${state.message}',
             );
 
@@ -141,14 +145,16 @@ class _AssessmentCreatePageState extends State<AssessmentCreatePage> {
               ),
             );
 
-            print(
+            AppLogger.info(
               '[AssessmentCreatePage] 🔙 Navegando de volta para detalhes do paciente...',
             );
             // Volta para a tela de feridas do paciente (1 tela para trás)
             Navigator.of(context).pop();
-            print('[AssessmentCreatePage] ✅ Navegação concluída!');
+            AppLogger.info('[AssessmentCreatePage] ✅ Navegação concluída!');
           } else if (state is AssessmentErrorState) {
-            print('[AssessmentCreatePage] ❌ Erro: ${state.message}');
+            AppLogger.error(
+              '[AssessmentCreatePage] ❌ Erro ao salvar avaliação: ${state.message}',
+            );
 
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

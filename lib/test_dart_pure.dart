@@ -1,8 +1,9 @@
+import 'core/utils/app_logger.dart';
 import 'domain/entities/patient_manual.dart';
 
 void main() {
   try {
-    print('Testando PatientManual puro...');
+    AppLogger.info('Testando PatientManual puro...');
 
     final patient = PatientManual.create(
       name: 'João Silva',
@@ -11,10 +12,13 @@ void main() {
       email: 'joao@example.com',
     );
 
-    print('✅ Paciente criado: $patient');
-    print('✅ PatientManual funcionando!');
+    AppLogger.info('✅ Paciente criado: $patient');
+    AppLogger.info('✅ PatientManual funcionando!');
   } catch (e, stackTrace) {
-    print('❌ Erro: $e');
-    print('Stack trace: $stackTrace');
+    AppLogger.error(
+      '❌ Erro ao testar PatientManual',
+      error: e,
+      stackTrace: stackTrace,
+    );
   }
 }

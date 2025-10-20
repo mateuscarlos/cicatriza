@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'core/di/injection_container.dart';
 import 'core/theme/app_theme.dart';
 import 'core/routing/app_routes.dart';
+import 'core/utils/app_logger.dart';
 import 'presentation/blocs/patient_bloc.dart';
 import 'presentation/blocs/wound_bloc.dart';
 import 'presentation/blocs/assessment_bloc.dart';
@@ -18,17 +19,25 @@ void main() async {
   // Inicializar Firebase
   try {
     await Firebase.initializeApp();
-    print('Firebase inicializado com sucesso');
-  } catch (e) {
-    print('Erro ao inicializar Firebase: $e');
+    AppLogger.info('Firebase inicializado com sucesso');
+  } catch (e, stackTrace) {
+    AppLogger.error(
+      'Erro ao inicializar Firebase',
+      error: e,
+      stackTrace: stackTrace,
+    );
   }
 
   // Inicializar Dependency Injection
   try {
     await initDependencies();
-    print('Dependências inicializadas com sucesso');
-  } catch (e) {
-    print('Erro ao inicializar dependências: $e');
+    AppLogger.info('Dependências inicializadas com sucesso');
+  } catch (e, stackTrace) {
+    AppLogger.error(
+      'Erro ao inicializar dependências',
+      error: e,
+      stackTrace: stackTrace,
+    );
   }
 
   runApp(const CicatrizaApp());
