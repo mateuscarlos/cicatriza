@@ -1,9 +1,10 @@
+import 'core/utils/app_logger.dart';
 import 'domain/entities/patient_manual.dart';
 import 'domain/entities/wound_manual.dart';
 import 'domain/entities/assessment_manual.dart';
 
 void main() {
-  print('🧪 Testando entidades manuais para M1...\n');
+  AppLogger.info('🧪 Testando entidades manuais para M1...\n');
 
   try {
     // Teste 1: Criar um paciente
@@ -14,7 +15,9 @@ void main() {
       email: 'maria@example.com',
       notes: 'Paciente com diabetes tipo 2',
     );
-    print('✅ Paciente criado: ${patient.name} (${patient.nameLowercase})');
+    AppLogger.info(
+      '✅ Paciente criado: ${patient.name} (${patient.nameLowercase})',
+    );
 
     // Teste 2: Criar uma ferida
     final wound = WoundManual.create(
@@ -24,7 +27,7 @@ void main() {
       locationDescription: 'Região plantar do hálux',
       causeDescription: 'Diabetes descompensado',
     );
-    print(
+    AppLogger.info(
       '✅ Ferida criada: ${wound.type} em ${wound.location} (${wound.status})',
     );
 
@@ -41,42 +44,50 @@ void main() {
       exudateAmount: 'Moderada',
       notes: 'Sinais de infecção local',
     );
-    print(
+    AppLogger.info(
       '✅ Avaliação criada: ${assessment.lengthCm}x${assessment.widthCm}cm, dor: ${assessment.painScale}/10',
     );
-    print('   Área calculada: ${assessment.area?.toStringAsFixed(2)}cm²');
+    AppLogger.info(
+      '   Área calculada: ${assessment.area?.toStringAsFixed(2)}cm²',
+    );
 
     // Teste 4: Conversão para JSON
     final patientJson = patient.toJson();
     final woundJson = wound.toJson();
     final assessmentJson = assessment.toJson();
-    print('✅ Conversões JSON funcionando');
+    AppLogger.info('✅ Conversões JSON funcionando');
 
     // Teste 5: Conversão de JSON
     final patientFromJson = PatientManual.fromJson(patientJson);
     final woundFromJson = WoundManual.fromJson(woundJson);
     final assessmentFromJson = AssessmentManual.fromJson(assessmentJson);
-    print('✅ Deserialização JSON funcionando');
+    AppLogger.info('✅ Deserialização JSON funcionando');
 
     // Teste 6: Igualdade
-    print('✅ Igualdade: paciente ${patient == patientFromJson ? "✓" : "✗"}');
-    print('✅ Igualdade: ferida ${wound == woundFromJson ? "✓" : "✗"}');
-    print(
+    AppLogger.info(
+      '✅ Igualdade: paciente ${patient == patientFromJson ? "✓" : "✗"}',
+    );
+    AppLogger.info('✅ Igualdade: ferida ${wound == woundFromJson ? "✓" : "✗"}');
+    AppLogger.info(
       '✅ Igualdade: avaliação ${assessment == assessmentFromJson ? "✓" : "✗"}',
     );
 
     // Teste 7: copyWith
     final updatedWound = wound.copyWith(status: 'Em cicatrização');
-    print('✅ copyWith: status ${wound.status} → ${updatedWound.status}');
+    AppLogger.info(
+      '✅ copyWith: status ${wound.status} → ${updatedWound.status}',
+    );
 
-    print('\n🎉 TODOS OS TESTES PASSARAM!');
-    print('📋 Entidades manuais prontas para M1:');
-    print('   • PatientManual ✓');
-    print('   • WoundManual ✓');
-    print('   • AssessmentManual ✓');
+    AppLogger.info('\n🎉 TODOS OS TESTES PASSARAM!');
+    AppLogger.info('📋 Entidades manuais prontas para M1:');
+    AppLogger.info('   • PatientManual ✓');
+    AppLogger.info('   • WoundManual ✓');
+    AppLogger.info('   • AssessmentManual ✓');
   } catch (e, stackTrace) {
-    print('❌ Erro durante os testes:');
-    print('Erro: $e');
-    print('Stack trace: $stackTrace');
+    AppLogger.error(
+      '❌ Erro durante os testes de entidades manuais',
+      error: e,
+      stackTrace: stackTrace,
+    );
   }
 }

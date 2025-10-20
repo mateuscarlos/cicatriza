@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../core/utils/app_logger.dart';
 import '../../domain/entities/assessment_manual.dart';
 import '../../domain/repositories/assessment_repository_manual.dart';
 import 'assessment_event.dart';
@@ -133,7 +134,7 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
     Emitter<AssessmentState> emit,
   ) async {
     try {
-      print('[AssessmentBloc] 🔵 Iniciando criação de avaliação');
+      AppLogger.info('[AssessmentBloc] 🔵 Iniciando criação de avaliação');
 
       // Primeiro valida os dados
       final errors = _validateAssessmentData(
@@ -145,12 +146,12 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
       );
 
       if (errors.isNotEmpty) {
-        print('[AssessmentBloc] ❌ Validação falhou: $errors');
+        AppLogger.warning('[AssessmentBloc] ❌ Validação falhou: $errors');
         emit(AssessmentValidationState(errors: errors, isValid: false));
         return;
       }
 
-      print('[AssessmentBloc] ✅ Validação passou');
+      AppLogger.info('[AssessmentBloc] ✅ Validação passou');
       final currentAssessments = _getCurrentAssessments();
 
       emit(
@@ -162,9 +163,9 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
         ),
       );
 
-      print('[AssessmentBloc] 📝 Criando assessment no repositório...');
-
-      print('[AssessmentBloc] 📝 Criando assessment no repositório...');
+      AppLogger.info(
+        '[AssessmentBloc] 📝 Criando assessment no repositório...',
+      );
 
       final newAssessment = AssessmentManual.create(
         woundId: event.woundId,
@@ -180,16 +181,20 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
         notes: event.notes,
       );
 
-      print('[AssessmentBloc] 💾 Salvando no repositório...');
+      AppLogger.info('[AssessmentBloc] 💾 Salvando no repositório...');
       final createdAssessment = await _assessmentRepository.createAssessment(
         newAssessment,
       );
 
-      print('[AssessmentBloc] ✅ Assessment criado: ${createdAssessment.id}');
+      AppLogger.info(
+        '[AssessmentBloc] ✅ Assessment criado: ${createdAssessment.id}',
+      );
 
       final updatedAssessments = [createdAssessment, ...currentAssessments];
 
-      print('[AssessmentBloc] 📤 Emitindo AssessmentOperationSuccessState');
+      AppLogger.info(
+        '[AssessmentBloc] 📤 Emitindo AssessmentOperationSuccessState',
+      );
       emit(
         AssessmentOperationSuccessState(
           assessments: updatedAssessments,
@@ -198,9 +203,13 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
           currentWoundId: event.woundId,
         ),
       );
-      print('[AssessmentBloc] ✅ Estado de sucesso emitido!');
-    } catch (e) {
-      print('[AssessmentBloc] ❌ Erro ao criar avaliação: $e');
+      AppLogger.info('[AssessmentBloc] ✅ Estado de sucesso emitido!');
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        '[AssessmentBloc] ❌ Erro ao criar avaliação',
+        error: e,
+        stackTrace: stackTrace,
+      );
       emit(
         AssessmentErrorState(
           message: 'Erro ao criar avaliação: $e',

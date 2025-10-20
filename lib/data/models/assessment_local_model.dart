@@ -1,49 +1,17 @@
-import 'package:hive/hive.dart';
-
-part 'assessment_local_model.g.dart';
-
-@HiveType(typeId: 0)
-class AssessmentLocalModel extends HiveObject {
-  @HiveField(0)
+class AssessmentLocalModel {
   final String id;
-
-  @HiveField(1)
   final String woundId;
-
-  @HiveField(2)
   final DateTime date;
-
-  @HiveField(3)
   final int painScale;
-
-  @HiveField(4)
   final double lengthCm;
-
-  @HiveField(5)
   final double widthCm;
-
-  @HiveField(6)
   final double? depthCm;
-
-  @HiveField(7)
   final String woundBed;
-
-  @HiveField(8)
   final String exudateType;
-
-  @HiveField(9)
   final String edgeAppearance;
-
-  @HiveField(10)
   final String? notes;
-
-  @HiveField(11)
   final bool isSynced;
-
-  @HiveField(12)
   final DateTime createdAt;
-
-  @HiveField(13)
   final DateTime updatedAt;
 
   AssessmentLocalModel({

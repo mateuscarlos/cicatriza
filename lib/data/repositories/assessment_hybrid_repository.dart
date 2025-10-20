@@ -2,12 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../datasources/assessment_local_storage.dart';
 import '../models/assessment_local_model_v2.dart';
 import '../../core/services/connectivity_service.dart';
+import '../../core/utils/app_logger.dart';
 import '../../domain/entities/assessment_manual.dart';
-import '../../domain/repositories/assessment_repository.dart';
 
 /// Repositório híbrido que funciona offline-first
 /// Salva localmente e sincroniza com Firestore quando possível
-class AssessmentHybridRepository implements AssessmentRepository {
+class AssessmentHybridRepository {
   final AssessmentLocalStorage _localStorage;
   final ConnectivityService _connectivityService;
   final FirebaseFirestore _firestore;
@@ -20,7 +20,6 @@ class AssessmentHybridRepository implements AssessmentRepository {
        _connectivityService = connectivityService,
        _firestore = firestore ?? FirebaseFirestore.instance;
 
-  @override
   Future<void> createAssessment(AssessmentManual assessment) async {
     // 1. Salvar localmente SEMPRE (offline-first)
     final localModel = _toLocalModel(assessment);
@@ -33,19 +32,20 @@ class AssessmentHybridRepository implements AssessmentRepository {
         await _localStorage.markAsSynced(assessment.id);
       } catch (e) {
         // Se falhar, mantém local e sincroniza depois
-        print('[AssessmentHybridRepository] Erro ao sincronizar: $e');
+        AppLogger.error(
+          '[AssessmentHybridRepository] Erro ao sincronizar',
+          error: e,
+        );
       }
     }
   }
 
-  @override
   Future<List<AssessmentManual>> getAssessmentsByWoundId(String woundId) async {
     // Retorna dados locais (sempre disponíveis)
     final localModels = await _localStorage.getAssessmentsByWoundId(woundId);
     return localModels.map(_toEntity).toList();
   }
 
-  @override
   Future<AssessmentManual?> getAssessmentById(String id) async {
     final localModel = await _localStorage.getAssessment(id);
     return localModel != null ? _toEntity(localModel) : null;
@@ -54,7 +54,9 @@ class AssessmentHybridRepository implements AssessmentRepository {
   /// Sincroniza todas as avaliações pendentes
   Future<int> syncPendingAssessments() async {
     if (!await _connectivityService.hasConnection()) {
-      print('[AssessmentHybridRepository] Sem conexão. Sync cancelada.');
+      AppLogger.info(
+        '[AssessmentHybridRepository] Sem conexão. Sync cancelada.',
+      );
       return 0;
     }
 
@@ -67,14 +69,15 @@ class AssessmentHybridRepository implements AssessmentRepository {
         await _localStorage.markAsSynced(assessment.id);
         syncedCount++;
       } catch (e) {
-        print(
-          '[AssessmentHybridRepository] Erro ao sincronizar ${assessment.id}: $e',
+        AppLogger.error(
+          '[AssessmentHybridRepository] Erro ao sincronizar ${assessment.id}',
+          error: e,
         );
       }
     }
 
     if (syncedCount > 0) {
-      print(
+      AppLogger.info(
         '[AssessmentHybridRepository] ✅ Sincronizadas $syncedCount avaliações',
       );
     }
@@ -96,13 +99,13 @@ class AssessmentHybridRepository implements AssessmentRepository {
       id: entity.id,
       woundId: entity.woundId,
       date: entity.date,
-      painScale: entity.painScale,
-      lengthCm: entity.lengthCm,
-      widthCm: entity.widthCm,
+      painScale: entity.painScale ?? 0,
+      lengthCm: entity.lengthCm ?? 0.0,
+      widthCm: entity.widthCm ?? 0.0,
       depthCm: entity.depthCm,
-      woundBed: entity.woundBed,
-      exudateType: entity.exudateType,
-      edgeAppearance: entity.edgeAppearance,
+      woundBed: entity.woundBed ?? '',
+      exudateType: entity.exudateType ?? '',
+      edgeAppearance: entity.edgeAppearance ?? '',
       notes: entity.notes,
       isSynced: false,
       createdAt: entity.createdAt,

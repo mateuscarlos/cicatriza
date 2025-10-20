@@ -5,6 +5,7 @@ import '../../data/repositories/assessment_repository_mock.dart';
 import '../../domain/repositories/patient_repository_manual.dart';
 import '../../domain/repositories/wound_repository_manual.dart';
 import '../../domain/repositories/assessment_repository_manual.dart';
+import '../utils/app_logger.dart';
 import '../../presentation/blocs/patient_bloc.dart';
 import '../../presentation/blocs/wound_bloc.dart';
 import '../../presentation/blocs/assessment_bloc.dart';
@@ -27,14 +28,15 @@ Future<void> initDependencies() async {
       () => FirebaseFirestore.instance,
     );
     sl.registerLazySingleton<FirebaseStorage>(() => FirebaseStorage.instance);
-    print('Firebase services registrados com sucesso');
+    AppLogger.info('Firebase services registrados com sucesso');
   } catch (e) {
-    print('Erro ao registrar Firebase services: $e');
+    AppLogger.error('Erro ao registrar Firebase services', error: e);
     // Continua sem Firebase para desenvolvimento
   }
   */
-
-  print('Firebase temporariamente desabilitado para desenvolvimento UI-UX');
+  AppLogger.info(
+    'Firebase temporariamente desabilitado para desenvolvimento UI-UX',
+  );
 
   // ============================================================================
   // Data Sources (Firebase)
