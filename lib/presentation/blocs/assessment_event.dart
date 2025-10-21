@@ -25,6 +25,7 @@ class CreateAssessmentEvent extends AssessmentEvent {
   final String? exudateType;
   final String? exudateAmount;
   final String? notes;
+  final List<String> photoPaths;
 
   const CreateAssessmentEvent({
     required this.woundId,
@@ -38,6 +39,7 @@ class CreateAssessmentEvent extends AssessmentEvent {
     this.exudateType,
     this.exudateAmount,
     this.notes,
+    this.photoPaths = const [],
   });
 }
 

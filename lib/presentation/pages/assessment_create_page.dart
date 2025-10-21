@@ -1,5 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import '../../core/utils/app_logger.dart';
 import '../../domain/entities/patient_manual.dart';
 import '../../domain/entities/wound_manual.dart';
@@ -23,8 +29,13 @@ class AssessmentCreatePage extends StatefulWidget {
 }
 
 class _AssessmentCreatePageState extends State<AssessmentCreatePage> {
+  static const int _maxPhotos = 4;
+
   final _formKey = GlobalKey<FormState>();
   final _scrollController = ScrollController();
+  final _imagePicker = ImagePicker();
+
+  final List<_AssessmentPhoto> _photos = [];
 
   // Controladores dos campos
   double? _length;
@@ -36,9 +47,13 @@ class _AssessmentCreatePageState extends State<AssessmentCreatePage> {
   String? _periphery;
   String? _notes;
   DateTime _assessmentDate = DateTime.now();
+  bool _isProcessingPhoto = false;
 
   @override
   void dispose() {
+    for (final photo in _photos) {
+      _deleteTempFile(photo.processedPath);
+    }
     _scrollController.dispose();
     super.dispose();
   }
@@ -84,6 +99,7 @@ class _AssessmentCreatePageState extends State<AssessmentCreatePage> {
             exudateType: _exudate,
             edgeAppearance: _periphery,
             notes: _notes,
+            photoPaths: _photos.map((photo) => photo.processedPath).toList(),
           ),
         );
         AppLogger.info(
@@ -104,6 +120,254 @@ class _AssessmentCreatePageState extends State<AssessmentCreatePage> {
           content: Text('Erro ao salvar: $e'),
           backgroundColor: Colors.red,
         ),
+      );
+    }
+  }
+
+  bool get _canAddMorePhotos => _photos.length < _maxPhotos;
+
+  void _showPhotoPickerSheet() {
+    if (!_canAddMorePhotos || _isProcessingPhoto) {
+      if (!_canAddMorePhotos) {
+        _showSnackBar('Limite de $_maxPhotos fotos atingido.', isError: false);
+      }
+      return;
+    }
+
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined),
+              title: const Text('Capturar com a câmera'),
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                _handlePhotoSelection(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Escolher da galeria'),
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                _handlePhotoSelection(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handlePhotoSelection(ImageSource source) async {
+    if (_isProcessingPhoto) return;
+
+    setState(() {
+      _isProcessingPhoto = true;
+    });
+
+    try {
+      final picked = await _imagePicker.pickImage(
+        source: source,
+        maxWidth: 2400,
+        maxHeight: 2400,
+        imageQuality: 95,
+      );
+
+      if (picked == null) {
+        return;
+      }
+
+      final photo = await _preparePhoto(picked);
+      if (photo == null) {
+        _showSnackBar('Não foi possível processar a imagem selecionada.');
+        return;
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _photos.add(photo);
+      });
+    } catch (error) {
+      _showSnackBar('Erro ao selecionar imagem: $error');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessingPhoto = false;
+        });
+      }
+    }
+  }
+
+  Future<_AssessmentPhoto?> _preparePhoto(XFile source) async {
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final fileName =
+          'assessment_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final targetPath = p.join(tempDir.path, fileName);
+
+      final compressed = await FlutterImageCompress.compressAndGetFile(
+        source.path,
+        targetPath,
+        quality: 80,
+        minWidth: 1600,
+        minHeight: 1200,
+        format: CompressFormat.jpeg,
+      );
+
+      if (compressed == null) {
+        return null;
+      }
+
+      return _AssessmentPhoto(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        originalPath: source.path,
+        processedPath: compressed.path,
+      );
+    } catch (error) {
+      AppLogger.error(
+        '[AssessmentCreatePage] Erro ao comprimir imagem',
+        error: error,
+      );
+      return null;
+    }
+  }
+
+  void _removePhoto(String photoId) {
+    final index = _photos.indexWhere((photo) => photo.id == photoId);
+    if (index == -1) return;
+
+    final photo = _photos[index];
+    setState(() {
+      _photos.removeAt(index);
+    });
+    _deleteTempFile(photo.processedPath);
+  }
+
+  Widget _buildPhotoSection(ThemeData theme) {
+    final remainingSlots = _maxPhotos - _photos.length;
+
+    return FormSection(
+      title: 'Registro Fotográfico',
+      children: [
+        Text(
+          'Capture ou selecione até $_maxPhotos fotos para documentar a evolução da ferida. '
+          'Restam $remainingSlots.',
+          style: theme.textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            ..._photos.map(_buildPhotoTile),
+            _buildAddPhotoButton(theme),
+          ],
+        ),
+        if (!_canAddMorePhotos)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              'Você atingiu o limite de $_maxPhotos fotos.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.error,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildAddPhotoButton(ThemeData theme) {
+    return SizedBox(
+      width: 112,
+      height: 112,
+      child: OutlinedButton(
+        onPressed: !_canAddMorePhotos || _isProcessingPhoto
+            ? null
+            : _showPhotoPickerSheet,
+        style: OutlinedButton.styleFrom(padding: const EdgeInsets.all(12)),
+        child: _isProcessingPhoto
+            ? const SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.add_a_photo_outlined,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(height: 8),
+                  Text('Adicionar', style: theme.textTheme.labelMedium),
+                ],
+              ),
+      ),
+    );
+  }
+
+  Widget _buildPhotoTile(_AssessmentPhoto photo) {
+    return Stack(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.file(
+            File(photo.processedPath),
+            width: 112,
+            height: 112,
+            fit: BoxFit.cover,
+          ),
+        ),
+        Positioned(
+          top: 4,
+          right: 4,
+          child: Material(
+            color: Colors.black54,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: () => _removePhoto(photo.id),
+              child: const Padding(
+                padding: EdgeInsets.all(4),
+                child: Icon(Icons.close, size: 16, color: Colors.white),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showSnackBar(String message, {bool isError = true}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError
+            ? Theme.of(context).colorScheme.error
+            : Theme.of(context).colorScheme.primary,
+      ),
+    );
+  }
+
+  void _deleteTempFile(String path) {
+    try {
+      final file = File(path);
+      if (file.existsSync()) {
+        file.deleteSync();
+      }
+    } catch (error) {
+      AppLogger.warning(
+        '[AssessmentCreatePage] Não foi possível remover arquivo temporário: $error',
       );
     }
   }
@@ -338,6 +602,10 @@ class _AssessmentCreatePageState extends State<AssessmentCreatePage> {
 
                 const SizedBox(height: 24),
 
+                _buildPhotoSection(theme),
+
+                const SizedBox(height: 24),
+
                 // Seção de observações
                 FormSection(
                   title: 'Data e Observações',
@@ -527,4 +795,16 @@ class _AssessmentCreatePageState extends State<AssessmentCreatePage> {
     }
     return age;
   }
+}
+
+class _AssessmentPhoto {
+  const _AssessmentPhoto({
+    required this.id,
+    required this.originalPath,
+    required this.processedPath,
+  });
+
+  final String id;
+  final String originalPath;
+  final String processedPath;
 }
