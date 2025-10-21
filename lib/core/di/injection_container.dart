@@ -1,16 +1,26 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get_it/get_it.dart';
-import '../../data/repositories/patient_repository_offline.dart';
-import '../../data/repositories/wound_repository_mock.dart';
-import '../../data/repositories/assessment_repository_mock.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart';
+
 import '../../data/datasources/local/offline_database.dart';
+import '../../data/repositories/assessment_repository_offline.dart';
+import '../../data/repositories/auth_repository_impl.dart';
+import '../../data/repositories/patient_repository_offline.dart';
+import '../../data/repositories/wound_repository_offline.dart';
+import '../../domain/repositories/assessment_repository_manual.dart';
+import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/patient_repository_manual.dart';
 import '../../domain/repositories/wound_repository_manual.dart';
-import '../../domain/repositories/assessment_repository_manual.dart';
-import '../utils/app_logger.dart';
-import '../services/connectivity_service.dart';
+import '../../presentation/blocs/assessment_bloc.dart';
+import '../../presentation/blocs/auth_bloc.dart';
 import '../../presentation/blocs/patient_bloc.dart';
 import '../../presentation/blocs/wound_bloc.dart';
-import '../../presentation/blocs/assessment_bloc.dart';
+import '../services/connectivity_service.dart';
+import '../utils/app_logger.dart';
+import '../config/google_sign_in_config.dart';
 
 /// Service Locator para Dependency Injection
 final GetIt sl = GetIt.instance;
@@ -21,24 +31,45 @@ Future<void> initDependencies() async {
   // Firebase Services
   // ============================================================================
 
-  // TODO: Reativar Firebase quando emuladores estiverem funcionando
-  // Por enquanto, desabilitar para testar UI-UX
-  /*
   try {
     sl.registerLazySingleton<FirebaseAuth>(() => FirebaseAuth.instance);
     sl.registerLazySingleton<FirebaseFirestore>(
       () => FirebaseFirestore.instance,
     );
     sl.registerLazySingleton<FirebaseStorage>(() => FirebaseStorage.instance);
+
+    final googleSignIn = GoogleSignIn.instance;
+
+    if (kIsWeb) {
+      await googleSignIn.initialize();
+    } else {
+      switch (defaultTargetPlatform) {
+        case TargetPlatform.android:
+          await googleSignIn.initialize(
+            serverClientId: GoogleSignInConfig.serverClientId,
+          );
+          break;
+        case TargetPlatform.iOS:
+        case TargetPlatform.macOS:
+          await googleSignIn.initialize(
+            clientId: GoogleSignInConfig.iosClientId,
+            serverClientId: GoogleSignInConfig.serverClientId,
+          );
+          break;
+        default:
+          await googleSignIn.initialize();
+      }
+    }
+    sl.registerLazySingleton<GoogleSignIn>(() => googleSignIn);
     AppLogger.info('Firebase services registrados com sucesso');
-  } catch (e) {
-    AppLogger.error('Erro ao registrar Firebase services', error: e);
-    // Continua sem Firebase para desenvolvimento
+  } catch (e, stackTrace) {
+    AppLogger.error(
+      'Erro ao registrar Firebase services',
+      error: e,
+      stackTrace: stackTrace,
+    );
+    rethrow;
   }
-  */
-  AppLogger.info(
-    'Firebase temporariamente desabilitado para desenvolvimento UI-UX',
-  );
 
   // ============================================================================
   // Data Sources (Firebase)
@@ -54,18 +85,46 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<OfflineDatabase>(() => OfflineDatabase.instance);
   sl.registerLazySingleton<ConnectivityService>(() => ConnectivityService());
 
-  sl.registerLazySingleton<PatientRepository>(
-    () => PatientRepositoryOffline(database: sl(), connectivityService: sl()),
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(
+      firebaseAuth: sl(),
+      firestore: sl(),
+      googleSignIn: sl(),
+    ),
   );
-  sl.registerLazySingleton<WoundRepository>(() => WoundRepositoryMock());
+
+  sl.registerLazySingleton<PatientRepository>(
+    () => PatientRepositoryOffline(
+      database: sl(),
+      firestore: sl(),
+      auth: sl(),
+      connectivityService: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton<WoundRepository>(
+    () => WoundRepositoryOffline(
+      database: sl(),
+      firestore: sl(),
+      auth: sl(),
+      connectivityService: sl(),
+    ),
+  );
+
   sl.registerLazySingleton<AssessmentRepository>(
-    () => AssessmentRepositoryMock(),
+    () => AssessmentRepositoryOffline(
+      database: sl(),
+      firestore: sl(),
+      auth: sl(),
+      connectivityService: sl(),
+    ),
   );
 
   // ============================================================================
   // BLoCs
   // ============================================================================
 
+  sl.registerFactory(() => AuthBloc(authRepository: sl()));
   sl.registerFactory(() => PatientBloc(patientRepository: sl()));
   sl.registerFactory(() => WoundBloc(woundRepository: sl()));
   sl.registerFactory(() => AssessmentBloc(assessmentRepository: sl()));
