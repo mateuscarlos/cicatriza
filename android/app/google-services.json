@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "48729747381-ks0u6mee48skm9903to3oqhgokr4erhp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.cicatriza",
+            "certificate_hash": "9779d9531abfbaf4f2d3b2eff5baf57c9b31f616"
+          }
+        },
+        {
           "client_id": "48729747381-cn889l89llsjs7spsrmg12v15d9h9m1n.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -29,6 +37,13 @@
             {
               "client_id": "48729747381-cn889l89llsjs7spsrmg12v15d9h9m1n.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "48729747381-1qqkmh8vagrjevc4fbihpa42t13t3fp9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.cicatriza"
+              }
             }
           ]
         }

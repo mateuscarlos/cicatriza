@@ -9,13 +9,16 @@ abstract class AuthEvent extends Equatable {
 }
 
 /// Verificar estado atual de autenticação
-class AuthCheckRequested extends AuthEvent {}
+class AuthCheckRequested extends AuthEvent {
+  const AuthCheckRequested();
+}
 
 /// Login com Google
-class AuthGoogleSignInRequested extends AuthEvent {}
-
-/// Login com Microsoft
-class AuthMicrosoftSignInRequested extends AuthEvent {}
+class AuthGoogleSignInRequested extends AuthEvent {
+  const AuthGoogleSignInRequested();
+}
 
 /// Logout
-class AuthSignOutRequested extends AuthEvent {}
+class AuthSignOutRequested extends AuthEvent {
+  const AuthSignOutRequested();
+}

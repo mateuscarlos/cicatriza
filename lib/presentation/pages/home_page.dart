@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../core/routing/app_routes.dart';
+import '../blocs/auth_bloc.dart';
+import '../blocs/auth_event.dart';
+import '../blocs/auth_state.dart';
 
 /// Página inicial após login
 class HomePage extends StatelessWidget {
@@ -6,15 +12,30 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authState = context.watch<AuthBloc>().state;
+    final displayName = authState is AuthAuthenticated
+        ? authState.displayName ?? authState.email
+        : 'Profissional';
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('CICATRIZA'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('CICATRIZA'),
+            Text(
+              displayName,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.account_circle),
             onPressed: () {
-              // TODO: Mostrar menu de perfil/logout
-              _showProfileMenu(context);
+              _showProfileMenu(context, authState);
             },
           ),
         ],
@@ -55,8 +76,7 @@ class HomePage extends StatelessWidget {
                     title: 'Pacientes',
                     subtitle: 'Gerenciar pacientes',
                     onTap: () {
-                      // TODO: Navegar para página de pacientes
-                      // context.goToPatients();
+                      Navigator.pushNamed(context, AppRoutes.patients);
                     },
                   ),
 
@@ -66,7 +86,7 @@ class HomePage extends StatelessWidget {
                     title: 'Avaliações',
                     subtitle: 'Nova avaliação',
                     onTap: () {
-                      // TODO: Navegar para nova avaliação
+                      Navigator.pushNamed(context, AppRoutes.patients);
                     },
                   ),
 
@@ -76,7 +96,11 @@ class HomePage extends StatelessWidget {
                     title: 'Agenda',
                     subtitle: 'Agendamentos',
                     onTap: () {
-                      // TODO: Navegar para agenda
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Agenda em desenvolvimento'),
+                        ),
+                      );
                     },
                   ),
 
@@ -86,7 +110,11 @@ class HomePage extends StatelessWidget {
                     title: 'Relatórios',
                     subtitle: 'Análises e dados',
                     onTap: () {
-                      // TODO: Navegar para relatórios
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Relatórios em desenvolvimento'),
+                        ),
+                      );
                     },
                   ),
                 ],
@@ -94,20 +122,6 @@ class HomePage extends StatelessWidget {
             ),
           ],
         ),
-      ),
-
-      // FAB para nova avaliação rápida
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // TODO: Navegar para nova avaliação rápida
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Nova avaliação - Em desenvolvimento'),
-            ),
-          );
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Nova Avaliação'),
       ),
     );
   }
@@ -158,7 +172,11 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  void _showProfileMenu(BuildContext context) {
+  void _showProfileMenu(BuildContext context, AuthState authState) {
+    final displayName = authState is AuthAuthenticated
+        ? authState.displayName ?? authState.email
+        : null;
+
     showModalBottomSheet(
       context: context,
       builder: (context) => Padding(
@@ -166,6 +184,14 @@ class HomePage extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (displayName != null) ...[
+              ListTile(
+                leading: const Icon(Icons.person),
+                title: Text(displayName),
+                subtitle: const Text('Conta autenticada'),
+              ),
+              const Divider(),
+            ],
             ListTile(
               leading: const Icon(Icons.person),
               title: const Text('Perfil'),
@@ -188,10 +214,7 @@ class HomePage extends StatelessWidget {
               title: const Text('Sair'),
               onTap: () {
                 Navigator.pop(context);
-                // TODO: Implementar logout via AuthBloc
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Logout será implementado')),
-                );
+                context.read<AuthBloc>().add(const AuthSignOutRequested());
               },
             ),
           ],
