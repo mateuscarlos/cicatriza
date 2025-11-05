@@ -43,6 +43,11 @@ service cloud.firestore {
       return role != null && roles.hasAny([role]);
     }
 
+    function userHasPatientRole(uid, pid, roles) {
+      return exists(/databases/$(db)/documents/users/$(uid)/patients/$(pid)) &&
+             get(/databases/$(db)/documents/users/$(uid)/patients/$(pid)).data.acl.roles[request.auth.uid] in roles;
+    }
+
     function validatePatient(data, uid) {
       return data.ownerId == uid &&
         ('acl' in data) &&
@@ -90,19 +95,21 @@ service cloud.firestore {
     // Users e subcoleções
     // --------------------------------------------------------------
     match /users/{uid} {
-      allow read, create, update, delete: if isOwner(uid);
+      allow read: if isAuth();
+      allow create: if isOwner(uid);
+      allow update, delete: if isOwner(uid);
 
       match /patients/{pid} {
         allow create: if isOwner(uid) && validatePatient(request.resource.data, uid);
 
         allow read: if isAuth() && (
           isOwner(uid) ||
-          (let role = resource.data.acl.roles[request.auth.uid]; role != null && ['owner', 'editor', 'viewer'].hasAny([role]))
+          userHasPatientRole(uid, pid, ['owner', 'editor', 'viewer'])
         );
 
         allow update, delete: if isAuth() && (
           isOwner(uid) ||
-          (let role = resource.data.acl.roles[request.auth.uid]; role != null && ['owner', 'editor'].hasAny([role]))
+          userHasPatientRole(uid, pid, ['owner', 'editor'])
         ) && validatePatient(request.resource.data, uid);
 
         match /wounds/{wid} {
