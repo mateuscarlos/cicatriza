@@ -219,6 +219,20 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
         '[AssessmentBloc] ✅ Assessment criado: ${createdAssessment.id}',
       );
 
+      // Processar upload de fotos se houver
+      if (event.photoPaths.isNotEmpty) {
+        AppLogger.info(
+          '[AssessmentBloc] 📸 Iniciando upload de ${event.photoPaths.length} foto(s)',
+        );
+        unawaited(
+          _processPhotoUploads(
+            assessmentId: createdAssessment.id,
+            woundId: event.woundId,
+            photoPaths: event.photoPaths,
+          ),
+        );
+      }
+
       final updatedAssessments = [createdAssessment, ...currentAssessments];
 
       AppLogger.info(
@@ -520,6 +534,116 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
       return (state as AssessmentOperationSuccessState).currentWoundId;
     }
     return null;
+  }
+
+  /// Processa upload de fotos em background
+  Future<void> _processPhotoUploads({
+    required String assessmentId,
+    required String woundId,
+    required List<String> photoPaths,
+  }) async {
+    for (final photoPath in photoPaths) {
+      try {
+        AppLogger.info('[AssessmentBloc] 📸 Processando foto: $photoPath');
+
+        // 1. Criar registro Media pendente
+        final media = Media.createLocal(
+          assessmentId: assessmentId,
+          type: MediaType.image,
+          localPath: photoPath,
+        );
+
+        final createdMedia = await _mediaRepository.createMedia(media);
+        AppLogger.info('[AssessmentBloc] ✅ Media criado: ${createdMedia.id}');
+
+        // 2. Comprimir imagem
+        AppLogger.info('[AssessmentBloc] 🗜️ Comprimindo imagem...');
+        final compressed = await _storageService.compressImage(photoPath);
+        AppLogger.info(
+          '[AssessmentBloc] ✅ Comprimido: ${(compressed.originalSize / 1024).toStringAsFixed(2)}KB → ${(compressed.compressedSize / 1024).toStringAsFixed(2)}KB',
+        );
+
+        // 3. Atualizar status para uploading
+        await _mediaRepository.updateMedia(
+          createdMedia.copyWith(uploadStatus: UploadStatus.uploading),
+        );
+
+        // 4. Fazer upload para Storage
+        AppLogger.info('[AssessmentBloc] ☁️ Iniciando upload...');
+
+        // Obter IDs necessários (precisamos buscar do assessment)
+        final assessment = await _assessmentRepository.getAssessmentById(
+          assessmentId,
+        );
+        if (assessment == null) {
+          throw Exception('Assessment não encontrado: $assessmentId');
+        }
+
+        // Buscar patientId através do wound
+        // Por ora, vamos usar um placeholder - isso será resolvido na integração completa
+        const ownerId = 'temp_owner'; // TODO: Obter do AuthRepository
+        const patientId = 'temp_patient'; // TODO: Obter via WoundRepository
+
+        final uploadResult = await _storageService.uploadPhoto(
+          ownerId: ownerId,
+          patientId: patientId,
+          woundId: woundId,
+          assessmentId: assessmentId,
+          localPath: photoPath,
+          compressedBytes: compressed.bytes,
+          mimeType: compressed.mimeType,
+          onProgress: (progress) {
+            // Atualizar progresso no repositório
+            unawaited(
+              _mediaRepository.updateUploadProgress(createdMedia.id, progress),
+            );
+          },
+        );
+
+        AppLogger.info(
+          '[AssessmentBloc] ✅ Upload concluído: ${uploadResult.downloadUrl}',
+        );
+
+        // 5. Marcar upload como completo
+        await _mediaRepository.completeUpload(
+          createdMedia.id,
+          uploadResult.storagePath,
+          uploadResult.downloadUrl,
+        );
+
+        // 6. Registrar evento no Analytics
+        await _analytics.logPhotoUploaded(photoCount: 1);
+
+        AppLogger.info('[AssessmentBloc] ✅ Foto processada com sucesso!');
+      } catch (e, stackTrace) {
+        AppLogger.error(
+          '[AssessmentBloc] ❌ Erro ao processar foto: $photoPath',
+          error: e,
+          stackTrace: stackTrace,
+        );
+
+        // Marcar upload como falho
+        try {
+          final failedMedia = await _mediaRepository.getMediaByAssessment(
+            assessmentId,
+          );
+          final media = failedMedia.firstWhere(
+            (m) => m.localPath == photoPath,
+            orElse: () => throw Exception('Media não encontrado'),
+          );
+
+          await _mediaRepository.failUpload(
+            media.id,
+            'Erro ao fazer upload: ${e.toString()}',
+          );
+        } catch (updateError) {
+          AppLogger.error(
+            '[AssessmentBloc] ❌ Erro ao atualizar status de falha',
+            error: updateError,
+          );
+        }
+      }
+    }
   }
 
   @override
