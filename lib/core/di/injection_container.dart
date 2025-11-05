@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get_it/get_it.dart';
@@ -18,9 +19,10 @@ import '../../presentation/blocs/assessment_bloc.dart';
 import '../../presentation/blocs/auth_bloc.dart';
 import '../../presentation/blocs/patient_bloc.dart';
 import '../../presentation/blocs/wound_bloc.dart';
+import '../config/google_sign_in_config.dart';
+import '../services/analytics_service.dart';
 import '../services/connectivity_service.dart';
 import '../utils/app_logger.dart';
-import '../config/google_sign_in_config.dart';
 
 /// Service Locator para Dependency Injection
 final GetIt sl = GetIt.instance;
@@ -37,6 +39,9 @@ Future<void> initDependencies() async {
       () => FirebaseFirestore.instance,
     );
     sl.registerLazySingleton<FirebaseStorage>(() => FirebaseStorage.instance);
+    sl.registerLazySingleton<FirebaseAnalytics>(
+      () => FirebaseAnalytics.instance,
+    );
 
     final googleSignIn = GoogleSignIn.instance;
 
@@ -84,6 +89,9 @@ Future<void> initDependencies() async {
 
   sl.registerLazySingleton<OfflineDatabase>(() => OfflineDatabase.instance);
   sl.registerLazySingleton<ConnectivityService>(() => ConnectivityService());
+  sl.registerLazySingleton<AnalyticsService>(
+    () => AnalyticsService(analytics: sl()),
+  );
 
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
@@ -124,8 +132,10 @@ Future<void> initDependencies() async {
   // BLoCs
   // ============================================================================
 
-  sl.registerFactory(() => AuthBloc(authRepository: sl()));
-  sl.registerFactory(() => PatientBloc(patientRepository: sl()));
+  sl.registerFactory(() => AuthBloc(authRepository: sl(), analytics: sl()));
+  sl.registerFactory(
+    () => PatientBloc(patientRepository: sl(), analytics: sl()),
+  );
   sl.registerFactory(() => WoundBloc(woundRepository: sl()));
   sl.registerFactory(() => AssessmentBloc(assessmentRepository: sl()));
 }

@@ -18,11 +18,6 @@ class AuthGoogleSignInRequested extends AuthEvent {
   const AuthGoogleSignInRequested();
 }
 
-/// Login com Microsoft
-class AuthMicrosoftSignInRequested extends AuthEvent {
-  const AuthMicrosoftSignInRequested();
-}
-
 /// Logout
 class AuthSignOutRequested extends AuthEvent {
   const AuthSignOutRequested();

@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/di/injection_container.dart';
 import 'core/routing/app_routes.dart';
+import 'core/services/analytics_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/app_logger.dart';
 import 'domain/repositories/assessment_repository_manual.dart';
@@ -37,6 +39,10 @@ void main() async {
       return true;
     };
     AppLogger.info('Crashlytics configurado com sucesso');
+
+    // Habilitar Analytics
+    await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
+    AppLogger.info('Analytics configurado com sucesso');
   } catch (e, stackTrace) {
     AppLogger.error(
       'Erro ao inicializar Firebase/Crashlytics',

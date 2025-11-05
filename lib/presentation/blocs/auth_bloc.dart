@@ -1,22 +1,26 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../domain/repositories/auth_repository.dart';
+import '../../core/services/analytics_service.dart';
 import '../../domain/entities/user_profile.dart';
+import '../../domain/repositories/auth_repository.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
 /// BLoC para gerenciar estado de autenticação
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
+  final AnalyticsService _analytics;
   late StreamSubscription<UserProfile?> _authSubscription;
 
-  AuthBloc({required AuthRepository authRepository})
-    : _authRepository = authRepository,
-      super(AuthInitial()) {
+  AuthBloc({
+    required AuthRepository authRepository,
+    required AnalyticsService analytics,
+  }) : _authRepository = authRepository,
+       _analytics = analytics,
+       super(AuthInitial()) {
     // Registrar handlers de eventos
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<AuthGoogleSignInRequested>(_onGoogleSignInRequested);
-    on<AuthMicrosoftSignInRequested>(_onMicrosoftSignInRequested);
     on<AuthSignOutRequested>(_onSignOutRequested);
 
     // Escutar mudanças de autenticação
@@ -67,6 +71,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final user = await _authRepository.signInWithGoogle();
 
       if (user != null) {
+        // Registrar evento de login bem-sucedido
+        await _analytics.logLoginSuccess('google');
+        await _analytics.setUserId(user.uid);
+
         emit(
           AuthAuthenticated(
             uid: user.uid,
@@ -83,33 +91,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  /// Login com Microsoft
-  Future<void> _onMicrosoftSignInRequested(
-    AuthMicrosoftSignInRequested event,
-    Emitter<AuthState> emit,
-  ) async {
-    emit(AuthLoading());
-
-    try {
-      final user = await _authRepository.signInWithMicrosoft();
-
-      if (user != null) {
-        emit(
-          AuthAuthenticated(
-            uid: user.uid,
-            email: user.email,
-            displayName: user.displayName,
-            photoURL: user.photoURL,
-          ),
-        );
-      } else {
-        emit(const AuthError('Falha no login com Microsoft'));
-      }
-    } catch (e) {
-      emit(AuthError('Erro no login com Microsoft: $e'));
-    }
-  }
-
   /// Logout
   Future<void> _onSignOutRequested(
     AuthSignOutRequested event,
@@ -119,6 +100,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     try {
       await _authRepository.signOut();
+      await _analytics.logLogout();
+      await _analytics.setUserId(null);
       emit(AuthUnauthenticated());
     } catch (e) {
       emit(AuthError('Erro no logout: $e'));

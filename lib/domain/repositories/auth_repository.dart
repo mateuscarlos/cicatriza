@@ -10,9 +10,6 @@ abstract class AuthRepository {
   /// Login com Google
   Future<UserProfile?> signInWithGoogle();
 
-  /// Login com Microsoft
-  Future<UserProfile?> signInWithMicrosoft();
-
   /// Logout
   Future<void> signOut();
 

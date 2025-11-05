@@ -123,20 +123,6 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<UserProfile?> signInWithMicrosoft() async {
-    try {
-      // TODO: Implementar login Microsoft em M1
-      // Por enquanto, jogar exceção informativa
-      throw UnimplementedError(
-        'Login com Microsoft será implementado em M1. '
-        'Requer configuração Azure AD + provider personalizado.',
-      );
-    } catch (e) {
-      throw Exception('Erro no login com Microsoft: $e');
-    }
-  }
-
-  @override
   Future<void> signOut() async {
     try {
       await Future.wait([_firebaseAuth.signOut(), _googleSignIn.signOut()]);

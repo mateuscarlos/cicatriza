@@ -1,19 +1,24 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../core/services/analytics_service.dart';
+import '../../core/utils/app_logger.dart';
 import '../../domain/entities/patient_manual.dart';
 import '../../domain/repositories/patient_repository_manual.dart';
-import '../../core/utils/app_logger.dart';
 import 'patient_event.dart';
 import 'patient_state.dart';
 
 /// BLoC para gerenciar estado dos pacientes
 class PatientBloc extends Bloc<PatientEvent, PatientState> {
   final PatientRepository _patientRepository;
+  final AnalyticsService _analytics;
   StreamSubscription<List<PatientManual>>? _patientsSubscription;
 
-  PatientBloc({required PatientRepository patientRepository})
-    : _patientRepository = patientRepository,
-      super(const PatientInitialState()) {
+  PatientBloc({
+    required PatientRepository patientRepository,
+    required AnalyticsService analytics,
+  }) : _patientRepository = patientRepository,
+       _analytics = analytics,
+       super(const PatientInitialState()) {
     // Registra os handlers dos eventos
     on<LoadPatientsEvent>(_onLoadPatients);
     on<SearchPatientsEvent>(_onSearchPatients);
@@ -128,6 +133,9 @@ class PatientBloc extends Bloc<PatientEvent, PatientState> {
       );
 
       final createdPatient = await _patientRepository.createPatient(newPatient);
+
+      // Registrar evento de analytics
+      await _analytics.logPatientCreated();
 
       final updatedPatients = [createdPatient, ...currentPatients];
 

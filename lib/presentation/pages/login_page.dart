@@ -101,39 +101,6 @@ class LoginPage extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity,
-                            height: 56,
-                            child: ElevatedButton.icon(
-                              onPressed: isLoading
-                                  ? null
-                                  : () {
-                                      ScaffoldMessenger.of(context)
-                                        ..hideCurrentSnackBar()
-                                        ..showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              'Login por e-mail será implementado em breve.',
-                                            ),
-                                          ),
-                                        );
-                                    },
-                              icon: const Icon(Icons.email_outlined),
-                              label: const Text(
-                                'Entrar com E-mail',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                          ),
                           const Spacer(),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 32),
