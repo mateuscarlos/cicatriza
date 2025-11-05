@@ -1,5 +1,5 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
@@ -9,299 +9,393 @@ part of 'wound.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// dart format off
 T _$identity<T>(T value) => value;
+
+final _privateConstructorUsedError = UnsupportedError(
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
+
+Wound _$WoundFromJson(Map<String, dynamic> json) {
+  return _Wound.fromJson(json);
+}
 
 /// @nodoc
 mixin _$Wound {
-
- String get id; String get patientId; WoundType get type; WoundLocation get locationSimple; int get onsetDays; WoundStatus get status;@TimestampConverter() DateTime get createdAt;@TimestampConverter() DateTime get updatedAt; String? get locationDescription; String? get notes; String? get causeDescription;
-/// Create a copy of Wound
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$WoundCopyWith<Wound> get copyWith => _$WoundCopyWithImpl<Wound>(this as Wound, _$identity);
+  String get id => throw _privateConstructorUsedError;
+  String get patientId => throw _privateConstructorUsedError;
+  WoundType get type => throw _privateConstructorUsedError;
+  WoundLocation get locationSimple => throw _privateConstructorUsedError;
+  int get onsetDays => throw _privateConstructorUsedError;
+  WoundStatus get status => throw _privateConstructorUsedError;
+  @TimestampConverter()
+  DateTime get createdAt => throw _privateConstructorUsedError;
+  @TimestampConverter()
+  DateTime get updatedAt => throw _privateConstructorUsedError;
+  String? get locationDescription => throw _privateConstructorUsedError;
+  String? get notes => throw _privateConstructorUsedError;
+  String? get causeDescription => throw _privateConstructorUsedError;
 
   /// Serializes this Wound to a JSON map.
-  Map<String, dynamic> toJson();
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Wound&&(identical(other.id, id) || other.id == id)&&(identical(other.patientId, patientId) || other.patientId == patientId)&&(identical(other.type, type) || other.type == type)&&(identical(other.locationSimple, locationSimple) || other.locationSimple == locationSimple)&&(identical(other.onsetDays, onsetDays) || other.onsetDays == onsetDays)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.locationDescription, locationDescription) || other.locationDescription == locationDescription)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.causeDescription, causeDescription) || other.causeDescription == causeDescription));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,id,patientId,type,locationSimple,onsetDays,status,createdAt,updatedAt,locationDescription,notes,causeDescription);
-
-@override
-String toString() {
-  return 'Wound(id: $id, patientId: $patientId, type: $type, locationSimple: $locationSimple, onsetDays: $onsetDays, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, locationDescription: $locationDescription, notes: $notes, causeDescription: $causeDescription)';
-}
-
-
+  /// Create a copy of Wound
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $WoundCopyWith<Wound> get copyWith => throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract mixin class $WoundCopyWith<$Res>  {
-  factory $WoundCopyWith(Wound value, $Res Function(Wound) _then) = _$WoundCopyWithImpl;
-@useResult
-$Res call({
- String id, String patientId, WoundType type, WoundLocation locationSimple, int onsetDays, WoundStatus status,@TimestampConverter() DateTime createdAt,@TimestampConverter() DateTime updatedAt, String? locationDescription, String? notes, String? causeDescription
-});
-
-
-
-
+abstract class $WoundCopyWith<$Res> {
+  factory $WoundCopyWith(Wound value, $Res Function(Wound) then) =
+      _$WoundCopyWithImpl<$Res, Wound>;
+  @useResult
+  $Res call({
+    String id,
+    String patientId,
+    WoundType type,
+    WoundLocation locationSimple,
+    int onsetDays,
+    WoundStatus status,
+    @TimestampConverter() DateTime createdAt,
+    @TimestampConverter() DateTime updatedAt,
+    String? locationDescription,
+    String? notes,
+    String? causeDescription,
+  });
 }
+
 /// @nodoc
-class _$WoundCopyWithImpl<$Res>
+class _$WoundCopyWithImpl<$Res, $Val extends Wound>
     implements $WoundCopyWith<$Res> {
-  _$WoundCopyWithImpl(this._self, this._then);
+  _$WoundCopyWithImpl(this._value, this._then);
 
-  final Wound _self;
-  final $Res Function(Wound) _then;
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
 
-/// Create a copy of Wound
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? patientId = null,Object? type = null,Object? locationSimple = null,Object? onsetDays = null,Object? status = null,Object? createdAt = null,Object? updatedAt = null,Object? locationDescription = freezed,Object? notes = freezed,Object? causeDescription = freezed,}) {
-  return _then(_self.copyWith(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,patientId: null == patientId ? _self.patientId : patientId // ignore: cast_nullable_to_non_nullable
-as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
-as WoundType,locationSimple: null == locationSimple ? _self.locationSimple : locationSimple // ignore: cast_nullable_to_non_nullable
-as WoundLocation,onsetDays: null == onsetDays ? _self.onsetDays : onsetDays // ignore: cast_nullable_to_non_nullable
-as int,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as WoundStatus,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,locationDescription: freezed == locationDescription ? _self.locationDescription : locationDescription // ignore: cast_nullable_to_non_nullable
-as String?,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
-as String?,causeDescription: freezed == causeDescription ? _self.causeDescription : causeDescription // ignore: cast_nullable_to_non_nullable
-as String?,
-  ));
+  /// Create a copy of Wound
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? patientId = null,
+    Object? type = null,
+    Object? locationSimple = null,
+    Object? onsetDays = null,
+    Object? status = null,
+    Object? createdAt = null,
+    Object? updatedAt = null,
+    Object? locationDescription = freezed,
+    Object? notes = freezed,
+    Object? causeDescription = freezed,
+  }) {
+    return _then(
+      _value.copyWith(
+            id: null == id
+                ? _value.id
+                : id // ignore: cast_nullable_to_non_nullable
+                      as String,
+            patientId: null == patientId
+                ? _value.patientId
+                : patientId // ignore: cast_nullable_to_non_nullable
+                      as String,
+            type: null == type
+                ? _value.type
+                : type // ignore: cast_nullable_to_non_nullable
+                      as WoundType,
+            locationSimple: null == locationSimple
+                ? _value.locationSimple
+                : locationSimple // ignore: cast_nullable_to_non_nullable
+                      as WoundLocation,
+            onsetDays: null == onsetDays
+                ? _value.onsetDays
+                : onsetDays // ignore: cast_nullable_to_non_nullable
+                      as int,
+            status: null == status
+                ? _value.status
+                : status // ignore: cast_nullable_to_non_nullable
+                      as WoundStatus,
+            createdAt: null == createdAt
+                ? _value.createdAt
+                : createdAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime,
+            updatedAt: null == updatedAt
+                ? _value.updatedAt
+                : updatedAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime,
+            locationDescription: freezed == locationDescription
+                ? _value.locationDescription
+                : locationDescription // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            notes: freezed == notes
+                ? _value.notes
+                : notes // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            causeDescription: freezed == causeDescription
+                ? _value.causeDescription
+                : causeDescription // ignore: cast_nullable_to_non_nullable
+                      as String?,
+          )
+          as $Val,
+    );
+  }
 }
 
+/// @nodoc
+abstract class _$$WoundImplCopyWith<$Res> implements $WoundCopyWith<$Res> {
+  factory _$$WoundImplCopyWith(
+    _$WoundImpl value,
+    $Res Function(_$WoundImpl) then,
+  ) = __$$WoundImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({
+    String id,
+    String patientId,
+    WoundType type,
+    WoundLocation locationSimple,
+    int onsetDays,
+    WoundStatus status,
+    @TimestampConverter() DateTime createdAt,
+    @TimestampConverter() DateTime updatedAt,
+    String? locationDescription,
+    String? notes,
+    String? causeDescription,
+  });
 }
 
+/// @nodoc
+class __$$WoundImplCopyWithImpl<$Res>
+    extends _$WoundCopyWithImpl<$Res, _$WoundImpl>
+    implements _$$WoundImplCopyWith<$Res> {
+  __$$WoundImplCopyWithImpl(
+    _$WoundImpl _value,
+    $Res Function(_$WoundImpl) _then,
+  ) : super(_value, _then);
 
-/// Adds pattern-matching-related methods to [Wound].
-extension WoundPatterns on Wound {
-/// A variant of `map` that fallback to returning `orElse`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _Wound value)?  $default,{required TResult orElse(),}){
-final _that = this;
-switch (_that) {
-case _Wound() when $default != null:
-return $default(_that);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// Callbacks receives the raw object, upcasted.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case final Subclass2 value:
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _Wound value)  $default,){
-final _that = this;
-switch (_that) {
-case _Wound():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
-}
-/// A variant of `map` that fallback to returning `null`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _Wound value)?  $default,){
-final _that = this;
-switch (_that) {
-case _Wound() when $default != null:
-return $default(_that);case _:
-  return null;
-
-}
-}
-/// A variant of `when` that fallback to an `orElse` callback.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String patientId,  WoundType type,  WoundLocation locationSimple,  int onsetDays,  WoundStatus status, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt,  String? locationDescription,  String? notes,  String? causeDescription)?  $default,{required TResult orElse(),}) {final _that = this;
-switch (_that) {
-case _Wound() when $default != null:
-return $default(_that.id,_that.patientId,_that.type,_that.locationSimple,_that.onsetDays,_that.status,_that.createdAt,_that.updatedAt,_that.locationDescription,_that.notes,_that.causeDescription);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// As opposed to `map`, this offers destructuring.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case Subclass2(:final field2):
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String patientId,  WoundType type,  WoundLocation locationSimple,  int onsetDays,  WoundStatus status, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt,  String? locationDescription,  String? notes,  String? causeDescription)  $default,) {final _that = this;
-switch (_that) {
-case _Wound():
-return $default(_that.id,_that.patientId,_that.type,_that.locationSimple,_that.onsetDays,_that.status,_that.createdAt,_that.updatedAt,_that.locationDescription,_that.notes,_that.causeDescription);case _:
-  throw StateError('Unexpected subclass');
-
-}
-}
-/// A variant of `when` that fallback to returning `null`
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String patientId,  WoundType type,  WoundLocation locationSimple,  int onsetDays,  WoundStatus status, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt,  String? locationDescription,  String? notes,  String? causeDescription)?  $default,) {final _that = this;
-switch (_that) {
-case _Wound() when $default != null:
-return $default(_that.id,_that.patientId,_that.type,_that.locationSimple,_that.onsetDays,_that.status,_that.createdAt,_that.updatedAt,_that.locationDescription,_that.notes,_that.causeDescription);case _:
-  return null;
-
-}
-}
-
+  /// Create a copy of Wound
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? patientId = null,
+    Object? type = null,
+    Object? locationSimple = null,
+    Object? onsetDays = null,
+    Object? status = null,
+    Object? createdAt = null,
+    Object? updatedAt = null,
+    Object? locationDescription = freezed,
+    Object? notes = freezed,
+    Object? causeDescription = freezed,
+  }) {
+    return _then(
+      _$WoundImpl(
+        id: null == id
+            ? _value.id
+            : id // ignore: cast_nullable_to_non_nullable
+                  as String,
+        patientId: null == patientId
+            ? _value.patientId
+            : patientId // ignore: cast_nullable_to_non_nullable
+                  as String,
+        type: null == type
+            ? _value.type
+            : type // ignore: cast_nullable_to_non_nullable
+                  as WoundType,
+        locationSimple: null == locationSimple
+            ? _value.locationSimple
+            : locationSimple // ignore: cast_nullable_to_non_nullable
+                  as WoundLocation,
+        onsetDays: null == onsetDays
+            ? _value.onsetDays
+            : onsetDays // ignore: cast_nullable_to_non_nullable
+                  as int,
+        status: null == status
+            ? _value.status
+            : status // ignore: cast_nullable_to_non_nullable
+                  as WoundStatus,
+        createdAt: null == createdAt
+            ? _value.createdAt
+            : createdAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime,
+        updatedAt: null == updatedAt
+            ? _value.updatedAt
+            : updatedAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime,
+        locationDescription: freezed == locationDescription
+            ? _value.locationDescription
+            : locationDescription // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        notes: freezed == notes
+            ? _value.notes
+            : notes // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        causeDescription: freezed == causeDescription
+            ? _value.causeDescription
+            : causeDescription // ignore: cast_nullable_to_non_nullable
+                  as String?,
+      ),
+    );
+  }
 }
 
 /// @nodoc
 @JsonSerializable()
+class _$WoundImpl implements _Wound {
+  const _$WoundImpl({
+    required this.id,
+    required this.patientId,
+    required this.type,
+    required this.locationSimple,
+    required this.onsetDays,
+    this.status = WoundStatus.active,
+    @TimestampConverter() required this.createdAt,
+    @TimestampConverter() required this.updatedAt,
+    this.locationDescription,
+    this.notes,
+    this.causeDescription,
+  });
 
-class _Wound implements Wound {
-  const _Wound({required this.id, required this.patientId, required this.type, required this.locationSimple, required this.onsetDays, this.status = WoundStatus.active, @TimestampConverter() required this.createdAt, @TimestampConverter() required this.updatedAt, this.locationDescription, this.notes, this.causeDescription});
-  factory _Wound.fromJson(Map<String, dynamic> json) => _$WoundFromJson(json);
+  factory _$WoundImpl.fromJson(Map<String, dynamic> json) =>
+      _$$WoundImplFromJson(json);
 
-@override final  String id;
-@override final  String patientId;
-@override final  WoundType type;
-@override final  WoundLocation locationSimple;
-@override final  int onsetDays;
-@override@JsonKey() final  WoundStatus status;
-@override@TimestampConverter() final  DateTime createdAt;
-@override@TimestampConverter() final  DateTime updatedAt;
-@override final  String? locationDescription;
-@override final  String? notes;
-@override final  String? causeDescription;
+  @override
+  final String id;
+  @override
+  final String patientId;
+  @override
+  final WoundType type;
+  @override
+  final WoundLocation locationSimple;
+  @override
+  final int onsetDays;
+  @override
+  @JsonKey()
+  final WoundStatus status;
+  @override
+  @TimestampConverter()
+  final DateTime createdAt;
+  @override
+  @TimestampConverter()
+  final DateTime updatedAt;
+  @override
+  final String? locationDescription;
+  @override
+  final String? notes;
+  @override
+  final String? causeDescription;
 
-/// Create a copy of Wound
-/// with the given fields replaced by the non-null parameter values.
-@override @JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-_$WoundCopyWith<_Wound> get copyWith => __$WoundCopyWithImpl<_Wound>(this, _$identity);
+  @override
+  String toString() {
+    return 'Wound(id: $id, patientId: $patientId, type: $type, locationSimple: $locationSimple, onsetDays: $onsetDays, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, locationDescription: $locationDescription, notes: $notes, causeDescription: $causeDescription)';
+  }
 
-@override
-Map<String, dynamic> toJson() {
-  return _$WoundToJson(this, );
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$WoundImpl &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.patientId, patientId) ||
+                other.patientId == patientId) &&
+            (identical(other.type, type) || other.type == type) &&
+            (identical(other.locationSimple, locationSimple) ||
+                other.locationSimple == locationSimple) &&
+            (identical(other.onsetDays, onsetDays) ||
+                other.onsetDays == onsetDays) &&
+            (identical(other.status, status) || other.status == status) &&
+            (identical(other.createdAt, createdAt) ||
+                other.createdAt == createdAt) &&
+            (identical(other.updatedAt, updatedAt) ||
+                other.updatedAt == updatedAt) &&
+            (identical(other.locationDescription, locationDescription) ||
+                other.locationDescription == locationDescription) &&
+            (identical(other.notes, notes) || other.notes == notes) &&
+            (identical(other.causeDescription, causeDescription) ||
+                other.causeDescription == causeDescription));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(
+    runtimeType,
+    id,
+    patientId,
+    type,
+    locationSimple,
+    onsetDays,
+    status,
+    createdAt,
+    updatedAt,
+    locationDescription,
+    notes,
+    causeDescription,
+  );
+
+  /// Create a copy of Wound
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$WoundImplCopyWith<_$WoundImpl> get copyWith =>
+      __$$WoundImplCopyWithImpl<_$WoundImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$WoundImplToJson(this);
+  }
 }
 
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Wound&&(identical(other.id, id) || other.id == id)&&(identical(other.patientId, patientId) || other.patientId == patientId)&&(identical(other.type, type) || other.type == type)&&(identical(other.locationSimple, locationSimple) || other.locationSimple == locationSimple)&&(identical(other.onsetDays, onsetDays) || other.onsetDays == onsetDays)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.locationDescription, locationDescription) || other.locationDescription == locationDescription)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.causeDescription, causeDescription) || other.causeDescription == causeDescription));
+abstract class _Wound implements Wound {
+  const factory _Wound({
+    required final String id,
+    required final String patientId,
+    required final WoundType type,
+    required final WoundLocation locationSimple,
+    required final int onsetDays,
+    final WoundStatus status,
+    @TimestampConverter() required final DateTime createdAt,
+    @TimestampConverter() required final DateTime updatedAt,
+    final String? locationDescription,
+    final String? notes,
+    final String? causeDescription,
+  }) = _$WoundImpl;
+
+  factory _Wound.fromJson(Map<String, dynamic> json) = _$WoundImpl.fromJson;
+
+  @override
+  String get id;
+  @override
+  String get patientId;
+  @override
+  WoundType get type;
+  @override
+  WoundLocation get locationSimple;
+  @override
+  int get onsetDays;
+  @override
+  WoundStatus get status;
+  @override
+  @TimestampConverter()
+  DateTime get createdAt;
+  @override
+  @TimestampConverter()
+  DateTime get updatedAt;
+  @override
+  String? get locationDescription;
+  @override
+  String? get notes;
+  @override
+  String? get causeDescription;
+
+  /// Create a copy of Wound
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$WoundImplCopyWith<_$WoundImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,id,patientId,type,locationSimple,onsetDays,status,createdAt,updatedAt,locationDescription,notes,causeDescription);
-
-@override
-String toString() {
-  return 'Wound(id: $id, patientId: $patientId, type: $type, locationSimple: $locationSimple, onsetDays: $onsetDays, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, locationDescription: $locationDescription, notes: $notes, causeDescription: $causeDescription)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class _$WoundCopyWith<$Res> implements $WoundCopyWith<$Res> {
-  factory _$WoundCopyWith(_Wound value, $Res Function(_Wound) _then) = __$WoundCopyWithImpl;
-@override @useResult
-$Res call({
- String id, String patientId, WoundType type, WoundLocation locationSimple, int onsetDays, WoundStatus status,@TimestampConverter() DateTime createdAt,@TimestampConverter() DateTime updatedAt, String? locationDescription, String? notes, String? causeDescription
-});
-
-
-
-
-}
-/// @nodoc
-class __$WoundCopyWithImpl<$Res>
-    implements _$WoundCopyWith<$Res> {
-  __$WoundCopyWithImpl(this._self, this._then);
-
-  final _Wound _self;
-  final $Res Function(_Wound) _then;
-
-/// Create a copy of Wound
-/// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? patientId = null,Object? type = null,Object? locationSimple = null,Object? onsetDays = null,Object? status = null,Object? createdAt = null,Object? updatedAt = null,Object? locationDescription = freezed,Object? notes = freezed,Object? causeDescription = freezed,}) {
-  return _then(_Wound(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,patientId: null == patientId ? _self.patientId : patientId // ignore: cast_nullable_to_non_nullable
-as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
-as WoundType,locationSimple: null == locationSimple ? _self.locationSimple : locationSimple // ignore: cast_nullable_to_non_nullable
-as WoundLocation,onsetDays: null == onsetDays ? _self.onsetDays : onsetDays // ignore: cast_nullable_to_non_nullable
-as int,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as WoundStatus,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,locationDescription: freezed == locationDescription ? _self.locationDescription : locationDescription // ignore: cast_nullable_to_non_nullable
-as String?,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
-as String?,causeDescription: freezed == causeDescription ? _self.causeDescription : causeDescription // ignore: cast_nullable_to_non_nullable
-as String?,
-  ));
-}
-
-
-}
-
-// dart format on

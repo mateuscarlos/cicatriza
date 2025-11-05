@@ -6,7 +6,7 @@ part of 'media.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_Media _$MediaFromJson(Map<String, dynamic> json) => _Media(
+_$MediaImpl _$$MediaImplFromJson(Map<String, dynamic> json) => _$MediaImpl(
   id: json['id'] as String,
   assessmentId: json['assessmentId'] as String,
   type: $enumDecode(_$MediaTypeEnumMap, json['type']),
@@ -26,25 +26,26 @@ _Media _$MediaFromJson(Map<String, dynamic> json) => _Media(
   errorMessage: json['errorMessage'] as String?,
 );
 
-Map<String, dynamic> _$MediaToJson(_Media instance) => <String, dynamic>{
-  'id': instance.id,
-  'assessmentId': instance.assessmentId,
-  'type': _$MediaTypeEnumMap[instance.type]!,
-  'uploadStatus': _$UploadStatusEnumMap[instance.uploadStatus]!,
-  'createdAt': instance.createdAt.toIso8601String(),
-  'updatedAt': instance.updatedAt.toIso8601String(),
-  'localPath': instance.localPath,
-  'storagePath': instance.storagePath,
-  'downloadUrl': instance.downloadUrl,
-  'thumbUrl': instance.thumbUrl,
-  'width': instance.width,
-  'height': instance.height,
-  'fileSize': instance.fileSize,
-  'mimeType': instance.mimeType,
-  'uploadProgress': instance.uploadProgress,
-  'retryCount': instance.retryCount,
-  'errorMessage': instance.errorMessage,
-};
+Map<String, dynamic> _$$MediaImplToJson(_$MediaImpl instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'assessmentId': instance.assessmentId,
+      'type': _$MediaTypeEnumMap[instance.type]!,
+      'uploadStatus': _$UploadStatusEnumMap[instance.uploadStatus]!,
+      'createdAt': instance.createdAt.toIso8601String(),
+      'updatedAt': instance.updatedAt.toIso8601String(),
+      'localPath': instance.localPath,
+      'storagePath': instance.storagePath,
+      'downloadUrl': instance.downloadUrl,
+      'thumbUrl': instance.thumbUrl,
+      'width': instance.width,
+      'height': instance.height,
+      'fileSize': instance.fileSize,
+      'mimeType': instance.mimeType,
+      'uploadProgress': instance.uploadProgress,
+      'retryCount': instance.retryCount,
+      'errorMessage': instance.errorMessage,
+    };
 
 const _$MediaTypeEnumMap = {
   MediaType.image: 'image',

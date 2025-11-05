@@ -6,7 +6,7 @@ part of 'wound.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_Wound _$WoundFromJson(Map<String, dynamic> json) => _Wound(
+_$WoundImpl _$$WoundImplFromJson(Map<String, dynamic> json) => _$WoundImpl(
   id: json['id'] as String,
   patientId: json['patientId'] as String,
   type: $enumDecode(_$WoundTypeEnumMap, json['type']),
@@ -22,19 +22,20 @@ _Wound _$WoundFromJson(Map<String, dynamic> json) => _Wound(
   causeDescription: json['causeDescription'] as String?,
 );
 
-Map<String, dynamic> _$WoundToJson(_Wound instance) => <String, dynamic>{
-  'id': instance.id,
-  'patientId': instance.patientId,
-  'type': _$WoundTypeEnumMap[instance.type]!,
-  'locationSimple': _$WoundLocationEnumMap[instance.locationSimple]!,
-  'onsetDays': instance.onsetDays,
-  'status': _$WoundStatusEnumMap[instance.status]!,
-  'createdAt': const TimestampConverter().toJson(instance.createdAt),
-  'updatedAt': const TimestampConverter().toJson(instance.updatedAt),
-  'locationDescription': instance.locationDescription,
-  'notes': instance.notes,
-  'causeDescription': instance.causeDescription,
-};
+Map<String, dynamic> _$$WoundImplToJson(_$WoundImpl instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'patientId': instance.patientId,
+      'type': _$WoundTypeEnumMap[instance.type]!,
+      'locationSimple': _$WoundLocationEnumMap[instance.locationSimple]!,
+      'onsetDays': instance.onsetDays,
+      'status': _$WoundStatusEnumMap[instance.status]!,
+      'createdAt': const TimestampConverter().toJson(instance.createdAt),
+      'updatedAt': const TimestampConverter().toJson(instance.updatedAt),
+      'locationDescription': instance.locationDescription,
+      'notes': instance.notes,
+      'causeDescription': instance.causeDescription,
+    };
 
 const _$WoundTypeEnumMap = {
   WoundType.pressureUlcer: 'pressure_ulcer',
