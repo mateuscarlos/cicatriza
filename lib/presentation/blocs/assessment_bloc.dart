@@ -1,19 +1,33 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../core/services/analytics_service.dart';
+import '../../core/services/storage_service.dart';
 import '../../core/utils/app_logger.dart';
 import '../../domain/entities/assessment_manual.dart';
+import '../../domain/entities/media.dart';
 import '../../domain/repositories/assessment_repository_manual.dart';
+import '../../domain/repositories/media_repository.dart';
 import 'assessment_event.dart';
 import 'assessment_state.dart';
 
 /// BLoC para gerenciar estado das avaliações com validações
 class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
   final AssessmentRepository _assessmentRepository;
+  final MediaRepository _mediaRepository;
+  final StorageService _storageService;
+  final AnalyticsService _analytics;
   StreamSubscription<List<AssessmentManual>>? _assessmentsSubscription;
 
-  AssessmentBloc({required AssessmentRepository assessmentRepository})
-    : _assessmentRepository = assessmentRepository,
-      super(const AssessmentInitialState()) {
+  AssessmentBloc({
+    required AssessmentRepository assessmentRepository,
+    required MediaRepository mediaRepository,
+    required StorageService storageService,
+    required AnalyticsService analytics,
+  }) : _assessmentRepository = assessmentRepository,
+       _mediaRepository = mediaRepository,
+       _storageService = storageService,
+       _analytics = analytics,
+       super(const AssessmentInitialState()) {
     // Registra os handlers dos eventos
     on<LoadAssessmentsByWoundEvent>(_onLoadAssessmentsByWound);
     on<CreateAssessmentEvent>(_onCreateAssessment);

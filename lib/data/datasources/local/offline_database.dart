@@ -12,7 +12,7 @@ class OfflineDatabase {
   static final OfflineDatabase instance = OfflineDatabase._();
 
   static const _dbName = 'cicatriza_offline.db';
-  static const _dbVersion = 3;
+  static const _dbVersion = 4;
 
   Database? _database;
 
@@ -67,6 +67,31 @@ class OfflineDatabase {
       await db.execute('ALTER TABLE assessments ADD COLUMN exudate_type TEXT;');
       await db.execute(
         'ALTER TABLE assessments ADD COLUMN exudate_amount TEXT;',
+      );
+    }
+
+    if (oldVersion < 4) {
+      // Adicionar campos para controle de upload offline na tabela media
+      await db.execute('ALTER TABLE media ADD COLUMN local_path TEXT;');
+      await db.execute(
+        'ALTER TABLE media ADD COLUMN upload_status TEXT NOT NULL DEFAULT "pending";',
+      );
+      await db.execute(
+        'ALTER TABLE media ADD COLUMN upload_progress REAL NOT NULL DEFAULT 0.0;',
+      );
+      await db.execute(
+        'ALTER TABLE media ADD COLUMN retry_count INTEGER NOT NULL DEFAULT 0;',
+      );
+      await db.execute('ALTER TABLE media ADD COLUMN file_size INTEGER;');
+      await db.execute('ALTER TABLE media ADD COLUMN mime_type TEXT;');
+      await db.execute('ALTER TABLE media ADD COLUMN error_message TEXT;');
+      await db.execute(
+        'ALTER TABLE media ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0;',
+      );
+
+      // Atualizar registros existentes
+      await db.execute(
+        'UPDATE media SET updated_at = created_at WHERE updated_at = 0;',
       );
     }
   }
@@ -135,12 +160,20 @@ class OfflineDatabase {
         wound_id TEXT NOT NULL,
         patient_id TEXT NOT NULL,
         owner_id TEXT NOT NULL,
+        local_path TEXT,
         storage_path TEXT NOT NULL,
         download_url TEXT,
         thumb_url TEXT,
+        upload_status TEXT NOT NULL DEFAULT 'pending',
+        upload_progress REAL NOT NULL DEFAULT 0.0,
+        retry_count INTEGER NOT NULL DEFAULT 0,
         width INTEGER,
         height INTEGER,
+        file_size INTEGER,
+        mime_type TEXT,
+        error_message TEXT,
         created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
         FOREIGN KEY(assessment_id) REFERENCES assessments(id) ON DELETE CASCADE
       );
     ''');
@@ -586,5 +619,107 @@ class OfflineDatabase {
     );
     final opId = await enqueueOperation(op);
     return op.copyWith(id: opId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Media CRUD methods
+  // ---------------------------------------------------------------------------
+
+  Future<List<Map<String, Object?>>> getMediaByAssessment({
+    required String assessmentId,
+  }) async {
+    final db = await database;
+    return db.query(
+      'media',
+      where: 'assessment_id = ?',
+      whereArgs: [assessmentId],
+      orderBy: 'created_at DESC',
+    );
+  }
+
+  Future<Map<String, Object?>?> getMediaById(String id) async {
+    final db = await database;
+    final rows = await db.query(
+      'media',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return rows.first;
+  }
+
+  Future<List<Map<String, Object?>>> getMediaByUploadStatus({
+    required String status,
+  }) async {
+    final db = await database;
+    return db.query(
+      'media',
+      where: 'upload_status = ?',
+      whereArgs: [status],
+      orderBy: 'created_at ASC',
+    );
+  }
+
+  Future<void> updateMediaUploadProgress({
+    required String id,
+    required double progress,
+  }) async {
+    final db = await database;
+    await db.update(
+      'media',
+      {
+        'upload_progress': progress,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<void> updateMediaUploadStatus({
+    required String id,
+    required String status,
+    String? errorMessage,
+  }) async {
+    final db = await database;
+    final updates = <String, Object?>{
+      'upload_status': status,
+      'updated_at': DateTime.now().millisecondsSinceEpoch,
+    };
+    if (errorMessage != null) {
+      updates['error_message'] = errorMessage;
+    }
+    await db.update('media', updates, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> completeMediaUpload({
+    required String id,
+    required String storagePath,
+    required String downloadUrl,
+    String? thumbUrl,
+  }) async {
+    final db = await database;
+    await db.update(
+      'media',
+      {
+        'storage_path': storagePath,
+        'download_url': downloadUrl,
+        if (thumbUrl != null) 'thumb_url': thumbUrl,
+        'upload_status': 'completed',
+        'upload_progress': 1.0,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<void> incrementMediaRetry(String id) async {
+    final db = await database;
+    await db.rawUpdate(
+      'UPDATE media SET retry_count = retry_count + 1, updated_at = ? WHERE id = ?',
+      [DateTime.now().millisecondsSinceEpoch, id],
+    );
   }
 }

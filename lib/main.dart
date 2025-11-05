@@ -8,12 +8,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/di/injection_container.dart';
 import 'core/routing/app_routes.dart';
-import 'core/services/analytics_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/app_logger.dart';
-import 'domain/repositories/assessment_repository_manual.dart';
-import 'domain/repositories/patient_repository_manual.dart';
-import 'domain/repositories/wound_repository_manual.dart';
 import 'firebase_options.dart';
 import 'presentation/blocs/assessment_bloc.dart';
 import 'presentation/blocs/auth_bloc.dart';
@@ -83,18 +79,9 @@ class _CicatrizaAppState extends State<CicatrizaApp> {
         BlocProvider<AuthBloc>(
           create: (_) => sl<AuthBloc>()..add(const AuthCheckRequested()),
         ),
-        BlocProvider<PatientBloc>(
-          create: (context) =>
-              PatientBloc(patientRepository: sl<PatientRepository>()),
-        ),
-        BlocProvider<WoundBloc>(
-          create: (context) =>
-              WoundBloc(woundRepository: sl<WoundRepository>()),
-        ),
-        BlocProvider<AssessmentBloc>(
-          create: (context) =>
-              AssessmentBloc(assessmentRepository: sl<AssessmentRepository>()),
-        ),
+        BlocProvider<PatientBloc>(create: (context) => sl<PatientBloc>()),
+        BlocProvider<WoundBloc>(create: (context) => sl<WoundBloc>()),
+        BlocProvider<AssessmentBloc>(create: (context) => sl<AssessmentBloc>()),
       ],
       child: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {

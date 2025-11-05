@@ -9,10 +9,12 @@ import 'package:flutter/foundation.dart';
 import '../../data/datasources/local/offline_database.dart';
 import '../../data/repositories/assessment_repository_offline.dart';
 import '../../data/repositories/auth_repository_impl.dart';
+import '../../data/repositories/media_repository_offline.dart';
 import '../../data/repositories/patient_repository_offline.dart';
 import '../../data/repositories/wound_repository_offline.dart';
 import '../../domain/repositories/assessment_repository_manual.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../domain/repositories/media_repository.dart';
 import '../../domain/repositories/patient_repository_manual.dart';
 import '../../domain/repositories/wound_repository_manual.dart';
 import '../../presentation/blocs/assessment_bloc.dart';
@@ -22,6 +24,7 @@ import '../../presentation/blocs/wound_bloc.dart';
 import '../config/google_sign_in_config.dart';
 import '../services/analytics_service.dart';
 import '../services/connectivity_service.dart';
+import '../services/storage_service.dart';
 import '../utils/app_logger.dart';
 
 /// Service Locator para Dependency Injection
@@ -92,6 +95,7 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<AnalyticsService>(
     () => AnalyticsService(analytics: sl()),
   );
+  sl.registerLazySingleton<StorageService>(() => StorageService(storage: sl()));
 
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
@@ -128,6 +132,15 @@ Future<void> initDependencies() async {
     ),
   );
 
+  sl.registerLazySingleton<MediaRepository>(
+    () => MediaRepositoryOffline(
+      database: sl(),
+      firestore: sl(),
+      auth: sl(),
+      connectivityService: sl(),
+    ),
+  );
+
   // ============================================================================
   // BLoCs
   // ============================================================================
@@ -137,5 +150,12 @@ Future<void> initDependencies() async {
     () => PatientBloc(patientRepository: sl(), analytics: sl()),
   );
   sl.registerFactory(() => WoundBloc(woundRepository: sl()));
-  sl.registerFactory(() => AssessmentBloc(assessmentRepository: sl()));
+  sl.registerFactory(
+    () => AssessmentBloc(
+      assessmentRepository: sl(),
+      mediaRepository: sl(),
+      storageService: sl(),
+      analytics: sl(),
+    ),
+  );
 }
