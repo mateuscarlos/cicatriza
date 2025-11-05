@@ -1,45 +1,45 @@
 {
   "project_info": {
-    "project_number": "48729747381",
-    "project_id": "cicatriza-dev-b1085",
-    "storage_bucket": "cicatriza-dev-b1085.firebasestorage.app"
+    "project_number": "YOUR_PROJECT_NUMBER",
+    "project_id": "YOUR_PROJECT_ID",
+    "storage_bucket": "YOUR_PROJECT_ID.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:48729747381:android:57192ff1f79b281c93b3fc",
+        "mobilesdk_app_id": "YOUR_MOBILESDK_APP_ID",
         "android_client_info": {
           "package_name": "com.example.cicatriza"
         }
       },
       "oauth_client": [
         {
-          "client_id": "48729747381-ks0u6mee48skm9903to3oqhgokr4erhp.apps.googleusercontent.com",
+          "client_id": "YOUR_OAUTH_CLIENT_ID",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.cicatriza",
-            "certificate_hash": "9779d9531abfbaf4f2d3b2eff5baf57c9b31f616"
+            "certificate_hash": "YOUR_CERTIFICATE_HASH"
           }
         },
         {
-          "client_id": "48729747381-cn889l89llsjs7spsrmg12v15d9h9m1n.apps.googleusercontent.com",
+          "client_id": "YOUR_WEB_CLIENT_ID",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyDmbo3grB4WcrBswQ0HUNKvS7ylXFvbLgY"
+          "current_key": "YOUR_API_KEY"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "48729747381-cn889l89llsjs7spsrmg12v15d9h9m1n.apps.googleusercontent.com",
+              "client_id": "YOUR_WEB_CLIENT_ID",
               "client_type": 3
             },
             {
-              "client_id": "48729747381-1qqkmh8vagrjevc4fbihpa42t13t3fp9.apps.googleusercontent.com",
+              "client_id": "YOUR_IOS_CLIENT_ID",
               "client_type": 2,
               "ios_info": {
                 "bundle_id": "com.example.cicatriza"

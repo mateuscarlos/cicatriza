@@ -55,3 +55,14 @@ jdk*_info.json
 # APK files - não versionar arquivos de build
 *.apk
 *.aab
+
+# Firebase - Arquivos sensíveis com API keys
+# IMPORTANTE: Nunca commitar esses arquivos!
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+lib/firebase_options.dart
+
+# Firebase - Manter apenas templates
+!android/app/google-services.json.template
+!ios/Runner/GoogleService-Info.plist.template
+!lib/firebase_options.dart.template
