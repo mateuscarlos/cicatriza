@@ -407,7 +407,9 @@ class PatientRepositoryOffline implements PatientRepository {
   }
 
   Map<String, dynamic> _patientToFirestore(PatientManual patient) {
+    final ownerId = _resolveOwnerId();
     return {
+      'ownerId': ownerId,
       'name': patient.name,
       'nameLowercase': patient.nameLowercase,
       'birthDate': Timestamp.fromDate(patient.birthDate),
@@ -417,6 +419,9 @@ class PatientRepositoryOffline implements PatientRepository {
       'email': patient.email,
       'createdAt': Timestamp.fromDate(patient.createdAt),
       'updatedAt': Timestamp.fromDate(patient.updatedAt),
+      'acl': {
+        'roles': {ownerId: 'owner'},
+      },
     };
   }
 

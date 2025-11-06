@@ -35,25 +35,27 @@ class WoundBloc extends Bloc<WoundEvent, WoundState> {
       // Cancela subscription anterior se existir
       await _woundsSubscription?.cancel();
 
-      // Inicia stream de feridas do paciente
-      _woundsSubscription = _woundRepository
-          .watchWounds(event.patientId)
-          .listen((wounds) {
-            if (!isClosed) {
-              // Emite estado atualizado com novas feridas do stream
-              if (state is WoundLoadedState) {
-                final currentState = state as WoundLoadedState;
-                emit(currentState.copyWith(wounds: wounds));
-              }
-            }
-          });
-
       // Carrega feridas iniciais
       final wounds = await _woundRepository.getWoundsByPatientId(
         event.patientId,
       );
 
-      emit(WoundLoadedState(wounds: wounds, currentPatientId: event.patientId));
+      if (!emit.isDone) {
+        emit(
+          WoundLoadedState(wounds: wounds, currentPatientId: event.patientId),
+        );
+      }
+
+      // Inicia stream de feridas do paciente APÓS emitir o estado inicial
+      await emit.forEach<List<WoundManual>>(
+        _woundRepository.watchWounds(event.patientId),
+        onData: (woundsList) {
+          return WoundLoadedState(
+            wounds: woundsList,
+            currentPatientId: event.patientId,
+          );
+        },
+      );
     } catch (e) {
       emit(
         WoundErrorState(
