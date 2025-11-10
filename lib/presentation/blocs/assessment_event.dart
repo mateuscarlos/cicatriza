@@ -114,3 +114,16 @@ class ValidateAssessmentEvent extends AssessmentEvent {
     this.notes,
   });
 }
+
+/// Evento disparado após salvar avaliação com sucesso
+class AssessmentSavedSuccessfullyEvent extends AssessmentEvent {
+  final String woundId;
+  final AssessmentManual savedAssessment;
+  final bool shouldNavigateBack;
+
+  const AssessmentSavedSuccessfullyEvent({
+    required this.woundId,
+    required this.savedAssessment,
+    this.shouldNavigateBack = true,
+  });
+}

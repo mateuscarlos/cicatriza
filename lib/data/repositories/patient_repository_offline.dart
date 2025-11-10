@@ -44,11 +44,18 @@ class PatientRepositoryOffline implements PatientRepository {
   @override
   Future<List<PatientManual>> getPatients() async {
     final ownerId = _resolveOwnerId();
+    AppLogger.info(
+      '🔍 [PatientRepositoryOffline] getPatients() ownerId: $ownerId',
+    );
+
     await _ensureCache(ownerId);
 
     // Attempt to refresh from Firestore in the background when possible.
     unawaited(_refreshFromRemote(ownerId));
 
+    AppLogger.info(
+      '📋 [PatientRepositoryOffline] Retornando ${_cachedPatients.length} pacientes: ${_cachedPatients.map((p) => p.name).join(', ')}',
+    );
     return List<PatientManual>.from(_cachedPatients);
   }
 
@@ -240,11 +247,25 @@ class PatientRepositoryOffline implements PatientRepository {
   }
 
   Future<void> _loadLocalPatients(String ownerId) async {
+    AppLogger.info(
+      '🗄️ [PatientRepositoryOffline] Carregando pacientes do SQLite para ownerId: $ownerId',
+    );
     final rows = await _database.getPatients(ownerId: ownerId);
+    AppLogger.info(
+      '📊 [PatientRepositoryOffline] Encontradas ${rows.length} linhas no SQLite',
+    );
+
     _cachedPatients
       ..clear()
       ..addAll(rows.map(_mapRowToPatient));
+
+    AppLogger.info(
+      '👥 [PatientRepositoryOffline] Mapeados ${_cachedPatients.length} pacientes antes de filtrar',
+    );
     _sortCache();
+    AppLogger.info(
+      '✅ [PatientRepositoryOffline] Cache final: ${_cachedPatients.length} pacientes não arquivados',
+    );
     _emitCache();
     _cacheInitialized = true;
     _cacheOwnerId = ownerId;

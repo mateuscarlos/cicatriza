@@ -461,17 +461,27 @@ class WoundRepositoryOffline implements WoundRepository {
     String patientId,
     WoundManual wound,
   ) {
-    return {
+    final data = <String, dynamic>{
       'ownerId': ownerId,
       'patientId': patientId,
       'type': wound.type,
       'location': wound.location,
-      'locationDescription': wound.locationDescription,
       'status': wound.status,
-      'causeDescription': wound.causeDescription,
       'createdAt': Timestamp.fromDate(wound.createdAt),
       'updatedAt': Timestamp.fromDate(wound.updatedAt),
     };
+
+    void addOptionalString(String key, String? value) {
+      if (value == null) return;
+      final trimmed = value.trim();
+      if (trimmed.isEmpty) return;
+      data[key] = trimmed;
+    }
+
+    addOptionalString('locationDescription', wound.locationDescription);
+    addOptionalString('causeDescription', wound.causeDescription);
+
+    return data;
   }
 
   String _resolveOwnerId() {

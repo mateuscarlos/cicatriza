@@ -96,11 +96,18 @@ class StorageService {
           'users/$ownerId/patients/$patientId/wounds/$woundId/'
           'assessments/$assessmentId/$fileName';
 
+      AppLogger.info('[StorageService] 📂 Upload path: $storagePath');
+      AppLogger.info('[StorageService] 📄 Arquivo: $fileName');
+      AppLogger.info(
+        '[StorageService] 📊 Tamanho: ${(compressedBytes.length / 1024).toStringAsFixed(2)}KB',
+      );
+
       final ref = _storage.ref().child(storagePath);
 
       final metadata = SettableMetadata(
         contentType: mimeType,
         customMetadata: {
+          'ownerId': ownerId,
           'patientId': patientId,
           'woundId': woundId,
           'assessmentId': assessmentId,
@@ -108,7 +115,15 @@ class StorageService {
         },
       );
 
+      AppLogger.info('[StorageService] 🏷️ Metadados:');
+      AppLogger.info('[StorageService]   - ContentType: $mimeType');
+      AppLogger.info('[StorageService]   - OwnerID: $ownerId');
+      AppLogger.info('[StorageService]   - PatientID: $patientId');
+      AppLogger.info('[StorageService]   - WoundID: $woundId');
+      AppLogger.info('[StorageService]   - AssessmentID: $assessmentId');
+
       // Iniciar upload
+      AppLogger.info('[StorageService] 🚀 Iniciando putData...');
       final uploadTask = ref.putData(compressedBytes, metadata);
 
       // Monitorar progresso
@@ -139,11 +154,24 @@ class StorageService {
         fileName: fileName,
       );
     } catch (e, stackTrace) {
+      final fileName = _generateFileName(localPath);
+      final errorPath =
+          'users/$ownerId/patients/$patientId/wounds/$woundId/'
+          'assessments/$assessmentId/$fileName';
+
       AppLogger.error(
-        'Erro ao fazer upload: $localPath',
+        '[StorageService] ❌ Erro detalhado no upload:',
         error: e,
         stackTrace: stackTrace,
       );
+
+      // Log adicional para debugging
+      AppLogger.error('[StorageService] 📂 Path que falhou: $errorPath');
+      AppLogger.error('[StorageService] 👤 OwnerID: $ownerId');
+      AppLogger.error('[StorageService] 🏥 PatientID: $patientId');
+      AppLogger.error('[StorageService] 🩹 WoundID: $woundId');
+      AppLogger.error('[StorageService] 📋 AssessmentID: $assessmentId');
+
       rethrow;
     }
   }

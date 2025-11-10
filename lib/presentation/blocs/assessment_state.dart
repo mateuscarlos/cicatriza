@@ -152,3 +152,26 @@ class AssessmentValidationState extends AssessmentState {
   @override
   List<Object?> get props => [errors, isValid];
 }
+
+/// Estado indicando que avaliação foi salva com sucesso e deve navegar de volta
+class AssessmentSavedAndNavigateBackState extends AssessmentState {
+  final List<AssessmentManual> assessments;
+  final AssessmentManual savedAssessment;
+  final String message;
+  final String? currentWoundId;
+
+  const AssessmentSavedAndNavigateBackState({
+    required this.assessments,
+    required this.savedAssessment,
+    required this.message,
+    this.currentWoundId,
+  });
+
+  @override
+  List<Object?> get props => [
+    assessments,
+    savedAssessment,
+    message,
+    currentWoundId,
+  ];
+}

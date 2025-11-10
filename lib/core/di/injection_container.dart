@@ -156,6 +156,7 @@ Future<void> initDependencies() async {
       mediaRepository: sl(),
       storageService: sl(),
       analytics: sl(),
+      auth: sl(),
     ),
   );
 }

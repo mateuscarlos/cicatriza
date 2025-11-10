@@ -55,6 +55,7 @@ class PatientBloc extends Bloc<PatientEvent, PatientState> {
 
       emit(PatientLoadedState(patients: patients));
     } catch (e) {
+      AppLogger.error('Erro ao carregar pacientes', error: e);
       emit(PatientErrorState(message: 'Erro ao carregar pacientes: $e'));
     }
   }

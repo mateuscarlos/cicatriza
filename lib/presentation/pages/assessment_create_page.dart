@@ -396,25 +396,40 @@ class _AssessmentCreatePageState extends State<AssessmentCreatePage> {
             '[AssessmentCreatePage] 📢 Estado recebido: ${state.runtimeType}',
           );
 
-          if (state is AssessmentOperationSuccessState) {
+          if (state is AssessmentSavedAndNavigateBackState) {
             AppLogger.info(
-              '[AssessmentCreatePage] ✅ Sucesso! Mensagem: ${state.message}',
+              '[AssessmentCreatePage] ✅ Avaliação salva e lista atualizada! Mensagem: ${state.message}',
             );
 
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('✅ Avaliação salva com sucesso!'),
                 backgroundColor: Colors.green,
-                duration: Duration(seconds: 3),
+                duration: Duration(seconds: 2),
               ),
             );
 
             AppLogger.info(
-              '[AssessmentCreatePage] 🔙 Navegando de volta para detalhes do paciente...',
+              '[AssessmentCreatePage] 🔙 Navegando de volta para lista de avaliações...',
             );
-            // Volta para a tela de feridas do paciente (1 tela para trás)
+
+            // Volta para a tela de lista de avaliações (1 tela para trás)
+            // Passa true para indicar que uma nova avaliação foi criada
             Navigator.of(context).pop(true);
             AppLogger.info('[AssessmentCreatePage] ✅ Navegação concluída!');
+          } else if (state is AssessmentOperationSuccessState) {
+            // Mantém o comportamento anterior para outros casos de sucesso
+            AppLogger.info(
+              '[AssessmentCreatePage] ✅ Sucesso! Mensagem: ${state.message}',
+            );
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('✅ ${state.message}'),
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 2),
+              ),
+            );
           } else if (state is AssessmentErrorState) {
             AppLogger.error(
               '[AssessmentCreatePage] ❌ Erro ao salvar avaliação: ${state.message}',

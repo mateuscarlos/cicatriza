@@ -255,6 +255,7 @@ class _PacientesListPageState extends State<PacientesListPage> {
     if (state is PatientErrorState && state.patients.isNotEmpty) {
       return state.patients;
     }
+
     return null;
   }
 }

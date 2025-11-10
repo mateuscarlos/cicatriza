@@ -539,23 +539,42 @@ class AssessmentRepositoryOffline implements AssessmentRepository {
     String patientId,
     AssessmentManual assessment,
   ) {
-    return {
+    final data = <String, dynamic>{
       'ownerId': ownerId,
       'patientId': patientId,
       'woundId': assessment.woundId,
       'date': Timestamp.fromDate(assessment.date),
-      'painScale': assessment.painScale,
-      'lengthCm': assessment.lengthCm,
-      'widthCm': assessment.widthCm,
-      'depthCm': assessment.depthCm,
-      'edgeAppearance': assessment.edgeAppearance,
-      'woundBed': assessment.woundBed,
-      'exudateType': assessment.exudateType,
-      'exudateAmount': assessment.exudateAmount,
-      'notes': assessment.notes,
       'createdAt': Timestamp.fromDate(assessment.createdAt),
       'updatedAt': Timestamp.fromDate(assessment.updatedAt),
     };
+
+    if (assessment.painScale != null) {
+      data['painScale'] = assessment.painScale;
+    }
+    if (assessment.lengthCm != null) {
+      data['lengthCm'] = assessment.lengthCm;
+    }
+    if (assessment.widthCm != null) {
+      data['widthCm'] = assessment.widthCm;
+    }
+    if (assessment.depthCm != null) {
+      data['depthCm'] = assessment.depthCm;
+    }
+
+    void addOptionalString(String key, String? value) {
+      if (value == null) return;
+      final trimmed = value.trim();
+      if (trimmed.isEmpty) return;
+      data[key] = trimmed;
+    }
+
+    addOptionalString('edgeAppearance', assessment.edgeAppearance);
+    addOptionalString('woundBed', assessment.woundBed);
+    addOptionalString('exudateType', assessment.exudateType);
+    addOptionalString('exudateAmount', assessment.exudateAmount);
+    addOptionalString('notes', assessment.notes);
+
+    return data;
   }
 
   String? _normalizeTextField(Object? value) {

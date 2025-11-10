@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/services/analytics_service.dart';
 import '../../core/services/storage_service.dart';
@@ -16,6 +18,7 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
   final MediaRepository _mediaRepository;
   final StorageService _storageService;
   final AnalyticsService _analytics;
+  final FirebaseAuth _auth;
   StreamSubscription<List<AssessmentManual>>? _assessmentsSubscription;
 
   AssessmentBloc({
@@ -23,10 +26,12 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
     required MediaRepository mediaRepository,
     required StorageService storageService,
     required AnalyticsService analytics,
+    FirebaseAuth? auth,
   }) : _assessmentRepository = assessmentRepository,
        _mediaRepository = mediaRepository,
        _storageService = storageService,
        _analytics = analytics,
+       _auth = auth ?? FirebaseAuth.instance,
        super(const AssessmentInitialState()) {
     // Registra os handlers dos eventos
     on<LoadAssessmentsByWoundEvent>(_onLoadAssessmentsByWound);
@@ -38,6 +43,7 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
     on<LoadAssessmentHistoryEvent>(_onLoadAssessmentHistory);
     on<FilterAssessmentsEvent>(_onFilterAssessments);
     on<ValidateAssessmentEvent>(_onValidateAssessment);
+    on<AssessmentSavedSuccessfullyEvent>(_onAssessmentSavedSuccessfully);
   }
 
   /// Valida dados de avaliação segundo regras do M1
@@ -156,6 +162,51 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
     emit(AssessmentValidationState(errors: errors, isValid: errors.isEmpty));
   }
 
+  /// Processa avaliação salva com sucesso e prepara navegação
+  Future<void> _onAssessmentSavedSuccessfully(
+    AssessmentSavedSuccessfullyEvent event,
+    Emitter<AssessmentState> emit,
+  ) async {
+    try {
+      AppLogger.info('[AssessmentBloc] 🎯 Processando salvamento com sucesso');
+
+      // Carrega todas as avaliações atualizadas da ferida, ordenadas por data
+      final updatedAssessments = await _assessmentRepository
+          .getAssessmentsSortedByDate(event.woundId);
+
+      AppLogger.info(
+        '[AssessmentBloc] ✅ ${updatedAssessments.length} avaliações carregadas',
+      );
+
+      emit(
+        AssessmentSavedAndNavigateBackState(
+          assessments: updatedAssessments,
+          savedAssessment: event.savedAssessment,
+          message: 'Avaliação salva com sucesso!',
+          currentWoundId: event.woundId,
+        ),
+      );
+
+      AppLogger.info('[AssessmentBloc] 🔙 Estado de navegação emitido');
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        '[AssessmentBloc] ❌ Erro ao processar salvamento',
+        error: e,
+        stackTrace: stackTrace,
+      );
+
+      // Emite estado de erro mas mantém a avaliação criada
+      emit(
+        AssessmentErrorState(
+          message: 'Avaliação salva mas erro ao carregar lista: $e',
+          assessments: [event.savedAssessment],
+          selectedAssessment: event.savedAssessment,
+          currentWoundId: event.woundId,
+        ),
+      );
+    }
+  }
+
   /// Cria uma nova avaliação
   Future<void> _onCreateAssessment(
     CreateAssessmentEvent event,
@@ -233,20 +284,23 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
         );
       }
 
-      final updatedAssessments = [createdAssessment, ...currentAssessments];
-
       AppLogger.info(
-        '[AssessmentBloc] 📤 Emitindo AssessmentOperationSuccessState',
+        '[AssessmentBloc] 📤 Disparando evento de salvamento com sucesso',
       );
-      emit(
-        AssessmentOperationSuccessState(
-          assessments: updatedAssessments,
-          message: 'Avaliação criada com sucesso!',
-          selectedAssessment: createdAssessment,
-          currentWoundId: event.woundId,
+
+      // Debug: Verificar se o dado foi realmente salvo
+      await _debugVerifyDataSaved(createdAssessment);
+
+      // Dispara evento para processar salvamento e preparar navegação
+      add(
+        AssessmentSavedSuccessfullyEvent(
+          woundId: event.woundId,
+          savedAssessment: createdAssessment,
+          shouldNavigateBack: true,
         ),
       );
-      AppLogger.info('[AssessmentBloc] ✅ Estado de sucesso emitido!');
+
+      AppLogger.info('[AssessmentBloc] ✅ Evento de salvamento disparado!');
     } catch (e, stackTrace) {
       AppLogger.error(
         '[AssessmentBloc] ❌ Erro ao criar avaliação',
@@ -542,6 +596,31 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
     required String woundId,
     required List<String> photoPaths,
   }) async {
+    // Verifica se o usuário está autenticado antes de começar
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      AppLogger.warning(
+        '[AssessmentBloc] ⚠️ Usuário não autenticado, salvando fotos apenas localmente',
+      );
+      // Salva apenas localmente sem fazer upload
+      for (final photoPath in photoPaths) {
+        try {
+          final media = Media.createLocal(
+            assessmentId: assessmentId,
+            type: MediaType.image,
+            localPath: photoPath,
+          );
+          await _mediaRepository.createMedia(media);
+          AppLogger.info(
+            '[AssessmentBloc] 💾 Foto salva localmente: $photoPath',
+          );
+        } catch (e) {
+          AppLogger.error('[AssessmentBloc] ❌ Erro ao salvar foto local: $e');
+        }
+      }
+      return;
+    }
+
     for (final photoPath in photoPaths) {
       try {
         AppLogger.info('[AssessmentBloc] 📸 Processando foto: $photoPath');
@@ -556,19 +635,25 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
         final createdMedia = await _mediaRepository.createMedia(media);
         AppLogger.info('[AssessmentBloc] ✅ Media criado: ${createdMedia.id}');
 
-        // 2. Comprimir imagem
+        // 2. Verificar se o arquivo existe
+        final file = File(photoPath);
+        if (!await file.exists()) {
+          throw Exception('Arquivo não encontrado: $photoPath');
+        }
+
+        // 3. Comprimir imagem
         AppLogger.info('[AssessmentBloc] 🗜️ Comprimindo imagem...');
         final compressed = await _storageService.compressImage(photoPath);
         AppLogger.info(
           '[AssessmentBloc] ✅ Comprimido: ${(compressed.originalSize / 1024).toStringAsFixed(2)}KB → ${(compressed.compressedSize / 1024).toStringAsFixed(2)}KB',
         );
 
-        // 3. Atualizar status para uploading
+        // 4. Atualizar status para uploading
         await _mediaRepository.updateMedia(
           createdMedia.copyWith(uploadStatus: UploadStatus.uploading),
         );
 
-        // 4. Fazer upload para Storage
+        // 5. Fazer upload para Storage
         AppLogger.info('[AssessmentBloc] ☁️ Iniciando upload...');
 
         // Obter IDs necessários (precisamos buscar do assessment)
@@ -579,10 +664,22 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
           throw Exception('Assessment não encontrado: $assessmentId');
         }
 
-        // Buscar patientId através do wound
-        // Por ora, vamos usar um placeholder - isso será resolvido na integração completa
-        const ownerId = 'temp_owner'; // TODO: Obter do AuthRepository
-        const patientId = 'temp_patient'; // TODO: Obter via WoundRepository
+        // Obter ownerId do usuário autenticado
+        final currentUser = _auth.currentUser;
+        if (currentUser == null) {
+          throw Exception('Usuário não autenticado para upload');
+        }
+        final ownerId = currentUser.uid;
+
+        // Para este MVP, vamos usar um patientId derivado da ferida
+        // Em uma versão futura, isso seria obtido via WoundRepository
+        final patientId = 'patient_${woundId.substring(0, 8)}';
+
+        AppLogger.info('[AssessmentBloc] 📋 Dados do upload:');
+        AppLogger.info('[AssessmentBloc]   - OwnerID: $ownerId');
+        AppLogger.info('[AssessmentBloc]   - PatientID: $patientId');
+        AppLogger.info('[AssessmentBloc]   - WoundID: $woundId');
+        AppLogger.info('[AssessmentBloc]   - AssessmentID: $assessmentId');
 
         final uploadResult = await _storageService.uploadPhoto(
           ownerId: ownerId,
@@ -604,14 +701,14 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
           '[AssessmentBloc] ✅ Upload concluído: ${uploadResult.downloadUrl}',
         );
 
-        // 5. Marcar upload como completo
+        // 6. Marcar upload como completo
         await _mediaRepository.completeUpload(
           createdMedia.id,
           uploadResult.storagePath,
           uploadResult.downloadUrl,
         );
 
-        // 6. Registrar evento no Analytics
+        // 7. Registrar evento no Analytics
         await _analytics.logPhotoUploaded(photoCount: 1);
 
         AppLogger.info('[AssessmentBloc] ✅ Foto processada com sucesso!');
@@ -621,6 +718,19 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
           error: e,
           stackTrace: stackTrace,
         );
+
+        // Analisar tipo de erro para melhor tratamento
+        String errorMessage = 'Erro ao fazer upload: ${e.toString()}';
+
+        if (e.toString().contains('unauthorized') ||
+            e.toString().contains('Permission denied')) {
+          errorMessage =
+              'Erro de permissão no Storage. Verifique as regras do Firebase.';
+          AppLogger.warning('[AssessmentBloc] 🔒 Erro de permissão detectado');
+        } else if (e.toString().contains('network')) {
+          errorMessage = 'Erro de conexão. Foto salva localmente.';
+          AppLogger.warning('[AssessmentBloc] 📶 Erro de rede detectado');
+        }
 
         // Marcar upload como falho
         try {
@@ -632,10 +742,7 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
             orElse: () => throw Exception('Media não encontrado'),
           );
 
-          await _mediaRepository.failUpload(
-            media.id,
-            'Erro ao fazer upload: ${e.toString()}',
-          );
+          await _mediaRepository.failUpload(media.id, errorMessage);
         } catch (updateError) {
           AppLogger.error(
             '[AssessmentBloc] ❌ Erro ao atualizar status de falha',
@@ -643,6 +750,50 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
           );
         }
       }
+    }
+  }
+
+  /// Método de debug para verificar se os dados foram salvos corretamente
+  Future<void> _debugVerifyDataSaved(AssessmentManual assessment) async {
+    try {
+      AppLogger.info('[AssessmentBloc] 🔍 VERIFICAÇÃO DEBUG - Iniciando...');
+
+      // 1. Verificar se o assessment foi salvo
+      final savedAssessment = await _assessmentRepository.getAssessmentById(
+        assessment.id,
+      );
+
+      if (savedAssessment != null) {
+        AppLogger.info(
+          '[AssessmentBloc] ✅ VERIFICAÇÃO DEBUG - Assessment encontrado no banco: ${savedAssessment.id}',
+        );
+
+        // 2. Verificar lista de assessments para a ferida
+        final allAssessments = await _assessmentRepository
+            .getAssessmentsByWoundId(assessment.woundId);
+
+        AppLogger.info(
+          '[AssessmentBloc] 📊 VERIFICAÇÃO DEBUG - Total de assessments para ferida ${assessment.woundId}: ${allAssessments.length}',
+        );
+
+        // 3. Listar todos os assessments
+        for (var i = 0; i < allAssessments.length; i++) {
+          final a = allAssessments[i];
+          AppLogger.info(
+            '[AssessmentBloc] 📋 VERIFICAÇÃO DEBUG - Assessment $i: ${a.id} (${a.date})',
+          );
+        }
+      } else {
+        AppLogger.error(
+          '[AssessmentBloc] ❌ VERIFICAÇÃO DEBUG - Assessment NÃO encontrado no banco: ${assessment.id}',
+        );
+      }
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        '[AssessmentBloc] ❌ VERIFICAÇÃO DEBUG - Erro ao verificar dados salvos',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 

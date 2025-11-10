@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../core/utils/app_logger.dart';
 import '../../domain/entities/wound_manual.dart';
 import '../../domain/repositories/wound_repository_manual.dart';
 import 'wound_event.dart';
@@ -91,7 +92,12 @@ class WoundBloc extends Bloc<WoundEvent, WoundState> {
         causeDescription: event.causeDescription,
       );
 
+      AppLogger.info(
+        '[WoundBloc] 🔵 Criando ferida para paciente: ${event.patientId}',
+      );
       final createdWound = await _woundRepository.createWound(newWound);
+
+      AppLogger.info('[WoundBloc] ✅ Ferida criada: ${createdWound.id}');
 
       final updatedWounds = [createdWound, ...currentWounds];
 
