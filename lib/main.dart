@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/di/injection_container.dart';
 import 'core/routing/app_routes.dart';
+import 'core/services/app_check_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/app_logger.dart';
 import 'firebase_options.dart';
@@ -28,6 +29,16 @@ void main() async {
     );
     AppLogger.info('Firebase inicializado com sucesso');
 
+    // Configurar Firebase App Check
+    try {
+      await AppCheckService.initialize();
+    } catch (e) {
+      AppLogger.error(
+        'App Check não pôde ser inicializado, continuando sem ele',
+        error: e,
+      );
+    }
+
     await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
     PlatformDispatcher.instance.onError = (error, stack) {
@@ -41,7 +52,7 @@ void main() async {
     AppLogger.info('Analytics configurado com sucesso');
   } catch (e, stackTrace) {
     AppLogger.error(
-      'Erro ao inicializar Firebase/Crashlytics',
+      'Erro ao inicializar Firebase/Crashlytics/App Check',
       error: e,
       stackTrace: stackTrace,
     );
