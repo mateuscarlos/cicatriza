@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../domain/entities/user_profile.dart';
-import '../../blocs/auth_bloc.dart';
-import '../../blocs/auth_event.dart';
 import '../../blocs/profile/profile_bloc.dart';
 import '../../blocs/profile/profile_event.dart';
 import '../../blocs/profile/profile_state.dart';
@@ -49,7 +47,7 @@ class _ProfileViewState extends State<ProfileView>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
@@ -111,12 +109,9 @@ class _ProfileViewState extends State<ProfileView>
         ],
         bottom: TabBar(
           controller: _tabController,
-          isScrollable: true,
           tabs: const [
             Tab(text: 'Identificação'),
             Tab(text: 'Contato'),
-            Tab(text: 'Preferências'),
-            Tab(text: 'Segurança'),
           ],
         ),
       ),
@@ -179,27 +174,6 @@ class _ProfileViewState extends State<ProfileView>
                   phoneController: _phoneController,
                   addressController: _addressController,
                   cityController: _cityController,
-                ),
-              ),
-              SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: PreferencesSection(
-                  profile: _currentProfile!,
-                  onProfileChanged: (updated) {
-                    setState(() {
-                      _currentProfile = updated;
-                    });
-                  },
-                ),
-              ),
-              SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: SecuritySection(
-                  profile: _currentProfile!,
-                  onLogout: () {
-                    context.read<AuthBloc>().add(const AuthSignOutRequested());
-                    Navigator.of(context).pushReplacementNamed('/login');
-                  },
                 ),
               ),
             ],

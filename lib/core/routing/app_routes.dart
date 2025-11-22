@@ -8,6 +8,7 @@ class AppRoutes {
   static const String home = '/';
   static const String patients = '/patients';
   static const String profile = '/profile';
+  static const String settings = '/settings';
   static const String wounds = '/wounds';
   static const String assessmentsList = '/assessments/list';
   static const String assessmentCreate = '/assessment/create';
@@ -35,6 +36,12 @@ class AppRoutes {
       case profile:
         return MaterialPageRoute(
           builder: (_) => const ProfilePage(),
+          settings: settings,
+        );
+
+      case AppRoutes.settings:
+        return MaterialPageRoute(
+          builder: (_) => const SettingsPage(),
           settings: settings,
         );
 

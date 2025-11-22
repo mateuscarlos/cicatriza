@@ -244,7 +244,7 @@ class HomePage extends StatelessWidget {
               title: const Text('Configurações'),
               onTap: () {
                 Navigator.pop(bottomSheetContext);
-                // TODO: Navegar para configurações
+                Navigator.of(context).pushNamed(AppRoutes.settings);
               },
             ),
             const Divider(),
