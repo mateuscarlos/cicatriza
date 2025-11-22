@@ -83,8 +83,9 @@ void main() {
             'email': email,
             'displayName': 'Test User',
             'photoURL': 'http://photo.url',
-            'createdAt': Timestamp.now(),
-            'updatedAt': Timestamp.now(),
+            'ownerId': 'test_uid',
+            'createdAt': DateTime.now().toIso8601String(),
+            'updatedAt': DateTime.now().toIso8601String(),
           });
 
           // Act

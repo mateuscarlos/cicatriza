@@ -217,6 +217,15 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<void> updateProfile(UserProfile profile) async {
+    try {
+      await _createUserProfile(profile);
+    } catch (e) {
+      throw Exception('Erro ao atualizar perfil: $e');
+    }
+  }
+
+  @override
   Future<void> signOut() async {
     try {
       await Future.wait([_firebaseAuth.signOut(), _googleSignIn.signOut()]);
@@ -232,13 +241,7 @@ class AuthRepositoryImpl implements AuthRepository {
       email: user.email ?? '',
       displayName: user.displayName,
       photoURL: user.photoURL,
-      crmCofen: null,
-      specialty: 'Estomaterapia',
-      timezone: 'America/Sao_Paulo',
       ownerId: user.uid,
-      acl: {
-        'roles': {user.uid: 'owner'},
-      },
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
@@ -249,22 +252,10 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final userRef = _firestore.doc('users/${profile.uid}');
 
-      await userRef.set({
-        'uid': profile.uid,
-        'email': profile.email,
-        'displayName': profile.displayName,
-        'photoURL': profile.photoURL,
-        'crmCofen': profile.crmCofen,
-        'specialty': profile.specialty,
-        'timezone': profile.timezone,
-        'ownerId': profile.ownerId,
-        'acl': profile.acl,
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      await userRef.set(profile.toJson(), SetOptions(merge: true));
     } catch (e, stackTrace) {
       AppLogger.error(
-        'Erro ao criar perfil do usuário',
+        'Erro ao criar/atualizar perfil do usuário',
         error: e,
         stackTrace: stackTrace,
       );
@@ -274,19 +265,19 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   UserProfile _mapUserProfile(User user, Map<String, dynamic> data) {
-    return UserProfile(
-      uid: user.uid,
-      email: (data['email'] as String?) ?? user.email ?? '',
-      displayName: data['displayName'] as String? ?? user.displayName,
-      photoURL: data['photoURL'] as String? ?? user.photoURL,
-      crmCofen: data['crmCofen'] as String?,
-      specialty: data['specialty'] as String? ?? 'Estomaterapia',
-      timezone: data['timezone'] as String? ?? 'America/Sao_Paulo',
-      ownerId: data['ownerId'] as String? ?? user.uid,
-      acl: Map<String, dynamic>.from(data['acl'] as Map? ?? {}),
-      createdAt: _parseDate(data['createdAt']),
-      updatedAt: _parseDate(data['updatedAt']),
-    );
+    return UserProfile.fromJson({
+      ...data,
+      'uid': user.uid,
+      'email': (data['email'] as String?) ?? user.email ?? '',
+      'displayName': data['displayName'] as String? ?? user.displayName,
+      'photoURL': data['photoURL'] as String? ?? user.photoURL,
+      'ownerId': (data['ownerId'] as String?) ?? user.uid,
+      'createdAt': _parseDate(data['createdAt']).toIso8601String(),
+      'updatedAt': _parseDate(data['updatedAt']).toIso8601String(),
+      'lastAccess': data['lastAccess'] != null
+          ? _parseDate(data['lastAccess']).toIso8601String()
+          : null,
+    });
   }
 
   DateTime _parseDate(dynamic value) {

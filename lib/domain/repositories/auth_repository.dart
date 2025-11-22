@@ -25,6 +25,9 @@ abstract class AuthRepository {
   /// Logout
   Future<void> signOut();
 
+  /// Atualizar perfil
+  Future<void> updateProfile(UserProfile profile);
+
   /// Verificar se usuário está autenticado
   bool get isAuthenticated;
 }

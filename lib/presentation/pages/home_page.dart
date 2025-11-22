@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../core/routing/app_router.dart';
 import '../../core/routing/app_routes.dart';
 import '../blocs/auth_bloc.dart';
 import '../blocs/auth_event.dart';
@@ -32,11 +33,36 @@ class HomePage extends StatelessWidget {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.account_circle),
-            onPressed: () {
-              _showProfileMenu(context, authState);
-            },
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: GestureDetector(
+              onTap: () => _showProfileMenu(context, authState),
+              child: CircleAvatar(
+                radius: 20,
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                backgroundImage:
+                    authState is AuthAuthenticated &&
+                        authState.photoURL != null &&
+                        authState.photoURL!.isNotEmpty
+                    ? NetworkImage(authState.photoURL!)
+                    : null,
+                child:
+                    authState is AuthAuthenticated &&
+                        (authState.photoURL == null ||
+                            authState.photoURL!.isEmpty)
+                    ? Text(
+                        (authState.displayName ?? authState.email)
+                            .substring(0, 1)
+                            .toUpperCase(),
+                        style: TextStyle(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onPrimaryContainer,
+                        ),
+                      )
+                    : null,
+              ),
+            ),
           ),
         ],
       ),
@@ -79,7 +105,6 @@ class HomePage extends StatelessWidget {
                       Navigator.pushNamed(context, AppRoutes.patients);
                     },
                   ),
-
                   _buildActionCard(
                     context,
                     icon: Icons.assessment,
@@ -89,7 +114,6 @@ class HomePage extends StatelessWidget {
                       Navigator.pushNamed(context, AppRoutes.patients);
                     },
                   ),
-
                   _buildActionCard(
                     context,
                     icon: Icons.calendar_today,
@@ -103,7 +127,6 @@ class HomePage extends StatelessWidget {
                       );
                     },
                   ),
-
                   _buildActionCard(
                     context,
                     icon: Icons.analytics,
@@ -148,7 +171,6 @@ class HomePage extends StatelessWidget {
                 color: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(height: 12),
-
               Text(
                 title,
                 style: Theme.of(
@@ -157,7 +179,6 @@ class HomePage extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 4),
-
               Text(
                 subtitle,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -176,17 +197,36 @@ class HomePage extends StatelessWidget {
     final displayName = authState is AuthAuthenticated
         ? authState.displayName ?? authState.email
         : null;
+    final photoURL = authState is AuthAuthenticated ? authState.photoURL : null;
 
     showModalBottomSheet(
       context: context,
-      builder: (context) => Padding(
+      builder: (bottomSheetContext) => Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (displayName != null) ...[
               ListTile(
-                leading: const Icon(Icons.person),
+                leading: CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Theme.of(
+                    bottomSheetContext,
+                  ).colorScheme.primaryContainer,
+                  backgroundImage: photoURL != null && photoURL.isNotEmpty
+                      ? NetworkImage(photoURL)
+                      : null,
+                  child: photoURL == null || photoURL.isEmpty
+                      ? Text(
+                          displayName.substring(0, 1).toUpperCase(),
+                          style: TextStyle(
+                            color: Theme.of(
+                              bottomSheetContext,
+                            ).colorScheme.onPrimaryContainer,
+                          ),
+                        )
+                      : null,
+                ),
                 title: Text(displayName),
                 subtitle: const Text('Conta autenticada'),
               ),
@@ -196,15 +236,15 @@ class HomePage extends StatelessWidget {
               leading: const Icon(Icons.person),
               title: const Text('Perfil'),
               onTap: () {
-                Navigator.pop(context);
-                // TODO: Navegar para perfil
+                Navigator.pop(bottomSheetContext);
+                context.goToProfile();
               },
             ),
             ListTile(
               leading: const Icon(Icons.settings),
               title: const Text('Configurações'),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(bottomSheetContext);
                 // TODO: Navegar para configurações
               },
             ),
@@ -213,7 +253,7 @@ class HomePage extends StatelessWidget {
               leading: const Icon(Icons.logout),
               title: const Text('Sair'),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(bottomSheetContext);
                 context.read<AuthBloc>().add(const AuthSignOutRequested());
               },
             ),

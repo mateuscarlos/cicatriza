@@ -14,26 +14,25 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
     try {
       final userRef = _firestore.doc('users/${profile.uid}');
 
-      final profileData = {
-        'uid': profile.uid,
-        'email': profile.email,
-        'displayName': profile.displayName,
-        'photoURL': profile.photoURL,
-        'crmCofen': profile.crmCofen,
-        'specialty': profile.specialty,
-        'timezone': profile.timezone,
-        'ownerId': profile.ownerId,
-        'acl': profile.acl,
-        'updatedAt': FieldValue.serverTimestamp(),
-      };
+      // Ensure timestamps are server timestamps for updates if needed,
+      // but profile.toJson() has strings.
+      // Actually, we should probably let Firestore handle it or convert back to Timestamp?
+      // For now, let's use toJson() which returns Map<String, dynamic> with Strings for dates.
+      // But wait, if we want ServerTimestamp, we should use FieldValue.
+      // The original code used manual map construction.
+      // Let's stick to manual map to control what we send, or use toJson and override.
 
-      // Se é primeira vez, incluir createdAt
+      // Using toJson is safer for new fields.
+      final data = profile.toJson();
+      data['updatedAt'] = FieldValue.serverTimestamp();
+
+      // If it's first time, include createdAt
       final doc = await userRef.get();
       if (!doc.exists) {
-        profileData['createdAt'] = FieldValue.serverTimestamp();
+        data['createdAt'] = FieldValue.serverTimestamp();
       }
 
-      await userRef.set(profileData, SetOptions(merge: true));
+      await userRef.set(data, SetOptions(merge: true));
     } catch (e) {
       throw Exception('Erro ao criar/atualizar perfil do usuário: $e');
     }
@@ -53,7 +52,7 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
         return null;
       }
 
-      return UserProfile.fromJson({...data, 'uid': uid});
+      return _mapUserProfile(uid, data);
     } catch (e) {
       throw Exception('Erro ao buscar perfil do usuário: $e');
     }
@@ -71,7 +70,7 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
         return null;
       }
 
-      return UserProfile.fromJson({...data, 'uid': uid});
+      return _mapUserProfile(uid, data);
     });
   }
 
@@ -107,5 +106,30 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
     } catch (e) {
       throw Exception('Erro ao atualizar perfil do usuário: $e');
     }
+  }
+
+  UserProfile _mapUserProfile(String uid, Map<String, dynamic> data) {
+    return UserProfile.fromJson({
+      ...data,
+      'uid': uid,
+      'createdAt': _parseDate(data['createdAt']).toIso8601String(),
+      'updatedAt': _parseDate(data['updatedAt']).toIso8601String(),
+      'lastAccess': data['lastAccess'] != null
+          ? _parseDate(data['lastAccess']).toIso8601String()
+          : null,
+    });
+  }
+
+  DateTime _parseDate(dynamic value) {
+    if (value is Timestamp) {
+      return value.toDate();
+    }
+    if (value is DateTime) {
+      return value;
+    }
+    if (value is String) {
+      return DateTime.tryParse(value) ?? DateTime.now();
+    }
+    return DateTime.now();
   }
 }

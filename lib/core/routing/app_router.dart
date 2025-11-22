@@ -4,6 +4,7 @@ import '../../presentation/pages/login_page.dart';
 import '../../presentation/pages/home_page.dart';
 import '../../presentation/pages/patients_page.dart';
 import '../../presentation/pages/splash_page.dart';
+import '../../presentation/pages/profile/profile_page.dart';
 
 /// Rotas da aplicação usando GoRouter
 class AppRouter {
@@ -11,6 +12,7 @@ class AppRouter {
   static const String login = '/login';
   static const String home = '/home';
   static const String patients = '/patients';
+  static const String profile = '/profile';
 
   /// Configuração das rotas
   static final GoRouter router = GoRouter(
@@ -42,6 +44,13 @@ class AppRouter {
         path: patients,
         name: 'patients',
         builder: (context, state) => const PatientsPage(),
+      ),
+
+      // Profile
+      GoRoute(
+        path: profile,
+        name: 'profile',
+        builder: (context, state) => const ProfilePage(),
       ),
     ],
 
@@ -87,4 +96,5 @@ extension AppRouterExtension on BuildContext {
   void goToLogin() => go(AppRouter.login);
   void goToHome() => go(AppRouter.home);
   void goToPatients() => go(AppRouter.patients);
+  void goToProfile() => go(AppRouter.profile);
 }

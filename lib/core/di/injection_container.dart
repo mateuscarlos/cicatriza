@@ -21,6 +21,7 @@ import '../../presentation/blocs/assessment_bloc.dart';
 import '../../presentation/blocs/auth_bloc.dart';
 import '../../presentation/blocs/patient_bloc.dart';
 import '../../presentation/blocs/wound_bloc.dart';
+import '../../presentation/blocs/profile/profile_bloc.dart';
 import '../config/google_sign_in_config.dart';
 import '../services/analytics_service.dart';
 import '../services/connectivity_service.dart';
@@ -159,4 +160,5 @@ Future<void> initDependencies() async {
       auth: sl(),
     ),
   );
+  sl.registerFactory(() => ProfileBloc(authRepository: sl()));
 }
