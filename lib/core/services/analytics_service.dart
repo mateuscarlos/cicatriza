@@ -28,6 +28,16 @@ class AnalyticsService {
     }
   }
 
+  /// Registra cadastro bem-sucedido
+  Future<void> logSignUpSuccess(String method) async {
+    try {
+      await _analytics.logSignUp(signUpMethod: method);
+      AppLogger.info('[Analytics] Sign up success: $method');
+    } catch (e) {
+      AppLogger.error('[Analytics] Erro ao registrar cadastro', error: e);
+    }
+  }
+
   /// Registra logout
   Future<void> logLogout() async {
     try {

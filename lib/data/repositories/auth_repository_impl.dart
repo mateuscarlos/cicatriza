@@ -123,6 +123,100 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<UserProfile?> signInWithEmailAndPassword(
+    String email,
+    String password,
+  ) async {
+    try {
+      final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      final user = userCredential.user;
+      if (user == null) {
+        throw Exception('Usuário não encontrado.');
+      }
+
+      final userDoc = await _firestore.doc('users/${user.uid}').get();
+      final data = userDoc.data();
+
+      if (data != null) {
+        return _mapUserProfile(user, data);
+      }
+
+      // Se não tiver perfil (caso raro), cria um básico
+      final profile = _createProfileFromFirebaseUser(user);
+      await _createUserProfile(profile);
+      return profile;
+    } on FirebaseAuthException catch (e) {
+      String message;
+      switch (e.code) {
+        case 'user-not-found':
+          message = 'Usuário não encontrado.';
+          break;
+        case 'wrong-password':
+          message = 'Senha incorreta.';
+          break;
+        case 'invalid-email':
+          message = 'Email inválido.';
+          break;
+        case 'user-disabled':
+          message = 'Usuário desativado.';
+          break;
+        default:
+          message = 'Erro no login: ${e.message ?? e.code}';
+      }
+      throw Exception(message);
+    } catch (e) {
+      throw Exception('Erro no login: $e');
+    }
+  }
+
+  @override
+  Future<UserProfile?> signUpWithEmailAndPassword(
+    String email,
+    String password,
+  ) async {
+    try {
+      final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      final user = userCredential.user;
+      if (user == null) {
+        throw Exception('Falha ao criar usuário.');
+      }
+
+      final profile = _createProfileFromFirebaseUser(user);
+      await _createUserProfile(profile);
+      return profile;
+    } on FirebaseAuthException catch (e) {
+      String message;
+      switch (e.code) {
+        case 'email-already-in-use':
+          message = 'Este email já está em uso.';
+          break;
+        case 'invalid-email':
+          message = 'Email inválido.';
+          break;
+        case 'weak-password':
+          message = 'A senha é muito fraca.';
+          break;
+        case 'operation-not-allowed':
+          message = 'Operação não permitida.';
+          break;
+        default:
+          message = 'Erro no cadastro: ${e.message ?? e.code}';
+      }
+      throw Exception(message);
+    } catch (e) {
+      throw Exception('Erro no cadastro: $e');
+    }
+  }
+
+  @override
   Future<void> signOut() async {
     try {
       await Future.wait([_firebaseAuth.signOut(), _googleSignIn.signOut()]);
@@ -168,10 +262,14 @@ class AuthRepositoryImpl implements AuthRepository {
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-    } catch (e) {
-      // Log do erro, mas não falhar o login
-      // TODO: Implementar logger adequado em M1
-      // print('Erro ao criar perfil do usuário: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'Erro ao criar perfil do usuário',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      // Não relançamos o erro para não bloquear o login,
+      // mas o erro fica registrado para monitoramento.
     }
   }
 

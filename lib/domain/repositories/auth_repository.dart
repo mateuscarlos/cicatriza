@@ -10,6 +10,18 @@ abstract class AuthRepository {
   /// Login com Google
   Future<UserProfile?> signInWithGoogle();
 
+  /// Login com Email e Senha
+  Future<UserProfile?> signInWithEmailAndPassword(
+    String email,
+    String password,
+  );
+
+  /// Cadastro com Email e Senha
+  Future<UserProfile?> signUpWithEmailAndPassword(
+    String email,
+    String password,
+  );
+
   /// Logout
   Future<void> signOut();
 

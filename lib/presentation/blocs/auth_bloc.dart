@@ -21,6 +21,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     // Registrar handlers de eventos
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<AuthGoogleSignInRequested>(_onGoogleSignInRequested);
+    on<AuthEmailSignInRequested>(_onEmailSignInRequested);
+    on<AuthEmailSignUpRequested>(_onEmailSignUpRequested);
     on<AuthSignOutRequested>(_onSignOutRequested);
 
     // Escutar mudanças de autenticação
@@ -88,6 +90,75 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       }
     } catch (e) {
       emit(AuthError('Erro no login com Google: $e'));
+    }
+  }
+
+  /// Login com Email e Senha
+  Future<void> _onEmailSignInRequested(
+    AuthEmailSignInRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    try {
+      final user = await _authRepository.signInWithEmailAndPassword(
+        event.email,
+        event.password,
+      );
+
+      if (user != null) {
+        await _analytics.logLoginSuccess('email');
+        await _analytics.setUserId(user.uid);
+
+        emit(
+          AuthAuthenticated(
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL,
+          ),
+        );
+      } else {
+        emit(const AuthError('Falha no login com email'));
+      }
+    } catch (e) {
+      // Remove "Exception: " prefix if present
+      final message = e.toString().replaceAll('Exception: ', '');
+      emit(AuthError(message));
+    }
+  }
+
+  /// Cadastro com Email e Senha
+  Future<void> _onEmailSignUpRequested(
+    AuthEmailSignUpRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    try {
+      final user = await _authRepository.signUpWithEmailAndPassword(
+        event.email,
+        event.password,
+      );
+
+      if (user != null) {
+        await _analytics.logSignUpSuccess('email');
+        await _analytics.setUserId(user.uid);
+
+        emit(
+          AuthAuthenticated(
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL,
+          ),
+        );
+      } else {
+        emit(const AuthError('Falha no cadastro com email'));
+      }
+    } catch (e) {
+      final message = e.toString().replaceAll('Exception: ', '');
+      emit(AuthError(message));
     }
   }
 
