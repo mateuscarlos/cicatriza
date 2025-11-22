@@ -40,6 +40,7 @@ class _ProfileViewState extends State<ProfileView>
   final _roleController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _cepController = TextEditingController();
   final _addressController = TextEditingController();
 
   // Temporary profile state for preferences
@@ -61,6 +62,7 @@ class _ProfileViewState extends State<ProfileView>
     _roleController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _cepController.dispose();
     _addressController.dispose();
     super.dispose();
   }
@@ -197,6 +199,7 @@ class _ProfileViewState extends State<ProfileView>
                   child: ContactSection(
                     emailController: _emailController,
                     phoneController: _phoneController,
+                    cepController: _cepController,
                     addressController: _addressController,
                   ),
                 ),

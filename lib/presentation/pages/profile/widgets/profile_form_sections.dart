@@ -3,6 +3,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+import 'package:brasil_fields/brasil_fields.dart';
+
+// Para busca de CEP
+import 'package:dio/dio.dart';
 
 class IdentificationSection extends StatelessWidget {
   final TextEditingController nameController;
@@ -211,6 +216,10 @@ class IdentificationSection extends StatelessWidget {
             if (value.trim().length < 3) {
               return 'Nome deve ter pelo menos 3 caracteres';
             }
+            // Validar caracteres especiais (permitir letras, espaços e acentos)
+            if (!RegExp(r"^[a-zA-ZÀ-ÿ\s]+$").hasMatch(value.trim())) {
+              return 'Nome não pode conter números ou caracteres especiais';
+            }
             return null;
           },
         ),
@@ -218,17 +227,23 @@ class IdentificationSection extends StatelessWidget {
         TextFormField(
           controller: crmController,
           decoration: const InputDecoration(
-            labelText: 'Registro Profissional (COREN/CRM)',
+            labelText: 'Registro Profissional (CRM/COREN)',
             border: OutlineInputBorder(),
             prefixIcon: Icon(Icons.badge),
-            hintText: 'Ex: CRM 123456 ou COREN 654321',
+            hintText: '123456-UF (ex: 123456-SP)',
           ),
+          inputFormatters: [
+            MaskTextInputFormatter(
+              mask: '######-AA',
+              filter: {"#": RegExp(r'[0-9]'), "A": RegExp(r'[A-Z]')},
+            ),
+          ],
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
               return 'Por favor, insira seu registro profissional';
             }
-            if (value.trim().length < 5) {
-              return 'Registro inválido';
+            if (!RegExp(r'^\d{1,6}-[A-Z]{2}$').hasMatch(value.trim())) {
+              return 'Formato inválido. Use: 123456-UF';
             }
             return null;
           },
@@ -273,17 +288,96 @@ class IdentificationSection extends StatelessWidget {
   }
 }
 
-class ContactSection extends StatelessWidget {
+class ContactSection extends StatefulWidget {
   final TextEditingController emailController;
   final TextEditingController phoneController;
+  final TextEditingController cepController;
   final TextEditingController addressController;
 
   const ContactSection({
     super.key,
     required this.emailController,
     required this.phoneController,
+    required this.cepController,
     required this.addressController,
   });
+
+  @override
+  State<ContactSection> createState() => _ContactSectionState();
+}
+
+class _ContactSectionState extends State<ContactSection> {
+  bool _isLoadingCep = false;
+
+  Future<void> _searchCep(String cep) async {
+    // Remove caracteres não numéricos
+    final cleanCep = cep.replaceAll(RegExp(r'\D'), '');
+
+    if (cleanCep.length != 8) return;
+
+    setState(() => _isLoadingCep = true);
+
+    try {
+      final dio = Dio();
+      final response = await dio.get(
+        'https://viacep.com.br/ws/$cleanCep/json/',
+      );
+
+      if (response.statusCode == 200 && mounted) {
+        final data = response.data;
+
+        if (data['erro'] == true) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('CEP não encontrado'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          return;
+        }
+
+        // Monta o endereço completo
+        final address = [
+          if (data['logradouro']?.toString().isNotEmpty == true)
+            data['logradouro'],
+          if (data['bairro']?.toString().isNotEmpty == true) data['bairro'],
+          if (data['localidade']?.toString().isNotEmpty == true)
+            data['localidade'],
+          if (data['uf']?.toString().isNotEmpty == true) data['uf'],
+        ].join(', ');
+
+        widget.addressController.text = address;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('CEP encontrado!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('CEP não encontrado'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao buscar CEP: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingCep = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -296,7 +390,7 @@ class ContactSection extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         TextFormField(
-          controller: emailController,
+          controller: widget.emailController,
           readOnly: true,
           decoration: const InputDecoration(
             labelText: 'E-mail Profissional',
@@ -307,7 +401,7 @@ class ContactSection extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         TextFormField(
-          controller: phoneController,
+          controller: widget.phoneController,
           decoration: const InputDecoration(
             labelText: 'Telefone (WhatsApp)',
             border: OutlineInputBorder(),
@@ -315,6 +409,7 @@ class ContactSection extends StatelessWidget {
             hintText: '(11) 99999-9999',
           ),
           keyboardType: TextInputType.phone,
+          inputFormatters: [TelefoneInputFormatter()],
           validator: (value) {
             if (value != null && value.isNotEmpty) {
               // Remove caracteres não numéricos
@@ -328,12 +423,43 @@ class ContactSection extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         TextFormField(
-          controller: addressController,
+          controller: widget.cepController,
+          decoration: InputDecoration(
+            labelText: 'CEP',
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.location_searching),
+            suffixIcon: _isLoadingCep
+                ? const Padding(
+                    padding: EdgeInsets.all(12.0),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                : IconButton(
+                    icon: const Icon(Icons.search),
+                    onPressed: () => _searchCep(widget.cepController.text),
+                    tooltip: 'Buscar CEP',
+                  ),
+            hintText: '12345-678',
+          ),
+          keyboardType: TextInputType.number,
+          inputFormatters: [CepInputFormatter()],
+          onChanged: (value) {
+            if (value.replaceAll(RegExp(r'\D'), '').length == 8) {
+              _searchCep(value);
+            }
+          },
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: widget.addressController,
           decoration: const InputDecoration(
-            labelText: 'Endereço Completo',
+            labelText: 'Endereço',
             border: OutlineInputBorder(),
             prefixIcon: Icon(Icons.location_on),
-            hintText: 'Rua, Número, Bairro, Cidade - Estado, CEP',
+            hintText: 'Rua, Número, Bairro, Cidade - Estado',
             alignLabelWithHint: true,
           ),
           maxLines: 3,

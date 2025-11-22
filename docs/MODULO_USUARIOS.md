@@ -1214,6 +1214,319 @@ Total: 28 tests, 28 passed ✓
 
 ---
 
+## Funcionalidades de Segurança
+
+O módulo de usuários implementa diversas funcionalidades de segurança para proteger dados sensíveis e monitorar acessos:
+
+### 1. Auditoria de Acessos
+
+Sistema completo de logs de auditoria que registra todas as ações importantes dos usuários.
+
+**Arquivo**: `lib/domain/entities/audit_log.dart`
+
+**Ações Registradas:**
+- Login (bem-sucedido e falhas)
+- Logout
+- Atualização de perfil
+- Alteração de senha
+- Reset de senha
+- Exclusão de conta
+- Exportação de dados
+- Revogação de sessões
+
+**Informações Capturadas:**
+```dart
+class AuditLog {
+  final String id;
+  final String userId;
+  final String action;
+  final DateTime timestamp;
+  final String deviceId;
+  final String deviceName;
+  final String deviceType; // 'android', 'ios', 'web', 'desktop'
+  final String? ipAddress;
+  final String? location;
+  final Map<String, dynamic>? metadata;
+}
+```
+
+**Repositório**: `lib/data/repositories/audit_repository_impl.dart`
+
+**Funcionalidades:**
+- Registro automático de ações
+- Consulta de logs por usuário
+- Consulta de logs por tipo de ação
+- Limpeza automática de logs antigos (>90 dias)
+- Armazenamento no Firestore subcoleção `audit_logs`
+
+**Uso:**
+```dart
+await auditRepository.logAction(
+  userId: user.uid,
+  action: AuditAction.login,
+  metadata: {'loginMethod': 'email'},
+);
+```
+
+---
+
+### 2. Detecção de Novo Dispositivo
+
+Sistema que identifica quando um usuário faz login de um dispositivo desconhecido.
+
+**Arquivo**: `lib/core/services/session_service.dart`
+
+**Como Funciona:**
+1. Gera ID único para cada dispositivo
+2. Armazena lista de dispositivos conhecidos localmente
+3. Verifica se dispositivo é novo a cada login
+4. Envia notificação push quando detectado novo dispositivo
+
+**Informações do Dispositivo:**
+- Android: Manufacturer + Model
+- iOS: Name + Model
+- Windows: Computer Name
+- macOS: Computer Name
+- Linux: Pretty Name
+
+**Integração com Firebase Messaging:**
+```dart
+if (await sessionService.isNewDevice()) {
+  // Enviar notificação push
+  await fcm.sendNotification(
+    userId: user.uid,
+    title: 'Novo login detectado',
+    body: 'Detectamos um login de ${deviceInfo.deviceName}',
+  );
+  
+  // Registrar dispositivo como conhecido
+  await sessionService.registerDevice();
+}
+```
+
+---
+
+### 3. Gerenciamento de Sessões Ativas
+
+Tela completa para visualizar e gerenciar todos os dispositivos conectados.
+
+**Arquivo**: `lib/presentation/pages/security/active_sessions_page.dart`
+
+**Funcionalidades:**
+- Listar todas as sessões ativas (últimos 30 dias)
+- Exibir informações de cada dispositivo:
+  - Nome do dispositivo
+  - Tipo (Android, iOS, Windows, etc.)
+  - Último acesso
+  - Data de login
+  - Indicador "Este dispositivo"
+- Revogar sessão individual
+- Botão "Deslogar de todos" (exceto dispositivo atual)
+- Pull-to-refresh
+
+**Estrutura da Sessão:**
+```dart
+class ActiveSession {
+  final String sessionId;
+  final String deviceId;
+  final String deviceName;
+  final String deviceType;
+  final DateTime createdAt;
+  final DateTime lastAccessAt;
+  final bool isCurrentDevice;
+}
+```
+
+**Armazenamento:**
+- Firestore: `users/{userId}/sessions/{sessionId}`
+- Sessões inativas por >30 dias são removidas automaticamente
+- SessionId armazenado localmente em SharedPreferences
+
+**Navegação:**
+```dart
+Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => ActiveSessionsPage(userId: user.uid),
+  ),
+);
+```
+
+---
+
+### 4. Criptografia de Dados Sensíveis
+
+Serviço para criptografar campos sensíveis antes de salvar no Firestore.
+
+**Arquivo**: `lib/core/services/encryption_service.dart`
+
+**Algoritmo:**
+- AES-256 (Advanced Encryption Standard)
+- Chave de 256 bits
+- Modo CBC (Cipher Block Chaining)
+- Encoding Base64 para armazenamento
+
+**Campos Criptografados:**
+- CRM/COREN
+- Telefone
+- Endereço completo
+- Outros dados sensíveis conforme necessário
+
+**Uso:**
+```dart
+final encryptionService = EncryptionService();
+
+// Criptografar
+final encrypted = encryptionService.encrypt('12345-SP');
+// Retorna: base64_encrypted_string
+
+// Descriptografar
+final decrypted = encryptionService.decrypt(encrypted);
+// Retorna: '12345-SP'
+
+// Verificar se está criptografado
+final isEncrypted = encryptionService.isEncrypted(text);
+```
+
+**Integração com UserProfile:**
+```dart
+// Ao salvar
+final profile = userProfile.copyWith(
+  crmCofen: encryptionService.encrypt(profile.crmCofen),
+  phone: encryptionService.encrypt(profile.phone),
+  address: encryptionService.encrypt(profile.address),
+);
+await firestore.collection('users').doc(uid).set(profile.toJson());
+
+// Ao carregar
+final doc = await firestore.collection('users').doc(uid).get();
+final profile = UserProfile.fromJson(doc.data()).copyWith(
+  crmCofen: encryptionService.decrypt(profile.crmCofen),
+  phone: encryptionService.decrypt(profile.phone),
+  address: encryptionService.decrypt(profile.address),
+);
+```
+
+**⚠️ Importante:**
+- Chave de criptografia deve ser armazenada de forma segura
+- Em produção, use variáveis de ambiente ou secret management
+- Nunca commite a chave no código
+
+---
+
+### 5. Rate Limiting de Requisições
+
+Sistema para prevenir abuso e ataques de força bruta.
+
+**Arquivo**: `lib/core/services/rate_limiter_service.dart`
+
+**Limites Padrão:**
+
+| Ação | Máximo de Tentativas | Janela de Tempo |
+|------|---------------------|-----------------|
+| Login | 5 | 15 minutos |
+| Reset de Senha | 3 | 1 hora |
+| Atualização de Perfil | 10 | 5 minutos |
+| Upload de Arquivo | 20 | 10 minutos |
+
+**Uso:**
+```dart
+final rateLimiter = RateLimiterService();
+
+// Verificar se pode executar ação
+final canLogin = await rateLimiter.canPerformAction(
+  action: 'login',
+  maxAttempts: RateLimits.loginMaxAttempts,
+  windowSeconds: RateLimits.loginWindowSeconds,
+);
+
+if (!canLogin) {
+  // Obter tempo restante
+  final timeRemaining = await rateLimiter.getTimeUntilNextAttempt(
+    action: 'login',
+    maxAttempts: RateLimits.loginMaxAttempts,
+    windowSeconds: RateLimits.loginWindowSeconds,
+  );
+  
+  throw Exception(
+    'Muitas tentativas. Aguarde ${timeRemaining?.inMinutes} minutos.',
+  );
+}
+
+// Executar ação
+await authRepository.signIn(email, password);
+
+// Registrar tentativa
+await rateLimiter.recordAttempt('login');
+```
+
+**Armazenamento:**
+- SharedPreferences local
+- Chave: `rate_limit_{action}`
+- Valor: Lista de timestamps (milissegundos)
+- Limpeza automática de tentativas fora da janela
+
+**Exemplo de Integração no AuthBloc:**
+```dart
+Future<void> _onEmailSignInRequested(
+  AuthEmailSignInRequested event,
+  Emitter<AuthState> emit,
+) async {
+  // Verificar rate limit
+  final canAttempt = await _rateLimiter.canPerformAction(
+    action: 'login',
+    maxAttempts: 5,
+    windowSeconds: 900,
+  );
+  
+  if (!canAttempt) {
+    final timeRemaining = await _rateLimiter.getTimeUntilNextAttempt(
+      action: 'login',
+      maxAttempts: 5,
+      windowSeconds: 900,
+    );
+    
+    emit(AuthError(
+      'Muitas tentativas de login. '
+      'Aguarde ${timeRemaining?.inMinutes} minutos.',
+    ));
+    return;
+  }
+  
+  emit(AuthLoading());
+  
+  try {
+    final user = await _authRepository.signInWithEmailAndPassword(
+      event.email,
+      event.password,
+    );
+    
+    // Sucesso - limpar tentativas
+    await _rateLimiter.clearAttempts('login');
+    
+    // Registrar no audit log
+    await _auditRepository.logAction(
+      userId: user.uid,
+      action: AuditAction.login,
+    );
+    
+    emit(AuthAuthenticated(uid: user.uid));
+  } catch (e) {
+    // Falha - registrar tentativa
+    await _rateLimiter.recordAttempt('login');
+    
+    await _auditRepository.logAction(
+      userId: event.email,
+      action: AuditAction.loginFailed,
+    );
+    
+    emit(AuthError(e.toString()));
+  }
+}
+```
+
+---
+
 ## Melhorias Futuras
 
 ### 1. Autenticação
@@ -1241,19 +1554,17 @@ Total: 28 tests, 28 passed ✓
 - [x] Validação de campos obrigatórios no perfil
 - [x] Validação de formato de telefone
 - [x] Validação de tamanho de campos
-- [ ] Validação de CRM/COREN em base governamental
-- [ ] Validação de telefone com SMS
-- [ ] Validação de CEP para autocompletar endereço
-- [ ] Mask inputs para telefone e CRM
-- [ ] Validação de caracteres especiais em nome
+- [x] Validação de CEP para autocompletar endereço
+- [x] Mask inputs para telefone e CRM/COREN
+- [x] Validação de caracteres especiais em nome (mantendo acentos)
 
 ### 4. Segurança
 
-- [ ] Auditoria de acessos
-- [ ] Notificação de login em novo dispositivo
-- [ ] Sessões ativas e opção de deslogar de todos
-- [ ] Criptografia de dados sensíveis no Firestore
-- [ ] Rate limiting de requisições
+- [x] Auditoria de acessos
+- [x] Notificação de login em novo dispositivo
+- [x] Sessões ativas e opção de deslogar de todos
+- [x] Criptografia de dados sensíveis no Firestore
+- [x] Rate limiting de requisições
 
 ### 5. UX/UI
 
