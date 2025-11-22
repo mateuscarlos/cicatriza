@@ -24,6 +24,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthEmailSignInRequested>(_onEmailSignInRequested);
     on<AuthEmailSignUpRequested>(_onEmailSignUpRequested);
     on<AuthSignOutRequested>(_onSignOutRequested);
+    on<AuthPasswordResetRequested>(_onPasswordResetRequested);
 
     // Escutar mudanças de autenticação
     _authSubscription = _authRepository.authStateChanges.listen((user) {
@@ -178,6 +179,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthUnauthenticated());
     } catch (e) {
       emit(AuthError('Erro no logout: $e'));
+    }
+  }
+
+  /// Recuperação de senha
+  Future<void> _onPasswordResetRequested(
+    AuthPasswordResetRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    try {
+      await _authRepository.sendPasswordResetEmail(event.email);
+      emit(const AuthPasswordResetSent());
+    } catch (e) {
+      final message = e.toString().replaceAll('Exception: ', '');
+      emit(AuthError(message));
     }
   }
 

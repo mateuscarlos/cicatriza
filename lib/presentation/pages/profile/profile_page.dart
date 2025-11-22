@@ -6,6 +6,7 @@ import '../../blocs/profile/profile_bloc.dart';
 import '../../blocs/profile/profile_event.dart';
 import '../../blocs/profile/profile_state.dart';
 import 'widgets/profile_form_sections.dart';
+import 'qr_code_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -29,6 +30,7 @@ class ProfileView extends StatefulWidget {
 class _ProfileViewState extends State<ProfileView>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final _formKey = GlobalKey<FormState>();
 
   // Controllers
   final _nameController = TextEditingController();
@@ -39,7 +41,6 @@ class _ProfileViewState extends State<ProfileView>
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
-  final _cityController = TextEditingController();
 
   // Temporary profile state for preferences
   UserProfile? _currentProfile;
@@ -61,7 +62,6 @@ class _ProfileViewState extends State<ProfileView>
     _emailController.dispose();
     _phoneController.dispose();
     _addressController.dispose();
-    _cityController.dispose();
     super.dispose();
   }
 
@@ -74,22 +74,31 @@ class _ProfileViewState extends State<ProfileView>
     _emailController.text = profile.email;
     _phoneController.text = profile.phone ?? '';
     _addressController.text = profile.address ?? '';
-    _cityController.text = profile.city ?? '';
     _currentProfile = profile;
   }
 
   void _saveProfile(BuildContext context) {
     if (_currentProfile == null) return;
 
+    // Validar formulário
+    if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Por favor, corrija os erros no formulário'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     final updatedProfile = _currentProfile!.copyWith(
-      displayName: _nameController.text,
-      crmCofen: _crmController.text,
-      specialty: _specialtyController.text,
-      institution: _institutionController.text,
-      role: _roleController.text,
-      phone: _phoneController.text,
-      address: _addressController.text,
-      city: _cityController.text,
+      displayName: _nameController.text.trim(),
+      crmCofen: _crmController.text.trim(),
+      specialty: _specialtyController.text.trim(),
+      institution: _institutionController.text.trim(),
+      role: _roleController.text.trim(),
+      phone: _phoneController.text.trim(),
+      address: _addressController.text.trim(),
       // Preferences are updated via callback in _currentProfile
     );
 
@@ -102,6 +111,20 @@ class _ProfileViewState extends State<ProfileView>
       appBar: AppBar(
         title: const Text('Meu Perfil'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.qr_code),
+            onPressed: () {
+              if (_currentProfile != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => QrCodePage(profile: _currentProfile!),
+                  ),
+                );
+              }
+            },
+            tooltip: 'QR Code do Perfil',
+          ),
           IconButton(
             icon: const Icon(Icons.save),
             onPressed: () => _saveProfile(context),
@@ -147,36 +170,38 @@ class _ProfileViewState extends State<ProfileView>
             return const Center(child: Text('Carregando perfil...'));
           }
 
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: IdentificationSection(
-                  nameController: _nameController,
-                  crmController: _crmController,
-                  specialtyController: _specialtyController,
-                  institutionController: _institutionController,
-                  roleController: _roleController,
-                  photoURL: _currentProfile!.photoURL,
-                  onPhotoChanged: (photoPath) {
-                    // Disparar evento para fazer upload da foto
-                    context.read<ProfileBloc>().add(
-                      ProfileImageUploadRequested(photoPath),
-                    );
-                  },
+          return Form(
+            key: _formKey,
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: IdentificationSection(
+                    nameController: _nameController,
+                    crmController: _crmController,
+                    specialtyController: _specialtyController,
+                    institutionController: _institutionController,
+                    roleController: _roleController,
+                    photoURL: _currentProfile!.photoURL,
+                    onPhotoChanged: (photoPath) {
+                      // Disparar evento para fazer upload da foto
+                      context.read<ProfileBloc>().add(
+                        ProfileImageUploadRequested(photoPath),
+                      );
+                    },
+                  ),
                 ),
-              ),
-              SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: ContactSection(
-                  emailController: _emailController,
-                  phoneController: _phoneController,
-                  addressController: _addressController,
-                  cityController: _cityController,
+                SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: ContactSection(
+                    emailController: _emailController,
+                    phoneController: _phoneController,
+                    addressController: _addressController,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),

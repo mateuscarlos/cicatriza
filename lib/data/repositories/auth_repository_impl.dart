@@ -242,6 +242,28 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  @override
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _firebaseAuth.sendPasswordResetEmail(email: email.trim());
+    } on FirebaseAuthException catch (e) {
+      String message;
+      switch (e.code) {
+        case 'invalid-email':
+          message = 'Email inválido.';
+          break;
+        case 'user-not-found':
+          message = 'Não existe conta com este email.';
+          break;
+        default:
+          message = 'Erro ao enviar email: ${e.message ?? e.code}';
+      }
+      throw Exception(message);
+    } catch (e) {
+      throw Exception('Erro ao enviar email de recuperação: $e');
+    }
+  }
+
   /// Criar UserProfile a partir do Firebase User
   UserProfile _createProfileFromFirebaseUser(
     User user, {

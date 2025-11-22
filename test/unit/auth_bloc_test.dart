@@ -115,12 +115,22 @@ void main() {
       'emits [AuthLoading, AuthAuthenticated] when AuthEmailSignUpRequested succeeds',
       build: () {
         when(
-          () => mockAuthRepository.signUpWithEmailAndPassword(email, password),
+          () => mockAuthRepository.signUpWithEmailAndPassword(
+            email,
+            password,
+            termsAccepted: true,
+            privacyPolicyAccepted: true,
+          ),
         ).thenAnswer((_) async => testUser);
         return authBloc;
       },
       act: (bloc) => bloc.add(
-        const AuthEmailSignUpRequested(email: email, password: password),
+        const AuthEmailSignUpRequested(
+          email: email,
+          password: password,
+          termsAccepted: true,
+          privacyPolicyAccepted: true,
+        ),
       ),
       expect: () => [
         isA<AuthLoading>(),
@@ -132,7 +142,12 @@ void main() {
       ],
       verify: (_) {
         verify(
-          () => mockAuthRepository.signUpWithEmailAndPassword(email, password),
+          () => mockAuthRepository.signUpWithEmailAndPassword(
+            email,
+            password,
+            termsAccepted: true,
+            privacyPolicyAccepted: true,
+          ),
         ).called(1);
         verify(() => mockAnalyticsService.logSignUpSuccess('email')).called(1);
       },
@@ -142,7 +157,12 @@ void main() {
       'emits [AuthLoading, AuthError] when AuthEmailSignUpRequested fails',
       build: () {
         when(
-          () => mockAuthRepository.signUpWithEmailAndPassword(email, password),
+          () => mockAuthRepository.signUpWithEmailAndPassword(
+            email,
+            password,
+            termsAccepted: false,
+            privacyPolicyAccepted: false,
+          ),
         ).thenThrow(Exception('Signup failed'));
         return authBloc;
       },

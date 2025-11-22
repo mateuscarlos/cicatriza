@@ -32,4 +32,7 @@ abstract class AuthRepository {
 
   /// Verificar se usuário está autenticado
   bool get isAuthenticated;
+
+  /// Enviar email de recuperação de senha
+  Future<void> sendPasswordResetEmail(String email);
 }

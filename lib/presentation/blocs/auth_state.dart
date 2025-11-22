@@ -44,3 +44,8 @@ class AuthError extends AuthState {
   @override
   List<Object> get props => [message];
 }
+
+/// Email de recuperação de senha enviado
+class AuthPasswordResetSent extends AuthState {
+  const AuthPasswordResetSent();
+}

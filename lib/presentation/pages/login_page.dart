@@ -120,7 +120,28 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             enabled: !isLoading,
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 8),
+
+                          // Forgot Password Link
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: isLoading
+                                  ? null
+                                  : () {
+                                      Navigator.of(
+                                        context,
+                                      ).pushNamed('/forgot-password');
+                                    },
+                              child: Text(
+                                'Esqueci minha senha',
+                                style: TextStyle(
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
 
                           // Login Button
                           SizedBox(

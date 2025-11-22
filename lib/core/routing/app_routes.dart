@@ -5,6 +5,7 @@ import '../../presentation/pages/pages.dart';
 
 class AppRoutes {
   static const String login = '/login';
+  static const String forgotPassword = '/forgot-password';
   static const String home = '/';
   static const String patients = '/patients';
   static const String profile = '/profile';
@@ -20,6 +21,12 @@ class AppRoutes {
       case login:
         return MaterialPageRoute(
           builder: (_) => const LoginPage(),
+          settings: settings,
+        );
+
+      case forgotPassword:
+        return MaterialPageRoute(
+          builder: (_) => const ForgotPasswordPage(),
           settings: settings,
         );
 

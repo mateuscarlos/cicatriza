@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 
 class IdentificationSection extends StatelessWidget {
   final TextEditingController nameController;
@@ -57,8 +60,72 @@ class IdentificationSection extends StatelessWidget {
         imageQuality: 85,
       );
 
-      if (image != null && onPhotoChanged != null) {
-        onPhotoChanged!(image.path);
+      if (image == null) return;
+
+      // Crop da imagem
+      final CroppedFile? croppedFile = await ImageCropper().cropImage(
+        sourcePath: image.path,
+        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Ajustar Foto',
+            toolbarColor: Theme.of(context).colorScheme.primary,
+            toolbarWidgetColor: Theme.of(context).colorScheme.onPrimary,
+            initAspectRatio: CropAspectRatioPreset.square,
+            lockAspectRatio: true,
+            hideBottomControls: false,
+          ),
+          IOSUiSettings(
+            title: 'Ajustar Foto',
+            aspectRatioLockEnabled: true,
+            resetAspectRatioEnabled: false,
+            aspectRatioPickerButtonHidden: true,
+          ),
+        ],
+      );
+
+      if (croppedFile == null) return;
+
+      // Preview da imagem antes de confirmar
+      if (context.mounted) {
+        final bool? confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Confirmar foto'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ClipOval(
+                  child: Image.file(
+                    File(croppedFile.path),
+                    width: 150,
+                    height: 150,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Deseja usar esta foto no seu perfil?',
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('CANCELAR'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('CONFIRMAR'),
+              ),
+            ],
+          ),
+        );
+
+        if (confirmed == true && onPhotoChanged != null) {
+          onPhotoChanged!(croppedFile.path);
+        }
       }
     } catch (e) {
       if (context.mounted) {
@@ -135,7 +202,17 @@ class IdentificationSection extends StatelessWidget {
           decoration: const InputDecoration(
             labelText: 'Nome Completo',
             border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.person),
           ),
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Por favor, insira seu nome completo';
+            }
+            if (value.trim().length < 3) {
+              return 'Nome deve ter pelo menos 3 caracteres';
+            }
+            return null;
+          },
         ),
         const SizedBox(height: 16),
         TextFormField(
@@ -143,7 +220,18 @@ class IdentificationSection extends StatelessWidget {
           decoration: const InputDecoration(
             labelText: 'Registro Profissional (COREN/CRM)',
             border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.badge),
+            hintText: 'Ex: CRM 123456 ou COREN 654321',
           ),
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Por favor, insira seu registro profissional';
+            }
+            if (value.trim().length < 5) {
+              return 'Registro inválido';
+            }
+            return null;
+          },
         ),
         const SizedBox(height: 16),
         TextFormField(
@@ -151,7 +239,15 @@ class IdentificationSection extends StatelessWidget {
           decoration: const InputDecoration(
             labelText: 'Especialidade',
             border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.medical_services),
+            hintText: 'Ex: Estomaterapia, Dermatologia',
           ),
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Por favor, insira sua especialidade';
+            }
+            return null;
+          },
         ),
         const SizedBox(height: 16),
         TextFormField(
@@ -159,6 +255,7 @@ class IdentificationSection extends StatelessWidget {
           decoration: const InputDecoration(
             labelText: 'Instituição / Clínica',
             border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.business),
           ),
         ),
         const SizedBox(height: 16),
@@ -167,6 +264,8 @@ class IdentificationSection extends StatelessWidget {
           decoration: const InputDecoration(
             labelText: 'Cargo / Função',
             border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.work),
+            hintText: 'Ex: Enfermeiro, Médico',
           ),
         ),
       ],
@@ -178,14 +277,12 @@ class ContactSection extends StatelessWidget {
   final TextEditingController emailController;
   final TextEditingController phoneController;
   final TextEditingController addressController;
-  final TextEditingController cityController;
 
   const ContactSection({
     super.key,
     required this.emailController,
     required this.phoneController,
     required this.addressController,
-    required this.cityController,
   });
 
   @override
@@ -205,6 +302,7 @@ class ContactSection extends StatelessWidget {
             labelText: 'E-mail Profissional',
             border: OutlineInputBorder(),
             filled: true,
+            prefixIcon: Icon(Icons.email),
           ),
         ),
         const SizedBox(height: 16),
@@ -213,24 +311,40 @@ class ContactSection extends StatelessWidget {
           decoration: const InputDecoration(
             labelText: 'Telefone (WhatsApp)',
             border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.phone),
+            hintText: '(11) 99999-9999',
           ),
           keyboardType: TextInputType.phone,
+          validator: (value) {
+            if (value != null && value.isNotEmpty) {
+              // Remove caracteres não numéricos
+              final cleaned = value.replaceAll(RegExp(r'\D'), '');
+              if (cleaned.length < 10) {
+                return 'Telefone inválido';
+              }
+            }
+            return null;
+          },
         ),
         const SizedBox(height: 16),
         TextFormField(
           controller: addressController,
           decoration: const InputDecoration(
-            labelText: 'Endereço Profissional',
+            labelText: 'Endereço Completo',
             border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.location_on),
+            hintText: 'Rua, Número, Bairro, Cidade - Estado, CEP',
+            alignLabelWithHint: true,
           ),
-        ),
-        const SizedBox(height: 16),
-        TextFormField(
-          controller: cityController,
-          decoration: const InputDecoration(
-            labelText: 'Cidade',
-            border: OutlineInputBorder(),
-          ),
+          maxLines: 3,
+          validator: (value) {
+            if (value != null &&
+                value.trim().isNotEmpty &&
+                value.trim().length < 10) {
+              return 'Endereço muito curto';
+            }
+            return null;
+          },
         ),
       ],
     );
