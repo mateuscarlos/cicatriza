@@ -5,6 +5,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/datasources/local/offline_database.dart';
 import '../../data/repositories/assessment_repository_offline.dart';
@@ -22,6 +23,7 @@ import '../../presentation/blocs/auth_bloc.dart';
 import '../../presentation/blocs/patient_bloc.dart';
 import '../../presentation/blocs/wound_bloc.dart';
 import '../../presentation/blocs/profile/profile_bloc.dart';
+import '../../presentation/blocs/theme/theme_cubit.dart';
 import '../config/google_sign_in_config.dart';
 import '../services/analytics_service.dart';
 import '../services/connectivity_service.dart';
@@ -33,6 +35,13 @@ final GetIt sl = GetIt.instance;
 
 /// Inicializar todas as dependências
 Future<void> initDependencies() async {
+  // ============================================================================
+  // Shared Preferences
+  // ============================================================================
+
+  final prefs = await SharedPreferences.getInstance();
+  sl.registerLazySingleton<SharedPreferences>(() => prefs);
+
   // ============================================================================
   // Firebase Services
   // ============================================================================
@@ -161,4 +170,7 @@ Future<void> initDependencies() async {
     ),
   );
   sl.registerFactory(() => ProfileBloc(authRepository: sl()));
+
+  // Theme Cubit
+  sl.registerLazySingleton(() => ThemeCubit(sl()));
 }

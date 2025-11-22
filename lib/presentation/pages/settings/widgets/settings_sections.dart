@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../domain/entities/user_profile.dart';
+import '../../../blocs/theme/theme_cubit.dart';
 
 class PreferencesSettingsSection extends StatefulWidget {
   final UserProfile profile;
@@ -56,6 +58,18 @@ class _PreferencesSettingsSectionState
     );
   }
 
+  ThemeMode _themeModeFromString(String theme) {
+    switch (theme) {
+      case 'light':
+        return ThemeMode.light;
+      case 'dark':
+        return ThemeMode.dark;
+      case 'system':
+      default:
+        return ThemeMode.system;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -105,6 +119,10 @@ class _PreferencesSettingsSectionState
             if (value != null) {
               setState(() => _theme = value);
               _updateProfile();
+
+              // Atualizar tema no ThemeCubit
+              final themeMode = _themeModeFromString(value);
+              context.read<ThemeCubit>().setTheme(themeMode);
             }
           },
         ),

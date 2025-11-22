@@ -18,6 +18,7 @@ import 'presentation/blocs/auth_event.dart';
 import 'presentation/blocs/auth_state.dart';
 import 'presentation/blocs/patient_bloc.dart';
 import 'presentation/blocs/wound_bloc.dart';
+import 'presentation/blocs/theme/theme_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -93,6 +94,7 @@ class _CicatrizaAppState extends State<CicatrizaApp> {
         BlocProvider<PatientBloc>(create: (context) => sl<PatientBloc>()),
         BlocProvider<WoundBloc>(create: (context) => sl<WoundBloc>()),
         BlocProvider<AssessmentBloc>(create: (context) => sl<AssessmentBloc>()),
+        BlocProvider<ThemeCubit>(create: (_) => sl<ThemeCubit>()),
       ],
       child: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
@@ -108,15 +110,19 @@ class _CicatrizaAppState extends State<CicatrizaApp> {
             );
           }
         },
-        child: MaterialApp(
-          navigatorKey: _navigatorKey,
-          title: 'Cicatriza',
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          themeMode: ThemeMode.system,
-          initialRoute: AppRoutes.login,
-          onGenerateRoute: AppRoutes.generateRoute,
-          debugShowCheckedModeBanner: false,
+        child: BlocBuilder<ThemeCubit, ThemeMode>(
+          builder: (context, themeMode) {
+            return MaterialApp(
+              navigatorKey: _navigatorKey,
+              title: 'Cicatriza',
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              themeMode: themeMode,
+              initialRoute: AppRoutes.login,
+              onGenerateRoute: AppRoutes.generateRoute,
+              debugShowCheckedModeBanner: false,
+            );
+          },
         ),
       ),
     );
