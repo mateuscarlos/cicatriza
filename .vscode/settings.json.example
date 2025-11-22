@@ -1,0 +1,13 @@
+{
+    "cmake.ignoreCMakeListsMissing": true,
+    "java.configuration.runtimes": [
+        {
+            "name": "JavaSE-21",
+            "path": "CAMINHO_PARA_SEU_JDK_21",
+            "default": true
+        }
+    ],
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.jdt.ls.java.home": "CAMINHO_PARA_SEU_JDK_21",
+    "java.configuration.updateBuildConfiguration": "automatic"
+}

@@ -1,0 +1,165 @@
+rules_version = '2';
+
+/**
+ * Firestore Security Rules — Cicatriza (M1)
+ * Estrutura hierárquica: users/{uid}/patients/{pid}/wounds/{wid}/assessments/{aid}/media/{mid}
+ * Controle de acesso baseado em ownerId e ACL (owner/editor/viewer) no documento do paciente.
+ * Validações essenciais conforme requisitos clínicos do marco 1.
+ */
+
+service cloud.firestore {
+  match /databases/{db}/documents {
+
+    // --------------------------------------------------------------
+    // Helpers gerais
+    // --------------------------------------------------------------
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isAuth() && request.auth.uid == uid;
+    }
+
+    function numberBetween(value, min, max) {
+      return (value is int || value is float) && value >= min && value <= max;
+    }
+
+    function positiveNumber(value) {
+      return (value is int || value is float) && value > 0;
+    }
+
+    function optionalCleanString(data, field, maxLen) {
+      return !(field in data) || (
+        data[field] is string &&
+        data[field].size() <= maxLen &&
+        !data[field].matches('.*<[^>]+>.*')
+      );
+    }
+
+    function patientHasRole(uid, pid, roles) {
+      let patient = get(/databases/$(db)/documents/users/$(uid)/patients/$(pid));
+      let role = patient.data.acl.roles[request.auth.uid];
+      return role != null && roles.hasAny([role]);
+    }
+
+    function userHasPatientRole(uid, pid, roles) {
+      return exists(/databases/$(db)/documents/users/$(uid)/patients/$(pid)) &&
+             get(/databases/$(db)/documents/users/$(uid)/patients/$(pid)).data.acl.roles[request.auth.uid] in roles;
+    }
+
+    function validatePatient(data, uid) {
+      return data.ownerId == uid &&
+        ('acl' in data) &&
+        ('roles' in data.acl) &&
+        data.acl.roles[uid] == 'owner' &&
+        data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
+        data.nameLowercase is string && data.nameLowercase.size() > 0 &&
+        data.updatedAt != null;
+    }
+
+    function validateWound(data, uid, pid) {
+      return data.ownerId == uid &&
+        data.patientId == pid &&
+        data.type is string && data.type.size() > 0 &&
+        data.location is string && data.location.size() > 0 &&
+        data.status is string && data.status.size() > 0 &&
+        data.updatedAt != null &&
+        optionalCleanString(data, 'locationDescription', 500) &&
+        optionalCleanString(data, 'causeDescription', 500) &&
+        optionalCleanString(data, 'notes', 2000);
+    }
+
+    function validateAssessment(data, uid, pid, wid) {
+      return data.ownerId == uid &&
+        data.patientId == pid &&
+        data.woundId == wid &&
+        data.date != null &&
+        numberBetween(data.painScale, 0, 10) &&
+        positiveNumber(data.lengthCm) &&
+        positiveNumber(data.widthCm) &&
+        positiveNumber(data.depthCm) &&
+        optionalCleanString(data, 'notes', 2000);
+    }
+
+    function validateMedia(data, uid, pid, wid, aid) {
+      return data.ownerId == uid &&
+        data.patientId == pid &&
+        data.woundId == wid &&
+        data.assessmentId == aid &&
+        data.storagePath is string &&
+        ['image', 'video'].hasAny([data.type]);
+    }
+
+    // --------------------------------------------------------------
+    // Users e subcoleções
+    // --------------------------------------------------------------
+    match /users/{uid} {
+      allow read: if isAuth();
+      allow create: if isOwner(uid);
+      allow update, delete: if isOwner(uid);
+
+      match /patients/{pid} {
+        allow create: if isOwner(uid) && validatePatient(request.resource.data, uid);
+
+        allow read: if isAuth() && (
+          isOwner(uid) ||
+          userHasPatientRole(uid, pid, ['owner', 'editor', 'viewer'])
+        );
+
+        allow update, delete: if isAuth() && (
+          isOwner(uid) ||
+          userHasPatientRole(uid, pid, ['owner', 'editor'])
+        ) && validatePatient(request.resource.data, uid);
+
+        match /wounds/{wid} {
+          // Simplificado: permite create/update/delete se o usuário é owner do path users/{uid}
+          allow create: if isOwner(uid) && validateWound(request.resource.data, uid, pid);
+          
+          allow read: if isAuth() && (
+            isOwner(uid) || userHasPatientRole(uid, pid, ['owner', 'editor', 'viewer'])
+          );
+
+          allow update, delete: if isOwner(uid) && validateWound(request.resource.data, uid, pid);
+
+          match /assessments/{aid} {
+            // Simplificado: permite create/update/delete se o usuário é owner do path users/{uid}
+            allow create: if isOwner(uid) && validateAssessment(request.resource.data, uid, pid, wid);
+
+            allow read: if isAuth() && (
+              isOwner(uid) || userHasPatientRole(uid, pid, ['owner', 'editor', 'viewer'])
+            );
+
+            allow update, delete: if isOwner(uid) && validateAssessment(request.resource.data, uid, pid, wid);
+
+            match /media/{mid} {
+              // Simplificado: permite create/update/delete se o usuário é owner do path users/{uid}
+              allow create: if isOwner(uid) && validateMedia(request.resource.data, uid, pid, wid, aid);
+
+              allow read: if isAuth() && (
+                isOwner(uid) || userHasPatientRole(uid, pid, ['owner', 'editor', 'viewer'])
+              );
+
+              allow update, delete: if isOwner(uid) && validateMedia(request.resource.data, uid, pid, wid, aid);
+            }
+          }
+        }
+      }
+    }
+
+    // --------------------------------------------------------------
+    // Collections globais auxiliares
+    // --------------------------------------------------------------
+    match /transfers/{id} {
+      allow create: if isAuth();
+      allow read, update: if isAuth() && request.auth.uid in [resource.data.fromUserId, resource.data.toUserId];
+      allow delete: if isAuth() && request.auth.uid == resource.data.fromUserId;
+    }
+
+    match /auditEvents/{id} {
+      allow create: if isAuth();
+      allow read: if isAuth() && request.auth.uid in [resource.data.actorId, resource.data.ownerId];
+      allow update, delete: if false;
+    }
+  }
+}

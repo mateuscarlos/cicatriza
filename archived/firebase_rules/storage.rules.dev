@@ -1,0 +1,37 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper para verificar se o usuário está autenticado
+    function isAuth() {
+      return request.auth != null;
+    }
+    
+    // Helper para verificar se é o proprietário
+    function isOwner(uid) {
+      return isAuth() && request.auth.uid == uid;
+    }
+    
+    // Validação básica de tipo de arquivo para uploads
+    function isValidImageUpload() {
+      return request.resource != null
+        && request.resource.contentType.matches('image/.*')
+        && request.resource.size <= 25 * 1024 * 1024; // 25MB
+    }
+    
+    // Mídia do usuário (fotos das avaliações)
+    match /users/{uid}/patients/{pid}/wounds/{wid}/assessments/{aid}/{fileName} {
+      // Ler: apenas o dono da conta
+      allow read: if isOwner(uid);
+      
+      // Escrever: dono da conta + validação de imagem para uploads
+      allow write: if isOwner(uid) && (resource == null || isValidImageUpload());
+    }
+    
+    // Fallback para qualquer arquivo do usuário
+    match /users/{uid}/{allPaths=**} {
+      allow read, write: if isOwner(uid);
+    }
+  }
+}
