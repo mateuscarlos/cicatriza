@@ -26,6 +26,11 @@ void main() {
 
   Widget createWidgetUnderTest() {
     return MaterialApp(
+      onGenerateRoute: (settings) {
+        return MaterialPageRoute(
+          builder: (_) => const Scaffold(body: Text('Dummy Page')),
+        );
+      },
       home: BlocProvider<AuthBloc>.value(
         value: mockAuthBloc,
         child: const RegisterPage(),
@@ -50,7 +55,8 @@ void main() {
     testWidgets('renders terms and privacy checkboxes', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('Eu li e aceito os '), findsNWidgets(2));
+      expect(find.text('Eu li e aceito os '), findsOneWidget);
+      expect(find.text('Eu li e aceito a '), findsOneWidget);
       expect(find.text('Termos de Uso'), findsOneWidget);
       expect(find.text('Política de Privacidade'), findsOneWidget);
       expect(find.byType(CheckboxListTile), findsNWidgets(2));
@@ -59,7 +65,9 @@ void main() {
     testWidgets('validates empty email', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      await tester.tap(find.text('CADASTRAR'));
+      final button = find.text('CADASTRAR');
+      await tester.ensureVisible(button);
+      await tester.tap(button);
       await tester.pumpAndSettle();
 
       expect(find.text('Por favor, insira seu email'), findsOneWidget);
@@ -72,7 +80,9 @@ void main() {
         find.widgetWithText(TextFormField, 'Email'),
         'invalid-email',
       );
-      await tester.tap(find.text('CADASTRAR'));
+      final button = find.text('CADASTRAR');
+      await tester.ensureVisible(button);
+      await tester.tap(button);
       await tester.pumpAndSettle();
 
       expect(find.text('Email inválido'), findsOneWidget);
@@ -85,7 +95,9 @@ void main() {
         find.widgetWithText(TextFormField, 'Email'),
         'test@example.com',
       );
-      await tester.tap(find.text('CADASTRAR'));
+      final button = find.text('CADASTRAR');
+      await tester.ensureVisible(button);
+      await tester.tap(button);
       await tester.pumpAndSettle();
 
       expect(find.text('Por favor, insira sua senha'), findsOneWidget);
@@ -102,7 +114,9 @@ void main() {
         find.widgetWithText(TextFormField, 'Senha'),
         'short',
       );
-      await tester.tap(find.text('CADASTRAR'));
+      final button = find.text('CADASTRAR');
+      await tester.ensureVisible(button);
+      await tester.tap(button);
       await tester.pumpAndSettle();
 
       expect(
@@ -122,7 +136,9 @@ void main() {
         find.widgetWithText(TextFormField, 'Senha'),
         'password',
       );
-      await tester.tap(find.text('CADASTRAR'));
+      final button = find.text('CADASTRAR');
+      await tester.ensureVisible(button);
+      await tester.tap(button);
       await tester.pumpAndSettle();
 
       expect(
@@ -146,7 +162,9 @@ void main() {
         find.widgetWithText(TextFormField, 'Confirmar Senha'),
         'DifferentPass123!',
       );
-      await tester.tap(find.text('CADASTRAR'));
+      final button = find.text('CADASTRAR');
+      await tester.ensureVisible(button);
+      await tester.tap(button);
       await tester.pumpAndSettle();
 
       expect(find.text('As senhas não coincidem'), findsOneWidget);
@@ -169,11 +187,15 @@ void main() {
       );
 
       // Check privacy but not terms
-      final privacyCheckbox = find.byType(CheckboxListTile).last;
+      // Tap the checkbox specifically to avoid hitting the link
+      final privacyCheckbox = find.byType(Checkbox).last;
+      await tester.ensureVisible(privacyCheckbox);
       await tester.tap(privacyCheckbox);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('CADASTRAR'));
+      final button = find.text('CADASTRAR');
+      await tester.ensureVisible(button);
+      await tester.tap(button);
       await tester.pumpAndSettle();
 
       expect(
@@ -199,11 +221,14 @@ void main() {
       );
 
       // Check terms but not privacy
-      final termsCheckbox = find.byType(CheckboxListTile).first;
+      final termsCheckbox = find.byType(Checkbox).first;
+      await tester.ensureVisible(termsCheckbox);
       await tester.tap(termsCheckbox);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('CADASTRAR'));
+      final button = find.text('CADASTRAR');
+      await tester.ensureVisible(button);
+      await tester.tap(button);
       await tester.pumpAndSettle();
 
       expect(
@@ -231,14 +256,20 @@ void main() {
         );
 
         // Accept both terms and privacy
-        final termsCheckbox = find.byType(CheckboxListTile).first;
-        final privacyCheckbox = find.byType(CheckboxListTile).last;
+        final termsCheckbox = find.byType(Checkbox).first;
+        final privacyCheckbox = find.byType(Checkbox).last;
+
+        await tester.ensureVisible(termsCheckbox);
         await tester.tap(termsCheckbox);
         await tester.pumpAndSettle();
+
+        await tester.ensureVisible(privacyCheckbox);
         await tester.tap(privacyCheckbox);
         await tester.pumpAndSettle();
 
-        await tester.tap(find.text('CADASTRAR'));
+        final button = find.text('CADASTRAR');
+        await tester.ensureVisible(button);
+        await tester.tap(button);
         await tester.pumpAndSettle();
 
         verify(

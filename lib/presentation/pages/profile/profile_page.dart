@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../domain/entities/user_profile.dart';
 import '../../blocs/profile/profile_bloc.dart';
 import '../../blocs/profile/profile_event.dart';
 import '../../blocs/profile/profile_state.dart';
+import '../../widgets/skeleton_loader.dart';
 import 'widgets/profile_form_sections.dart';
 import 'qr_code_page.dart';
 
@@ -107,6 +109,27 @@ class _ProfileViewState extends State<ProfileView>
     context.read<ProfileBloc>().add(ProfileUpdateRequested(updatedProfile));
   }
 
+  void _shareProfile() {
+    if (_currentProfile == null) return;
+
+    final name = _currentProfile!.displayName ?? 'Sem nome';
+    final specialty = _currentProfile!.specialty;
+    final institution = _currentProfile!.institution ?? '';
+    final crm = _currentProfile!.crmCofen ?? '';
+
+    final text =
+        '''
+Perfil Profissional - Cicatriza
+
+Nome: $name
+Especialidade: $specialty${institution.isNotEmpty ? '\nInstituição: $institution' : ''}${crm.isNotEmpty ? '\nCRM/COREN: $crm' : ''}
+
+Aplicativo Cicatriza - Gestão de Feridas
+    ''';
+
+    Share.share(text, subject: 'Perfil Profissional - $name');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -128,8 +151,14 @@ class _ProfileViewState extends State<ProfileView>
             tooltip: 'QR Code do Perfil',
           ),
           IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: _shareProfile,
+            tooltip: 'Compartilhar Perfil',
+          ),
+          IconButton(
             icon: const Icon(Icons.save),
             onPressed: () => _saveProfile(context),
+            tooltip: 'Salvar Alterações',
           ),
         ],
         bottom: TabBar(
@@ -163,8 +192,8 @@ class _ProfileViewState extends State<ProfileView>
           }
         },
         builder: (context, state) {
-          if (state is ProfileLoading) {
-            return const Center(child: CircularProgressIndicator());
+          if (state is ProfileLoading && _currentProfile == null) {
+            return const ProfileSkeleton();
           }
 
           if (_currentProfile == null) {
@@ -172,38 +201,49 @@ class _ProfileViewState extends State<ProfileView>
             return const Center(child: Text('Carregando perfil...'));
           }
 
-          return Form(
-            key: _formKey,
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: IdentificationSection(
-                    nameController: _nameController,
-                    crmController: _crmController,
-                    specialtyController: _specialtyController,
-                    institutionController: _institutionController,
-                    roleController: _roleController,
-                    photoURL: _currentProfile!.photoURL,
-                    onPhotoChanged: (photoPath) {
-                      // Disparar evento para fazer upload da foto
-                      context.read<ProfileBloc>().add(
-                        ProfileImageUploadRequested(photoPath),
-                      );
-                    },
+          return RefreshIndicator(
+            onRefresh: () async {
+              context.read<ProfileBloc>().add(const ProfileLoadRequested());
+              // Aguardar até o estado mudar
+              await context.read<ProfileBloc>().stream.firstWhere(
+                (state) => state is! ProfileLoading,
+              );
+            },
+            child: Form(
+              key: _formKey,
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: IdentificationSection(
+                      nameController: _nameController,
+                      crmController: _crmController,
+                      specialtyController: _specialtyController,
+                      institutionController: _institutionController,
+                      roleController: _roleController,
+                      photoURL: _currentProfile!.photoURL,
+                      onPhotoChanged: (photoPath) {
+                        // Disparar evento para fazer upload da foto
+                        context.read<ProfileBloc>().add(
+                          ProfileImageUploadRequested(photoPath),
+                        );
+                      },
+                    ),
                   ),
-                ),
-                SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: ContactSection(
-                    emailController: _emailController,
-                    phoneController: _phoneController,
-                    cepController: _cepController,
-                    addressController: _addressController,
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: ContactSection(
+                      emailController: _emailController,
+                      phoneController: _phoneController,
+                      cepController: _cepController,
+                      addressController: _addressController,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },

@@ -293,6 +293,7 @@ class ContactSection extends StatefulWidget {
   final TextEditingController phoneController;
   final TextEditingController cepController;
   final TextEditingController addressController;
+  final Dio? dio;
 
   const ContactSection({
     super.key,
@@ -300,6 +301,7 @@ class ContactSection extends StatefulWidget {
     required this.phoneController,
     required this.cepController,
     required this.addressController,
+    this.dio,
   });
 
   @override
@@ -318,7 +320,7 @@ class _ContactSectionState extends State<ContactSection> {
     setState(() => _isLoadingCep = true);
 
     try {
-      final dio = Dio();
+      final dio = widget.dio ?? Dio();
       final response = await dio.get(
         'https://viacep.com.br/ws/$cleanCep/json/',
       );

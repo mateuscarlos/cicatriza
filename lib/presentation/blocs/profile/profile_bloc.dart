@@ -7,10 +7,14 @@ import 'profile_state.dart';
 
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   final AuthRepository _authRepository;
+  final FirebaseStorage _firebaseStorage;
 
-  ProfileBloc({required AuthRepository authRepository})
-    : _authRepository = authRepository,
-      super(const ProfileInitial()) {
+  ProfileBloc({
+    required AuthRepository authRepository,
+    FirebaseStorage? firebaseStorage,
+  }) : _authRepository = authRepository,
+       _firebaseStorage = firebaseStorage ?? FirebaseStorage.instance,
+       super(const ProfileInitial()) {
     on<ProfileLoadRequested>(_onLoadRequested);
     on<ProfileUpdateRequested>(_onUpdateRequested);
     on<ProfileImageUploadRequested>(_onImageUploadRequested);
@@ -63,7 +67,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
       // Upload da imagem para Firebase Storage
       final file = File(event.imagePath);
-      final storageRef = FirebaseStorage.instance
+      final storageRef = _firebaseStorage
           .ref()
           .child('user_profiles')
           .child('${currentUser.uid}.jpg');

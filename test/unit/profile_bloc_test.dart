@@ -1,17 +1,46 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cicatriza/domain/entities/user_profile.dart';
 import 'package:cicatriza/domain/repositories/auth_repository.dart';
 import 'package:cicatriza/presentation/blocs/profile/profile_bloc.dart';
 import 'package:cicatriza/presentation/blocs/profile/profile_event.dart';
 import 'package:cicatriza/presentation/blocs/profile/profile_state.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
+class MockFirebaseStorage extends Mock implements FirebaseStorage {}
+
+class MockReference extends Mock implements Reference {}
+
+class MockTaskSnapshot extends Mock implements TaskSnapshot {}
+
+class FakeUploadTask extends Fake implements UploadTask {
+  final TaskSnapshot _snapshot;
+  FakeUploadTask(this._snapshot);
+
+  @override
+  Future<S> then<S>(
+    FutureOr<S> Function(TaskSnapshot value) onValue, {
+    Function? onError,
+  }) async {
+    return onValue(_snapshot);
+  }
+}
+
+class FakeFile extends Fake implements File {}
+
+class FakeUserProfile extends Fake implements UserProfile {}
+
 void main() {
   late ProfileBloc profileBloc;
   late MockAuthRepository mockAuthRepository;
+  late MockFirebaseStorage mockFirebaseStorage;
+  late MockReference mockReference;
+  late MockTaskSnapshot mockTaskSnapshot;
 
   final testUser = UserProfile(
     uid: 'test_uid',
@@ -22,9 +51,21 @@ void main() {
     updatedAt: DateTime.now(),
   );
 
+  setUpAll(() {
+    registerFallbackValue(FakeFile());
+    registerFallbackValue(FakeUserProfile());
+  });
+
   setUp(() {
     mockAuthRepository = MockAuthRepository();
-    profileBloc = ProfileBloc(authRepository: mockAuthRepository);
+    mockFirebaseStorage = MockFirebaseStorage();
+    mockReference = MockReference();
+    mockTaskSnapshot = MockTaskSnapshot();
+
+    profileBloc = ProfileBloc(
+      authRepository: mockAuthRepository,
+      firebaseStorage: mockFirebaseStorage,
+    );
   });
 
   tearDown(() {
@@ -91,6 +132,36 @@ void main() {
           'message',
           contains('Update failed'),
         ),
+      ],
+    );
+
+    blocTest<ProfileBloc, ProfileState>(
+      'emits [ProfileLoading, ProfileUpdateSuccess, ProfileLoaded] when ProfileImageUploadRequested succeeds',
+      build: () {
+        when(() => mockAuthRepository.currentUser).thenReturn(testUser);
+        when(() => mockFirebaseStorage.ref()).thenReturn(mockReference);
+        when(() => mockReference.child(any())).thenReturn(mockReference);
+
+        final fakeTask = FakeUploadTask(mockTaskSnapshot);
+        when(() => mockReference.putFile(any())).thenAnswer((_) => fakeTask);
+
+        when(() => mockTaskSnapshot.ref).thenReturn(mockReference);
+        when(
+          () => mockReference.getDownloadURL(),
+        ).thenAnswer((_) async => 'https://example.com/photo.jpg');
+
+        when(
+          () => mockAuthRepository.updateProfile(any()),
+        ).thenAnswer((_) async {});
+
+        return profileBloc;
+      },
+      act: (bloc) =>
+          bloc.add(const ProfileImageUploadRequested('path/to/image.jpg')),
+      expect: () => [
+        const ProfileLoading(),
+        isA<ProfileUpdateSuccess>(),
+        isA<ProfileLoaded>(),
       ],
     );
   });
