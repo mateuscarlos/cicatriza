@@ -64,7 +64,7 @@ git checkout -b refactor/descricao-da-refatoracao
 - Siga os padrões de código Dart/Flutter
 - Escreva testes para novas funcionalidades
 - Documente código complexo
-- Use o [CHECKLIST.md](CHECKLIST.md) como referência
+- Use o [CHECKLIST.md](docs/project_management/CHECKLIST.md) como referência
 
 ### 5. Commits
 

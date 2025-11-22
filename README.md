@@ -1,8 +1,8 @@
 # Cicatriza
 
 > ⚠️ **ALERTA DE SEGURANÇA:** Firebase API key foi exposta e precisa ser regenerada.  
-> **Owner:** Ver [`SECURITY_ACTION_REQUIRED.md`](SECURITY_ACTION_REQUIRED.md) para ações urgentes.  
-> **Desenvolvedores:** Ver [`docs/SECURITY_FIREBASE.md`](docs/SECURITY_FIREBASE.md) para setup seguro.
+> **Owner:** Ver [`docs/project_management/SECURITY_ACTION_REQUIRED.md`](docs/project_management/SECURITY_ACTION_REQUIRED.md) para ações urgentes.  
+> **Desenvolvedores:** Ver [`docs/security/SECURITY_FIREBASE.md`](docs/security/SECURITY_FIREBASE.md) para setup seguro.
 
 Um aplicativo Flutter para avaliação e acompanhamento de feridas.
 
