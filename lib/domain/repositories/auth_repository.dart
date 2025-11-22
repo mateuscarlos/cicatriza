@@ -19,8 +19,10 @@ abstract class AuthRepository {
   /// Cadastro com Email e Senha
   Future<UserProfile?> signUpWithEmailAndPassword(
     String email,
-    String password,
-  );
+    String password, {
+    bool termsAccepted,
+    bool privacyPolicyAccepted,
+  });
 
   /// Logout
   Future<void> signOut();

@@ -21,6 +21,8 @@ class _RegisterPageState extends State<RegisterPage> {
   final _confirmPasswordController = TextEditingController();
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
+  bool _termsAccepted = false;
+  bool _privacyPolicyAccepted = false;
 
   @override
   void dispose() {
@@ -32,10 +34,32 @@ class _RegisterPageState extends State<RegisterPage> {
 
   void _onRegisterPressed() {
     if (_formKey.currentState?.validate() ?? false) {
+      if (!_termsAccepted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Você deve aceitar os Termos de Uso para continuar'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+      if (!_privacyPolicyAccepted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Você deve aceitar a Política de Privacidade para continuar',
+            ),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
       context.read<AuthBloc>().add(
         AuthEmailSignUpRequested(
           email: _emailController.text.trim(),
           password: _passwordController.text,
+          termsAccepted: _termsAccepted,
+          privacyPolicyAccepted: _privacyPolicyAccepted,
         ),
       );
     }
@@ -204,7 +228,70 @@ class _RegisterPageState extends State<RegisterPage> {
                       },
                       enabled: !isLoading,
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 24),
+                    CheckboxListTile(
+                      value: _termsAccepted,
+                      onChanged: isLoading
+                          ? null
+                          : (value) {
+                              setState(() {
+                                _termsAccepted = value ?? false;
+                              });
+                            },
+                      title: Row(
+                        children: [
+                          const Text('Eu li e aceito os '),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pushNamed(context, '/terms-of-use');
+                            },
+                            child: Text(
+                              'Termos de Uso',
+                              style: TextStyle(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                    ),
+                    CheckboxListTile(
+                      value: _privacyPolicyAccepted,
+                      onChanged: isLoading
+                          ? null
+                          : (value) {
+                              setState(() {
+                                _privacyPolicyAccepted = value ?? false;
+                              });
+                            },
+                      title: Row(
+                        children: [
+                          const Text('Eu li e aceito a '),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pushNamed(context, '/privacy-policy');
+                            },
+                            child: Text(
+                              'Política de Privacidade',
+                              style: TextStyle(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                    ),
+                    const SizedBox(height: 24),
                     SizedBox(
                       height: 56,
                       child: FilledButton(

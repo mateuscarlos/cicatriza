@@ -33,11 +33,23 @@ class AuthEmailSignInRequested extends AuthEvent {
 class AuthEmailSignUpRequested extends AuthEvent {
   final String email;
   final String password;
+  final bool termsAccepted;
+  final bool privacyPolicyAccepted;
 
-  const AuthEmailSignUpRequested({required this.email, required this.password});
+  const AuthEmailSignUpRequested({
+    required this.email,
+    required this.password,
+    this.termsAccepted = false,
+    this.privacyPolicyAccepted = false,
+  });
 
   @override
-  List<Object> get props => [email, password];
+  List<Object> get props => [
+    email,
+    password,
+    termsAccepted,
+    privacyPolicyAccepted,
+  ];
 }
 
 /// Logout

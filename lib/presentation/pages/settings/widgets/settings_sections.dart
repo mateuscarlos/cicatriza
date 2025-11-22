@@ -260,16 +260,6 @@ class SecuritySettingsSection extends StatelessWidget {
         Card(
           child: Column(
             children: [
-              CheckboxListTile(
-                secondary: const Icon(Icons.verified_user),
-                title: const Text('Consentimento LGPD'),
-                subtitle: const Text(
-                  'Concordo com o processamento dos meus dados pessoais',
-                ),
-                value: profile.lgpdConsent,
-                onChanged: null, // Read-only, gerenciado em outro fluxo
-              ),
-              const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.download),
                 title: const Text('Exportar meus dados'),
@@ -292,12 +282,7 @@ class SecuritySettingsSection extends StatelessWidget {
                 title: const Text('Política de Privacidade'),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () {
-                  // TODO: Abrir política de privacidade
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Abrindo política de privacidade...'),
-                    ),
-                  );
+                  Navigator.pushNamed(context, '/privacy-policy');
                 },
               ),
               const Divider(height: 1),
@@ -306,10 +291,7 @@ class SecuritySettingsSection extends StatelessWidget {
                 title: const Text('Termos de Uso'),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () {
-                  // TODO: Abrir termos de uso
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Abrindo termos de uso...')),
-                  );
+                  Navigator.pushNamed(context, '/terms-of-use');
                 },
               ),
             ],
@@ -413,7 +395,7 @@ class SecuritySettingsSection extends StatelessWidget {
       builder: (context) => AlertDialog(
         title: const Text('Excluir conta'),
         content: const Text(
-          'Esta ação é irreversível e todos os seus dados serão permanentemente excluídos. Tem certeza que deseja continuar?',
+          'ATENÇÃO: Esta ação é irreversível!\n\nSerão excluídos permanentemente:\n• Todos os seus dados cadastrais\n• Todos os dados dos pacientes\n• Histórico de avaliações e fotos\n• Registros de tratamentos\n\nEsta operação não pode ser desfeita. Tem certeza que deseja continuar?',
         ),
         actions: [
           TextButton(

@@ -29,6 +29,10 @@ class UserProfile {
   final DateTime updatedAt;
   final DateTime? lastAccess;
   final bool lgpdConsent;
+  final bool termsAccepted;
+  final DateTime? termsAcceptedAt;
+  final bool privacyPolicyAccepted;
+  final DateTime? privacyPolicyAcceptedAt;
 
   const UserProfile({
     required this.uid,
@@ -57,6 +61,10 @@ class UserProfile {
     required this.updatedAt,
     this.lastAccess,
     this.lgpdConsent = false,
+    this.termsAccepted = false,
+    this.termsAcceptedAt,
+    this.privacyPolicyAccepted = false,
+    this.privacyPolicyAcceptedAt,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
@@ -88,6 +96,14 @@ class UserProfile {
           ? DateTime.parse(json['lastAccess'] as String)
           : null,
       lgpdConsent: json['lgpdConsent'] as bool? ?? false,
+      termsAccepted: json['termsAccepted'] as bool? ?? false,
+      termsAcceptedAt: json['termsAcceptedAt'] != null
+          ? DateTime.parse(json['termsAcceptedAt'] as String)
+          : null,
+      privacyPolicyAccepted: json['privacyPolicyAccepted'] as bool? ?? false,
+      privacyPolicyAcceptedAt: json['privacyPolicyAcceptedAt'] != null
+          ? DateTime.parse(json['privacyPolicyAcceptedAt'] as String)
+          : null,
     );
   }
 
@@ -115,6 +131,10 @@ class UserProfile {
       'updatedAt': updatedAt.toIso8601String(),
       'lastAccess': lastAccess?.toIso8601String(),
       'lgpdConsent': lgpdConsent,
+      'termsAccepted': termsAccepted,
+      'termsAcceptedAt': termsAcceptedAt?.toIso8601String(),
+      'privacyPolicyAccepted': privacyPolicyAccepted,
+      'privacyPolicyAcceptedAt': privacyPolicyAcceptedAt?.toIso8601String(),
     };
   }
 
@@ -141,6 +161,10 @@ class UserProfile {
     DateTime? updatedAt,
     DateTime? lastAccess,
     bool? lgpdConsent,
+    bool? termsAccepted,
+    DateTime? termsAcceptedAt,
+    bool? privacyPolicyAccepted,
+    DateTime? privacyPolicyAcceptedAt,
   }) {
     return UserProfile(
       uid: uid ?? this.uid,
@@ -165,6 +189,12 @@ class UserProfile {
       updatedAt: updatedAt ?? this.updatedAt,
       lastAccess: lastAccess ?? this.lastAccess,
       lgpdConsent: lgpdConsent ?? this.lgpdConsent,
+      termsAccepted: termsAccepted ?? this.termsAccepted,
+      termsAcceptedAt: termsAcceptedAt ?? this.termsAcceptedAt,
+      privacyPolicyAccepted:
+          privacyPolicyAccepted ?? this.privacyPolicyAccepted,
+      privacyPolicyAcceptedAt:
+          privacyPolicyAcceptedAt ?? this.privacyPolicyAcceptedAt,
     );
   }
 

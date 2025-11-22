@@ -176,8 +176,10 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<UserProfile?> signUpWithEmailAndPassword(
     String email,
-    String password,
-  ) async {
+    String password, {
+    bool termsAccepted = false,
+    bool privacyPolicyAccepted = false,
+  }) async {
     try {
       final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,
@@ -189,7 +191,13 @@ class AuthRepositoryImpl implements AuthRepository {
         throw Exception('Falha ao criar usuário.');
       }
 
-      final profile = _createProfileFromFirebaseUser(user);
+      final now = DateTime.now();
+      final profile = _createProfileFromFirebaseUser(
+        user,
+        termsAccepted: termsAccepted,
+        privacyPolicyAccepted: privacyPolicyAccepted,
+        acceptedAt: now,
+      );
       await _createUserProfile(profile);
       return profile;
     } on FirebaseAuthException catch (e) {
@@ -235,15 +243,26 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   /// Criar UserProfile a partir do Firebase User
-  UserProfile _createProfileFromFirebaseUser(User user) {
+  UserProfile _createProfileFromFirebaseUser(
+    User user, {
+    bool termsAccepted = false,
+    bool privacyPolicyAccepted = false,
+    DateTime? acceptedAt,
+  }) {
+    final now = acceptedAt ?? DateTime.now();
     return UserProfile(
       uid: user.uid,
       email: user.email ?? '',
       displayName: user.displayName,
       photoURL: user.photoURL,
       ownerId: user.uid,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
+      createdAt: now,
+      updatedAt: now,
+      lgpdConsent: termsAccepted && privacyPolicyAccepted,
+      termsAccepted: termsAccepted,
+      termsAcceptedAt: termsAccepted ? now : null,
+      privacyPolicyAccepted: privacyPolicyAccepted,
+      privacyPolicyAcceptedAt: privacyPolicyAccepted ? now : null,
     );
   }
 

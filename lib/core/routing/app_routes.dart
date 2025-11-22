@@ -9,6 +9,8 @@ class AppRoutes {
   static const String patients = '/patients';
   static const String profile = '/profile';
   static const String settings = '/settings';
+  static const String privacyPolicy = '/privacy-policy';
+  static const String termsOfUse = '/terms-of-use';
   static const String wounds = '/wounds';
   static const String assessmentsList = '/assessments/list';
   static const String assessmentCreate = '/assessment/create';
@@ -42,6 +44,18 @@ class AppRoutes {
       case AppRoutes.settings:
         return MaterialPageRoute(
           builder: (_) => const SettingsPage(),
+          settings: settings,
+        );
+
+      case AppRoutes.privacyPolicy:
+        return MaterialPageRoute(
+          builder: (_) => const PrivacyPolicyPage(),
+          settings: settings,
+        );
+
+      case AppRoutes.termsOfUse:
+        return MaterialPageRoute(
+          builder: (_) => const TermsOfUsePage(),
           settings: settings,
         );
 

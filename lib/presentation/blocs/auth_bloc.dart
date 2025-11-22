@@ -139,6 +139,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final user = await _authRepository.signUpWithEmailAndPassword(
         event.email,
         event.password,
+        termsAccepted: event.termsAccepted,
+        privacyPolicyAccepted: event.privacyPolicyAccepted,
       );
 
       if (user != null) {
