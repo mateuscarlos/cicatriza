@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../core/routing/app_router.dart';
 import '../../core/routing/app_routes.dart';
 import '../blocs/auth_bloc.dart';
 import '../blocs/auth_event.dart';
@@ -237,7 +236,7 @@ class HomePage extends StatelessWidget {
               title: const Text('Perfil'),
               onTap: () {
                 Navigator.pop(bottomSheetContext);
-                context.goToProfile();
+                Navigator.of(context).pushNamed(AppRoutes.profile);
               },
             ),
             ListTile(

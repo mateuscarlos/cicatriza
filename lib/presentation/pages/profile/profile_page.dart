@@ -125,9 +125,14 @@ class _ProfileViewState extends State<ProfileView>
           if (state is ProfileLoaded) {
             _updateControllers(state.profile);
           } else if (state is ProfileUpdateSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Perfil atualizado com sucesso!')),
-            );
+            // Verificar se foi atualização de foto ou dados gerais
+            final message = state.profile.photoURL != _currentProfile?.photoURL
+                ? 'Foto de perfil atualizada com sucesso!'
+                : 'Perfil atualizado com sucesso!';
+
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(message)));
           } else if (state is ProfileError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -158,6 +163,13 @@ class _ProfileViewState extends State<ProfileView>
                   specialtyController: _specialtyController,
                   institutionController: _institutionController,
                   roleController: _roleController,
+                  photoURL: _currentProfile!.photoURL,
+                  onPhotoChanged: (photoPath) {
+                    // Disparar evento para fazer upload da foto
+                    context.read<ProfileBloc>().add(
+                      ProfileImageUploadRequested(photoPath),
+                    );
+                  },
                 ),
               ),
               SingleChildScrollView(

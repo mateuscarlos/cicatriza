@@ -1,5 +1,7 @@
 {
   "projects": {
     "default": "cicatriza-dev-b1085"
-  }
+  },
+  "targets": {},
+  "etags": {}
 }
