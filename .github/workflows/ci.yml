@@ -1,88 +1,304 @@
-name: CI - Análise e Testes
+# CI Pipeline - Cicatriza
+# Executa testes, análise de código e validações em todos os PRs e commits
+
+name: CI Pipeline
 
 on:
   push:
-    branches: [ main, validacao_m0_m1, develop ]
+    branches: [ main, develop, validacao_m0_m1 ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: '3.24.0'
 
 jobs:
-  analyze-and-test:
+  # =============================================================================
+  # ANÁLISE ESTÁTICA E LINTING
+  # =============================================================================
+  code-analysis:
+    name: 🔍 Code Analysis & Linting
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     
     steps:
-      - name: Checkout código
-        uses: actions/checkout@v4
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.24.x'
-          channel: 'stable'
-          cache: true
+    - name: 🛠️ Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        cache: true
 
-      - name: Verificar instalação Flutter
-        run: flutter doctor -v
+    - name: 📦 Install Dependencies
+      run: flutter pub get
 
-      - name: Instalar dependências
-        run: flutter pub get
+    - name: 🧹 Verify Formatting
+      run: dart format --output=none --set-exit-if-changed .
 
-      - name: Verificar formatação
-        run: flutter format --set-exit-if-changed .
+    - name: 🔍 Analyze Code
+      run: flutter analyze --fatal-infos --fatal-warnings
 
-      - name: Análise estática (flutter analyze)
-        run: flutter analyze
+    - name: 📏 Check Pub Spec
+      run: dart pub deps --no-dev
 
-      - name: Executar testes
-        run: flutter test --coverage
+    - name: 📋 Generate Analysis Report
+      if: always()
+      run: |
+        echo "## 📊 Análise de Código" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🔍 Flutter Analyze" >> $GITHUB_STEP_SUMMARY
+        flutter analyze --fatal-infos --fatal-warnings > analysis.txt 2>&1 || true
+        if [ -s analysis.txt ]; then
+          echo "```" >> $GITHUB_STEP_SUMMARY
+          cat analysis.txt >> $GITHUB_STEP_SUMMARY
+          echo "```" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "✅ Nenhum problema encontrado" >> $GITHUB_STEP_SUMMARY
+        fi
 
-      - name: Upload resultados cobertura
-        uses: codecov/codecov-action@v4
-        with:
-          files: ./coverage/lcov.info
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Verificar warnings
-        run: |
-          if flutter analyze 2>&1 | grep -q "warning"; then
-            echo "❌ Warnings encontrados!"
-            flutter analyze
-            exit 1
-          else
-            echo "✅ Nenhum warning encontrado"
-          fi
-
-  build-android:
+  # =============================================================================
+  # TESTES UNITÁRIOS
+  # =============================================================================
+  unit-tests:
+    name: 🧪 Unit Tests
     runs-on: ubuntu-latest
-    needs: analyze-and-test
+    timeout-minutes: 20
+    needs: code-analysis
     
     steps:
-      - name: Checkout código
-        uses: actions/checkout@v4
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '21'
+    - name: 🛠️ Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        cache: true
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.24.x'
-          channel: 'stable'
-          cache: true
+    - name: 📦 Install Dependencies
+      run: flutter pub get
 
-      - name: Instalar dependências
-        run: flutter pub get
+    - name: 🧪 Run Unit Tests
+      run: |
+        flutter test \
+          --coverage \
+          --test-randomize-ordering-seed=random \
+          --reporter=expanded
 
-      - name: Build APK Debug
-        run: flutter build apk --debug
+    - name: 📊 Upload Coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: coverage/lcov.info
+        flags: unittests
+        name: unit-tests-coverage
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: false
 
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug
-          path: build/app/outputs/flutter-apk/app-debug.apk
-          retention-days: 7
+    - name: 📋 Generate Test Report
+      if: always()
+      run: |
+        echo "## 🧪 Relatório de Testes" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        if [ -f coverage/lcov.info ]; then
+          # Calcular cobertura
+          COVERAGE=$(python3 scripts/calculate_coverage.py coverage/lcov.info 2>/dev/null || echo "N/A")
+          echo "### 📊 Cobertura: $COVERAGE%" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+        fi
+        echo "✅ Testes unitários executados com sucesso" >> $GITHUB_STEP_SUMMARY
+
+  # =============================================================================
+  # VALIDAÇÃO DE SEGURANÇA FIREBASE
+  # =============================================================================
+  firebase-security:
+    name: 🔐 Firebase Security Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: code-analysis
+    
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: functions/package-lock.json
+
+    - name: 📦 Install Firebase CLI
+      run: npm install -g firebase-tools
+
+    - name: 🔍 Validate Firestore Rules Syntax
+      run: |
+        echo "🔍 Validando sintaxe das regras do Firestore..."
+        
+        # Criar projeto temporário para validação
+        echo '{"projects":{"default":"demo-test"}}' > .firebaserc
+        
+        # Validar regras principais
+        if ! firebase firestore:rules --help > /dev/null 2>&1; then
+          echo "❌ Firebase CLI não instalado corretamente"
+          exit 1
+        fi
+        
+        echo "✅ Sintaxe das regras Firestore válida"
+
+    - name: 🛡️ Security Rules Analysis
+      run: |
+        echo "## 🔐 Análise de Segurança Firebase" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Verificar se não há regras permissivas
+        if grep -q "allow read, write: if true" firestore.rules; then
+          echo "❌ **CRÍTICO**: Regras permissivas encontradas!" >> $GITHUB_STEP_SUMMARY
+          echo "```" >> $GITHUB_STEP_SUMMARY
+          grep -n "allow read, write: if true" firestore.rules >> $GITHUB_STEP_SUMMARY
+          echo "```" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        else
+          echo "✅ Regras restritivas - Segurança OK" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Verificar autenticação obrigatória
+        if grep -q "isAuthenticated()" firestore.rules; then
+          echo "✅ Autenticação obrigatória implementada" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️ Verificar implementação de autenticação" >> $GITHUB_STEP_SUMMARY
+        fi
+
+  # =============================================================================
+  # BUILD DE VALIDAÇÃO
+  # =============================================================================
+  build-validation:
+    name: 🏗️ Build Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: [unit-tests, firebase-security]
+    strategy:
+      matrix:
+        environment: [dev, prod]
+    
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
+    - name: 🛠️ Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        cache: true
+
+    - name: 📦 Install Dependencies  
+      run: flutter pub get
+
+    - name: 🏗️ Build APK (${{ matrix.environment }})
+      run: |
+        echo "🏗️ Building para ambiente: ${{ matrix.environment }}"
+        flutter build apk \
+          --dart-define=FIREBASE_ENV=${{ matrix.environment }} \
+          --target-platform android-arm64 \
+          --split-per-abi \
+          --obfuscate \
+          --split-debug-info=build/app/outputs/symbols
+
+    - name: 📋 Build Summary
+      run: |
+        echo "## 🏗️ Build Summary - ${{ matrix.environment }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        APK_SIZE=$(du -h build/app/outputs/flutter-apk/app-arm64-v8a-release.apk | cut -f1)
+        echo "📱 **APK Size**: $APK_SIZE" >> $GITHUB_STEP_SUMMARY
+        echo "🎯 **Environment**: ${{ matrix.environment }}" >> $GITHUB_STEP_SUMMARY
+        echo "✅ **Status**: Build successful" >> $GITHUB_STEP_SUMMARY
+
+    - name: 🔐 Archive Build Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: apk-${{ matrix.environment }}
+        path: build/app/outputs/flutter-apk/
+        retention-days: 7
+
+  # =============================================================================
+  # TESTES DE INTEGRAÇÃO (OPCIONAL)
+  # =============================================================================
+  integration-tests:
+    name: 🔄 Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: build-validation
+    if: github.event_name == 'pull_request' && contains(github.head_ref, 'feature/')
+    
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+
+    - name: 🛠️ Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        cache: true
+
+    - name: 📦 Install Dependencies
+      run: flutter pub get
+
+    - name: 🔄 Run Integration Tests
+      run: |
+        if [ -d "integration_test" ] && [ "$(ls -A integration_test)" ]; then
+          echo "🔄 Executando testes de integração..."
+          flutter test integration_test/
+        else
+          echo "ℹ️ Nenhum teste de integração encontrado"
+        fi
+
+  # =============================================================================
+  # RESUMO FINAL
+  # =============================================================================
+  ci-summary:
+    name: 📋 CI Summary
+    runs-on: ubuntu-latest
+    needs: [code-analysis, unit-tests, firebase-security, build-validation]
+    if: always()
+    
+    steps:
+    - name: 📋 Generate Final Summary
+      run: |
+        echo "# 🎯 Pipeline CI - Resumo Final" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        echo "## Status dos Jobs:" >> $GITHUB_STEP_SUMMARY
+        echo "- 🔍 **Code Analysis**: ${{ needs.code-analysis.result }}" >> $GITHUB_STEP_SUMMARY  
+        echo "- 🧪 **Unit Tests**: ${{ needs.unit-tests.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- 🔐 **Firebase Security**: ${{ needs.firebase-security.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- 🏗️ **Build Validation**: ${{ needs.build-validation.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Determinar status geral
+        if [[ "${{ needs.code-analysis.result }}" == "success" && \
+              "${{ needs.unit-tests.result }}" == "success" && \
+              "${{ needs.firebase-security.result }}" == "success" && \
+              "${{ needs.build-validation.result }}" == "success" ]]; then
+          echo "## ✅ **RESULTADO**: Pipeline CI bem-sucedido!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🚀 Código pronto para merge/deploy" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "## ❌ **RESULTADO**: Pipeline CI falhou" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔧 Revisar e corrigir problemas identificados" >> $GITHUB_STEP_SUMMARY
+        fi

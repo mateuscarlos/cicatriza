@@ -8,9 +8,7 @@ class FormSection extends StatelessWidget {
   final bool showDivider;
 
   const FormSection({
-    super.key,
-    required this.title,
-    required this.children,
+    required this.title, required this.children, super.key,
     this.padding,
     this.showDivider = true,
   });

@@ -1,0 +1,249 @@
+name: Performance Analysis
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths: [ 'lib/**', 'test/**' ]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * 1' # Executar toda segunda-feira às 2h
+
+env:
+  FLUTTER_VERSION: '3.24.0'
+
+jobs:
+  # =============================================================================
+  # ANÁLISE DE PERFORMANCE
+  # =============================================================================
+  performance-analysis:
+    name: 📊 Performance Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: 🛠️ Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        cache: true
+
+    - name: 📦 Install Dependencies
+      run: flutter pub get
+
+    - name: 🔍 Analyze Package Dependencies
+      run: |
+        echo "## 📦 Análise de Dependências" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Analisar dependências
+        flutter pub deps --style=compact > deps.txt
+        
+        # Contar dependências
+        DIRECT_DEPS=$(grep -c "^[a-zA-Z]" pubspec.yaml || echo "0")
+        TOTAL_DEPS=$(flutter pub deps --style=compact | grep -c "─" || echo "0")
+        
+        echo "📊 **Dependências Diretas**: $DIRECT_DEPS" >> $GITHUB_STEP_SUMMARY
+        echo "📊 **Total de Dependências**: $TOTAL_DEPS" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+
+    - name: 📱 Build Size Analysis
+      run: |
+        echo "## 📱 Análise de Tamanho do Build" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Build APK para análise
+        flutter build apk --debug --target-platform android-arm64
+        
+        # Analisar tamanho
+        if [ -f "build/app/outputs/flutter-apk/app-debug.apk" ]; then
+          APK_SIZE=$(du -h build/app/outputs/flutter-apk/app-debug.apk | cut -f1)
+          echo "📱 **Tamanho APK Debug**: $APK_SIZE" >> $GITHUB_STEP_SUMMARY
+          
+          # Verificar se está dentro do limite recomendado (100MB)
+          APK_SIZE_BYTES=$(du -b build/app/outputs/flutter-apk/app-debug.apk | cut -f1)
+          if [ $APK_SIZE_BYTES -gt 104857600 ]; then
+            echo "⚠️ **Aviso**: APK maior que 100MB" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **Status**: Tamanho dentro do limite recomendado" >> $GITHUB_STEP_SUMMARY
+          fi
+        fi
+
+    - name: 🧪 Performance Tests
+      run: |
+        echo "## 🧪 Testes de Performance" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Executar testes de performance se existirem
+        if [ -d "test/performance" ] && [ "$(ls -A test/performance)" ]; then
+          echo "🧪 Executando testes de performance..."
+          flutter test test/performance/ --reporter=json > performance_results.json || true
+          
+          if [ -f "performance_results.json" ]; then
+            echo "✅ Testes de performance executados" >> $GITHUB_STEP_SUMMARY
+          fi
+        else
+          echo "ℹ️ Nenhum teste de performance encontrado" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: 📊 Code Metrics
+      run: |
+        echo "## 📊 Métricas de Código" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Contar linhas de código
+        DART_FILES=$(find lib -name "*.dart" | wc -l)
+        DART_LINES=$(find lib -name "*.dart" -exec cat {} \; | wc -l)
+        TEST_FILES=$(find test -name "*.dart" | wc -l 2>/dev/null || echo "0")
+        
+        echo "📄 **Arquivos Dart**: $DART_FILES" >> $GITHUB_STEP_SUMMARY
+        echo "📏 **Linhas de Código**: $DART_LINES" >> $GITHUB_STEP_SUMMARY
+        echo "🧪 **Arquivos de Teste**: $TEST_FILES" >> $GITHUB_STEP_SUMMARY
+        
+        # Calcular cobertura de testes (aproximada)
+        if [ $TEST_FILES -gt 0 ] && [ $DART_FILES -gt 0 ]; then
+          TEST_COVERAGE_RATIO=$(( $TEST_FILES * 100 / $DART_FILES ))
+          echo "📊 **Proporção Teste/Código**: ${TEST_COVERAGE_RATIO}%" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: 🔍 Import Analysis
+      run: |
+        echo "## 🔍 Análise de Imports" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Verificar imports desnecessários
+        UNUSED_IMPORTS=$(flutter analyze 2>&1 | grep -c "unused_import" || echo "0")
+        UNUSED_FIELDS=$(flutter analyze 2>&1 | grep -c "unused_field" || echo "0")
+        UNUSED_LOCALS=$(flutter analyze 2>&1 | grep -c "unused_local_variable" || echo "0")
+        
+        echo "📦 **Imports Não Utilizados**: $UNUSED_IMPORTS" >> $GITHUB_STEP_SUMMARY
+        echo "🏷️ **Campos Não Utilizados**: $UNUSED_FIELDS" >> $GITHUB_STEP_SUMMARY
+        echo "🔤 **Variáveis Locais Não Utilizadas**: $UNUSED_LOCALS" >> $GITHUB_STEP_SUMMARY
+        
+        TOTAL_UNUSED=$(($UNUSED_IMPORTS + $UNUSED_FIELDS + $UNUSED_LOCALS))
+        if [ $TOTAL_UNUSED -eq 0 ]; then
+          echo "✅ **Status**: Código limpo - nenhum elemento não utilizado" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "🧹 **Sugestão**: Limpar elementos não utilizados" >> $GITHUB_STEP_SUMMARY
+        fi
+
+  # =============================================================================
+  # BENCHMARK COMPARATIVO
+  # =============================================================================
+  benchmark-comparison:
+    name: ⚡ Benchmark Comparison
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: 📥 Checkout Code (Current)
+      uses: actions/checkout@v4
+
+    - name: 🛠️ Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        cache: true
+
+    - name: 📦 Install Dependencies
+      run: flutter pub get
+
+    - name: ⚡ Run Current Branch Benchmark
+      run: |
+        echo "⚡ Executando benchmark da branch atual..."
+        
+        # Build atual
+        time flutter build apk --debug > build_current.log 2>&1
+        CURRENT_BUILD_TIME=$(grep real build_current.log | awk '{print $2}' || echo "N/A")
+        
+        echo "CURRENT_BUILD_TIME=$CURRENT_BUILD_TIME" >> $GITHUB_ENV
+
+    - name: 📥 Checkout Base Branch
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.base_ref }}
+        path: base-branch
+
+    - name: ⚡ Run Base Branch Benchmark
+      run: |
+        echo "⚡ Executando benchmark da branch base..."
+        
+        cd base-branch
+        flutter pub get
+        time flutter build apk --debug > ../build_base.log 2>&1 || true
+        cd ..
+        
+        BASE_BUILD_TIME=$(grep real build_base.log | awk '{print $2}' || echo "N/A")
+        echo "BASE_BUILD_TIME=$BASE_BUILD_TIME" >> $GITHUB_ENV
+
+    - name: 📊 Benchmark Comparison Report
+      run: |
+        echo "## ⚡ Comparação de Performance" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Métrica | Branch Base | Branch Atual | Diferença |" >> $GITHUB_STEP_SUMMARY
+        echo "|---------|-------------|--------------|-----------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Tempo de Build | $BASE_BUILD_TIME | $CURRENT_BUILD_TIME | - |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Comparar tamanhos de APK se possível
+        BASE_APK="base-branch/build/app/outputs/flutter-apk/app-debug.apk"
+        CURRENT_APK="build/app/outputs/flutter-apk/app-debug.apk"
+        
+        if [ -f "$BASE_APK" ] && [ -f "$CURRENT_APK" ]; then
+          BASE_SIZE=$(du -h "$BASE_APK" | cut -f1)
+          CURRENT_SIZE=$(du -h "$CURRENT_APK" | cut -f1)
+          echo "| Tamanho APK | $BASE_SIZE | $CURRENT_SIZE | - |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "📝 **Nota**: Métricas coletadas em ambiente CI - podem variar em builds locais" >> $GITHUB_STEP_SUMMARY
+
+  # =============================================================================
+  # RECOMENDAÇÕES DE OTIMIZAÇÃO
+  # =============================================================================
+  optimization-recommendations:
+    name: 💡 Optimization Recommendations
+    runs-on: ubuntu-latest
+    needs: [performance-analysis]
+    if: always()
+    
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+
+    - name: 💡 Generate Recommendations
+      run: |
+        echo "## 💡 Recomendações de Otimização" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Analisar pubspec.yaml para dependências pesadas
+        if grep -q "firebase_" pubspec.yaml; then
+          echo "🔥 **Firebase**: Considere usar apenas os módulos necessários do Firebase" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if grep -q "flutter_bloc" pubspec.yaml; then
+          echo "🏗️ **BLoC**: Verifique se todos os BLoCs são necessários e otimize o estado" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Verificar imagens grandes
+        if [ -d "assets/images" ]; then
+          LARGE_IMAGES=$(find assets/images -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" \) -size +500k | wc -l)
+          if [ $LARGE_IMAGES -gt 0 ]; then
+            echo "🖼️ **Imagens**: $LARGE_IMAGES imagens > 500KB encontradas - considere otimização" >> $GITHUB_STEP_SUMMARY
+          fi
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🎯 Dicas Gerais de Performance:" >> $GITHUB_STEP_SUMMARY
+        echo "- Use `const` constructors sempre que possível" >> $GITHUB_STEP_SUMMARY
+        echo "- Evite widgets desnecessários na árvore" >> $GITHUB_STEP_SUMMARY
+        echo "- Implemente lazy loading para listas grandes" >> $GITHUB_STEP_SUMMARY
+        echo "- Use `RepaintBoundary` para widgets que mudam frequentemente" >> $GITHUB_STEP_SUMMARY
+        echo "- Otimize imagens e use formatos apropriados" >> $GITHUB_STEP_SUMMARY

@@ -2,13 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import '../../core/base/base_repository.dart';
 import '../../core/utils/app_logger.dart';
-
 import '../../domain/entities/user_profile.dart';
 import '../../domain/repositories/auth_repository.dart';
 
 /// Implementação do AuthRepository usando Firebase
-class AuthRepositoryImpl implements AuthRepository {
+final class AuthRepositoryImpl extends BaseRepository
+    implements AuthRepository {
   final FirebaseAuth _firebaseAuth;
   final FirebaseFirestore _firestore;
   final GoogleSignIn _googleSignIn;
@@ -20,6 +21,9 @@ class AuthRepositoryImpl implements AuthRepository {
   }) : _firebaseAuth = firebaseAuth,
        _firestore = firestore,
        _googleSignIn = googleSignIn;
+
+  @override
+  String get repositoryName => 'AuthRepository';
   @override
   Stream<UserProfile?> get authStateChanges {
     return _firebaseAuth.authStateChanges().asyncMap((user) async {
@@ -38,7 +42,7 @@ class AuthRepositoryImpl implements AuthRepository {
         final profile = _createProfileFromFirebaseUser(user);
         await _createUserProfile(profile);
         return profile;
-      } catch (e) {
+      } on Exception {
         // Em caso de erro, retornar perfil básico do Firebase Auth
         return _createProfileFromFirebaseUser(user);
       }
@@ -57,79 +61,76 @@ class AuthRepositoryImpl implements AuthRepository {
   bool get isAuthenticated => _firebaseAuth.currentUser != null;
 
   @override
-  Future<UserProfile?> signInWithGoogle() async {
-    try {
-      await _googleSignIn.signOut();
+  Future<Result<UserProfile?>> signInWithGoogle() async {
+    return executeOperation(() async {
+      try {
+        await _googleSignIn.signOut();
 
-      if (!_googleSignIn.supportsAuthenticate()) {
-        throw Exception('Fluxo de autenticação do Google não suportado.');
+        if (!_googleSignIn.supportsAuthenticate()) {
+          throw Exception('Fluxo de autenticação do Google não suportado.');
+        }
+
+        final googleUser = await _googleSignIn.authenticate(
+          scopeHint: const ['email', 'profile'],
+        );
+
+        final googleAuth = googleUser.authentication;
+        final idToken = googleAuth.idToken;
+        if (idToken == null) {
+          throw Exception('Token de identificação do Google não disponível.');
+        }
+
+        final credential = GoogleAuthProvider.credential(idToken: idToken);
+
+        final userCredential = await _firebaseAuth.signInWithCredential(
+          credential,
+        );
+
+        final firebaseUser = userCredential.user;
+        if (firebaseUser == null) {
+          throw Exception('Usuário do Firebase não retornado.');
+        }
+
+        final userDoc = await _firestore.doc('users/${firebaseUser.uid}').get();
+        final data = userDoc.data();
+
+        if (data != null) {
+          return _mapUserProfile(firebaseUser, data);
+        }
+
+        final profile = _createProfileFromFirebaseUser(firebaseUser);
+        await _createUserProfile(profile);
+        return profile;
+      } on GoogleSignInException catch (e) {
+        final description = e.description?.trim();
+        final isUserCancellation =
+            e.code == GoogleSignInExceptionCode.canceled &&
+            (description == null || description.isEmpty);
+
+        if (isUserCancellation) {
+          return null; // Usuário cancelou, retorna null
+        }
+
+        throw Exception(
+          'Erro no login com Google: ${description ?? e.code.name}',
+        );
+      } on FirebaseAuthException catch (e) {
+        throw Exception('Erro no login com Google: ${e.message ?? e.code}');
       }
-
-      final googleUser = await _googleSignIn.authenticate(
-        scopeHint: const ['email', 'profile'],
-      );
-
-      final googleAuth = googleUser.authentication;
-      final idToken = googleAuth.idToken;
-      if (idToken == null) {
-        throw Exception('Token de identificação do Google não disponível.');
-      }
-
-      final credential = GoogleAuthProvider.credential(idToken: idToken);
-
-      final userCredential = await _firebaseAuth.signInWithCredential(
-        credential,
-      );
-
-      final firebaseUser = userCredential.user;
-      if (firebaseUser == null) {
-        throw Exception('Usuário do Firebase não retornado.');
-      }
-
-      final userDoc = await _firestore.doc('users/${firebaseUser.uid}').get();
-      final data = userDoc.data();
-
-      if (data != null) {
-        return _mapUserProfile(firebaseUser, data);
-      }
-
-      final profile = _createProfileFromFirebaseUser(firebaseUser);
-      await _createUserProfile(profile);
-      return profile;
-    } on GoogleSignInException catch (e, stackTrace) {
-      AppLogger.error(
-        'Google Sign-In falhou',
-        error: e,
-        stackTrace: stackTrace,
-      );
-
-      final description = e.description?.trim();
-      final isUserCancellation =
-          e.code == GoogleSignInExceptionCode.canceled &&
-          (description == null || description.isEmpty);
-
-      if (isUserCancellation) {
-        return null;
-      }
-
-      throw Exception(
-        'Erro no login com Google: ${description ?? e.code.name}',
-      );
-    } on FirebaseAuthException catch (e) {
-      throw Exception('Erro no login com Google: ${e.message ?? e.code}');
-    } catch (e) {
-      throw Exception('Erro no login com Google: $e');
-    }
+    }, operationName: 'signInWithGoogle');
   }
 
   @override
-  Future<UserProfile?> signInWithEmailAndPassword(
+  Future<Result<UserProfile?>> signInWithEmailAndPassword(
     String email,
     String password,
   ) async {
-    try {
+    return executeOperation(() async {
+      validateNotEmpty(email, 'email');
+      validateNotEmpty(password, 'password');
+
       final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
-        email: email,
+        email: email.trim(),
         password: password,
       );
 
@@ -149,40 +150,22 @@ class AuthRepositoryImpl implements AuthRepository {
       final profile = _createProfileFromFirebaseUser(user);
       await _createUserProfile(profile);
       return profile;
-    } on FirebaseAuthException catch (e) {
-      String message;
-      switch (e.code) {
-        case 'user-not-found':
-          message = 'Usuário não encontrado.';
-          break;
-        case 'wrong-password':
-          message = 'Senha incorreta.';
-          break;
-        case 'invalid-email':
-          message = 'Email inválido.';
-          break;
-        case 'user-disabled':
-          message = 'Usuário desativado.';
-          break;
-        default:
-          message = 'Erro no login: ${e.message ?? e.code}';
-      }
-      throw Exception(message);
-    } catch (e) {
-      throw Exception('Erro no login: $e');
-    }
+    }, operationName: 'signInWithEmailAndPassword');
   }
 
   @override
-  Future<UserProfile?> signUpWithEmailAndPassword(
+  Future<Result<UserProfile?>> signUpWithEmailAndPassword(
     String email,
     String password, {
     bool termsAccepted = false,
     bool privacyPolicyAccepted = false,
   }) async {
-    try {
+    return executeOperation(() async {
+      validateNotEmpty(email, 'email');
+      validateNotEmpty(password, 'password');
+
       final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
-        email: email,
+        email: email.trim(),
         password: password,
       );
 
@@ -200,68 +183,30 @@ class AuthRepositoryImpl implements AuthRepository {
       );
       await _createUserProfile(profile);
       return profile;
-    } on FirebaseAuthException catch (e) {
-      String message;
-      switch (e.code) {
-        case 'email-already-in-use':
-          message = 'Este email já está em uso.';
-          break;
-        case 'invalid-email':
-          message = 'Email inválido.';
-          break;
-        case 'weak-password':
-          message = 'A senha é muito fraca.';
-          break;
-        case 'operation-not-allowed':
-          message = 'Operação não permitida.';
-          break;
-        default:
-          message = 'Erro no cadastro: ${e.message ?? e.code}';
-      }
-      throw Exception(message);
-    } catch (e) {
-      throw Exception('Erro no cadastro: $e');
-    }
+    }, operationName: 'signUpWithEmailAndPassword');
   }
 
   @override
-  Future<void> updateProfile(UserProfile profile) async {
-    try {
+  Future<Result<void>> updateProfile(UserProfile profile) async {
+    return executeOperation(() async {
+      validateRequired({'profile': profile});
       await _createUserProfile(profile);
-    } catch (e) {
-      throw Exception('Erro ao atualizar perfil: $e');
-    }
+    }, operationName: 'updateProfile');
   }
 
   @override
-  Future<void> signOut() async {
-    try {
+  Future<Result<void>> signOut() async {
+    return executeOperation(() async {
       await Future.wait([_firebaseAuth.signOut(), _googleSignIn.signOut()]);
-    } catch (e) {
-      throw Exception('Erro no logout: $e');
-    }
+    }, operationName: 'signOut');
   }
 
   @override
-  Future<void> sendPasswordResetEmail(String email) async {
-    try {
+  Future<Result<void>> sendPasswordResetEmail(String email) async {
+    return executeOperation(() async {
+      validateNotEmpty(email, 'email');
       await _firebaseAuth.sendPasswordResetEmail(email: email.trim());
-    } on FirebaseAuthException catch (e) {
-      String message;
-      switch (e.code) {
-        case 'invalid-email':
-          message = 'Email inválido.';
-          break;
-        case 'user-not-found':
-          message = 'Não existe conta com este email.';
-          break;
-        default:
-          message = 'Erro ao enviar email: ${e.message ?? e.code}';
-      }
-      throw Exception(message);
-    } catch (e) {
-      throw Exception('Erro ao enviar email de recuperação: $e');
-    }
+    }, operationName: 'sendPasswordResetEmail');
   }
 
   /// Criar UserProfile a partir do Firebase User
@@ -294,7 +239,7 @@ class AuthRepositoryImpl implements AuthRepository {
       final userRef = _firestore.doc('users/${profile.uid}');
 
       await userRef.set(profile.toJson(), SetOptions(merge: true));
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       AppLogger.error(
         'Erro ao criar/atualizar perfil do usuário',
         error: e,

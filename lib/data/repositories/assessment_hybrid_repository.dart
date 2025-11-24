@@ -107,7 +107,6 @@ class AssessmentHybridRepository {
       exudateType: entity.exudateType ?? '',
       edgeAppearance: entity.edgeAppearance ?? '',
       notes: entity.notes,
-      isSynced: false,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     );

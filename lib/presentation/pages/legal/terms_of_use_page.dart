@@ -7,8 +7,8 @@ class TermsOfUsePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Termos de Uso')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+      body: const SingleChildScrollView(
+        padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -152,9 +152,9 @@ class TermsOfUsePage extends StatelessWidget {
                   '• Telefone: (11) 0000-0000\n\n'
                   'Horário de atendimento: Segunda a sexta, 9h às 18h',
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             _AcceptanceBox(),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
           ],
         ),
       ),

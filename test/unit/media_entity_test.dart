@@ -14,8 +14,6 @@ void main() {
         uploadStatus: UploadStatus.pending,
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
-        uploadProgress: 0.0,
-        retryCount: 0,
       );
 
       expect(media.id, 'media-123');
@@ -45,7 +43,6 @@ void main() {
         fileSize: 524288,
         mimeType: 'image/jpeg',
         uploadProgress: 1.0,
-        retryCount: 0,
       );
 
       expect(media.localPath, '/local/path/image.jpg');
@@ -67,7 +64,6 @@ void main() {
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
         uploadProgress: 0.5,
-        retryCount: 0,
       );
 
       final modified = original.copyWith(uploadProgress: 0.75);
@@ -86,7 +82,6 @@ void main() {
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
         uploadProgress: 0.8,
-        retryCount: 0,
       );
 
       final completed = original.copyWith(
@@ -112,7 +107,6 @@ void main() {
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
         uploadProgress: 0.3,
-        retryCount: 0,
       );
 
       final failed = original.copyWith(
@@ -136,7 +130,6 @@ void main() {
         updatedAt: testUpdatedAt,
         localPath: '/local/image.jpg',
         uploadProgress: 1.0,
-        retryCount: 0,
       );
 
       final json = media.toJson();
@@ -183,7 +176,6 @@ void main() {
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
         uploadProgress: 1.0,
-        retryCount: 0,
       );
 
       final media2 = Media(
@@ -194,7 +186,6 @@ void main() {
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
         uploadProgress: 1.0,
-        retryCount: 0,
       );
 
       final media3 = Media(
@@ -204,8 +195,6 @@ void main() {
         uploadStatus: UploadStatus.pending,
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
-        uploadProgress: 0.0,
-        retryCount: 0,
       );
 
       expect(media1, media2);
@@ -220,8 +209,6 @@ void main() {
         uploadStatus: UploadStatus.pending,
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
-        uploadProgress: 0.0,
-        retryCount: 0,
       );
 
       expect(media.type, MediaType.video);
@@ -235,7 +222,6 @@ void main() {
         uploadStatus: UploadStatus.failed,
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
-        uploadProgress: 0.0,
         retryCount: 2,
       );
 

@@ -28,7 +28,7 @@ class AssessmentRepositoryMock implements AssessmentRepository {
       final prefs = await SharedPreferences.getInstance();
       final jsonString = prefs.getString(_storageKey);
       if (jsonString != null) {
-        final List<dynamic> jsonList = jsonDecode(jsonString);
+        final List<dynamic> jsonList = jsonDecode(jsonString) as List<dynamic>;
         _assessments.clear();
         _assessments.addAll(
           jsonList.map(

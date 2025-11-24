@@ -1,46 +1,44 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../../core/base/base_repository.dart';
 import '../../domain/entities/user_profile.dart';
 import '../../domain/repositories/user_profile_repository.dart';
 
 /// Implementação do UserProfileRepository usando Firestore
-class UserProfileRepositoryImpl implements UserProfileRepository {
+final class UserProfileRepositoryImpl extends BaseRepository
+    implements UserProfileRepository {
   final FirebaseFirestore _firestore;
 
   UserProfileRepositoryImpl({required FirebaseFirestore firestore})
     : _firestore = firestore;
 
   @override
-  Future<void> createOrUpdateProfile(UserProfile profile) async {
-    try {
+  String get repositoryName => 'UserProfileRepository';
+
+  @override
+  Future<Result<void>> createOrUpdateProfile(UserProfile profile) async {
+    return executeOperation(() async {
+      validateRequired({'profile': profile, 'uid': profile.uid});
+
       final userRef = _firestore.doc('users/${profile.uid}');
-
-      // Ensure timestamps are server timestamps for updates if needed,
-      // but profile.toJson() has strings.
-      // Actually, we should probably let Firestore handle it or convert back to Timestamp?
-      // For now, let's use toJson() which returns Map<String, dynamic> with Strings for dates.
-      // But wait, if we want ServerTimestamp, we should use FieldValue.
-      // The original code used manual map construction.
-      // Let's stick to manual map to control what we send, or use toJson and override.
-
-      // Using toJson is safer for new fields.
       final data = profile.toJson();
       data['updatedAt'] = FieldValue.serverTimestamp();
 
-      // If it's first time, include createdAt
+      // Se é a primeira vez, incluir createdAt
       final doc = await userRef.get();
       if (!doc.exists) {
         data['createdAt'] = FieldValue.serverTimestamp();
       }
 
       await userRef.set(data, SetOptions(merge: true));
-    } catch (e) {
-      throw Exception('Erro ao criar/atualizar perfil do usuário: $e');
-    }
+    }, operationName: 'createOrUpdateProfile');
   }
 
   @override
-  Future<UserProfile?> getProfile(String uid) async {
-    try {
+  Future<Result<UserProfile?>> getProfile(String uid) async {
+    return executeOperation(() async {
+      validateNotEmpty(uid, 'uid');
+
       final doc = await _firestore.doc('users/$uid').get();
 
       if (!doc.exists) return null;
@@ -53,9 +51,7 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
       }
 
       return _mapUserProfile(uid, data);
-    } catch (e) {
-      throw Exception('Erro ao buscar perfil do usuário: $e');
-    }
+    }, operationName: 'getProfile');
   }
 
   @override
@@ -75,19 +71,24 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
   }
 
   @override
-  Future<bool> isFirstLogin(String uid) async {
-    try {
+  Future<Result<bool>> isFirstLogin(String uid) async {
+    return executeOperation(() async {
+      validateNotEmpty(uid, 'uid');
+
       final doc = await _firestore.doc('users/$uid').get();
       return !doc.exists;
-    } catch (e) {
-      // Em caso de erro, assumir que é primeiro login
-      return true;
-    }
+    }, operationName: 'isFirstLogin');
   }
 
   @override
-  Future<void> updateProfile(String uid, Map<String, dynamic> updates) async {
-    try {
+  Future<Result<void>> updateProfile(
+    String uid,
+    Map<String, dynamic> updates,
+  ) async {
+    return executeOperation(() async {
+      validateNotEmpty(uid, 'uid');
+      validateRequired({'updates': updates});
+
       final userRef = _firestore.doc('users/$uid');
 
       // Verificar se o documento existe
@@ -103,9 +104,7 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
       };
 
       await userRef.update(updateData);
-    } catch (e) {
-      throw Exception('Erro ao atualizar perfil do usuário: $e');
-    }
+    }, operationName: 'updateProfile');
   }
 
   UserProfile _mapUserProfile(String uid, Map<String, dynamic> data) {

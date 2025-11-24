@@ -34,7 +34,6 @@ void main() {
       role: 'Enfermeiro',
       crmCofen: 'CRM 12345',
       phone: '11987654321',
-      photoURL: null,
       institution: 'Hospital Test',
       address: 'Rua Test, 123',
       ownerId: 'test-uid',
@@ -296,7 +295,7 @@ void main() {
     ) async {
       await tester.pumpWidget(
         MediaQuery(
-          data: const MediaQueryData(textScaleFactor: 2.0),
+          data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),
           child: createWidgetUnderTest(),
         ),
       );

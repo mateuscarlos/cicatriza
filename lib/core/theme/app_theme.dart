@@ -99,7 +99,6 @@ class AppTheme {
       // Esquema de cores - Tema Claro
       colorScheme: const ColorScheme.light(
         primary: CicatrizaLightColors.primary,
-        onPrimary: Colors.white,
         primaryContainer: CicatrizaLightColors.secondary,
         onPrimaryContainer: CicatrizaLightColors.textPrimary,
         secondary: CicatrizaLightColors.secondary,
@@ -107,8 +106,6 @@ class AppTheme {
         tertiary: CicatrizaLightColors.accent,
         onTertiary: Colors.white,
         error: CicatrizaLightColors.error,
-        onError: Colors.white,
-        surface: CicatrizaLightColors.surface,
         onSurface: CicatrizaLightColors.textPrimary,
         surfaceContainerHighest: CicatrizaLightColors.background,
         onSurfaceVariant: CicatrizaLightColors.textSecondary,
@@ -329,7 +326,6 @@ class AppTheme {
         error: CicatrizaDarkColors.error,
         onError: CicatrizaDarkColors.surface,
         surface: CicatrizaDarkColors.surface,
-        onSurface: CicatrizaDarkColors.textPrimary,
         surfaceContainerHighest: CicatrizaDarkColors.background,
         onSurfaceVariant: CicatrizaDarkColors.textSecondary,
         outline: CicatrizaDarkColors.divider,

@@ -29,10 +29,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     // Escutar mudanças de autenticação
     _authSubscription = _authRepository.authStateChanges.listen((user) {
       if (user != null) {
-        add(AuthCheckRequested());
+        add(const AuthCheckRequested());
       } else {
         if (state is! AuthUnauthenticated) {
-          add(AuthCheckRequested());
+          add(const AuthCheckRequested());
         }
       }
     });
@@ -58,7 +58,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       } else {
         emit(AuthUnauthenticated());
       }
-    } catch (e) {
+    } on Exception catch (e) {
       emit(AuthError('Erro ao verificar autenticação: $e'));
     }
   }
@@ -70,9 +70,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
 
-    try {
-      final user = await _authRepository.signInWithGoogle();
+    final result = await _authRepository.signInWithGoogle();
 
+    if (result.isSuccess) {
+      final user = result.data;
       if (user != null) {
         // Registrar evento de login bem-sucedido
         await _analytics.logLoginSuccess('google');
@@ -87,10 +88,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           ),
         );
       } else {
-        emit(const AuthError('Falha no login com Google'));
+        // Usuário cancelou o login
+        emit(AuthUnauthenticated());
       }
-    } catch (e) {
-      emit(AuthError('Erro no login com Google: $e'));
+    } else {
+      emit(AuthError(result.error ?? 'Erro no login com Google'));
     }
   }
 
@@ -101,12 +103,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
 
-    try {
-      final user = await _authRepository.signInWithEmailAndPassword(
-        event.email,
-        event.password,
-      );
+    final result = await _authRepository.signInWithEmailAndPassword(
+      event.email,
+      event.password,
+    );
 
+    if (result.isSuccess) {
+      final user = result.data;
       if (user != null) {
         await _analytics.logLoginSuccess('email');
         await _analytics.setUserId(user.uid);
@@ -122,10 +125,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       } else {
         emit(const AuthError('Falha no login com email'));
       }
-    } catch (e) {
-      // Remove "Exception: " prefix if present
-      final message = e.toString().replaceAll('Exception: ', '');
-      emit(AuthError(message));
+    } else {
+      emit(AuthError(result.error ?? 'Erro no login com email'));
     }
   }
 
@@ -136,14 +137,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
 
-    try {
-      final user = await _authRepository.signUpWithEmailAndPassword(
-        event.email,
-        event.password,
-        termsAccepted: event.termsAccepted,
-        privacyPolicyAccepted: event.privacyPolicyAccepted,
-      );
+    final result = await _authRepository.signUpWithEmailAndPassword(
+      event.email,
+      event.password,
+      termsAccepted: event.termsAccepted,
+      privacyPolicyAccepted: event.privacyPolicyAccepted,
+    );
 
+    if (result.isSuccess) {
+      final user = result.data;
       if (user != null) {
         await _analytics.logSignUpSuccess('email');
         await _analytics.setUserId(user.uid);
@@ -159,9 +161,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       } else {
         emit(const AuthError('Falha no cadastro com email'));
       }
-    } catch (e) {
-      final message = e.toString().replaceAll('Exception: ', '');
-      emit(AuthError(message));
+    } else {
+      emit(AuthError(result.error ?? 'Erro no cadastro com email'));
     }
   }
 
@@ -172,13 +173,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
 
-    try {
-      await _authRepository.signOut();
+    final result = await _authRepository.signOut();
+
+    if (result.isSuccess) {
       await _analytics.logLogout();
       await _analytics.setUserId(null);
       emit(AuthUnauthenticated());
-    } catch (e) {
-      emit(AuthError('Erro no logout: $e'));
+    } else {
+      emit(AuthError(result.error ?? 'Erro no logout'));
     }
   }
 
@@ -189,12 +191,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
 
-    try {
-      await _authRepository.sendPasswordResetEmail(event.email);
+    final result = await _authRepository.sendPasswordResetEmail(event.email);
+
+    if (result.isSuccess) {
       emit(const AuthPasswordResetSent());
-    } catch (e) {
-      final message = e.toString().replaceAll('Exception: ', '');
-      emit(AuthError(message));
+    } else {
+      emit(AuthError(result.error ?? 'Erro ao enviar email de recuperação'));
     }
   }
 

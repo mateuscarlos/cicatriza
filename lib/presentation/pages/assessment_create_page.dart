@@ -19,9 +19,7 @@ class AssessmentCreatePage extends StatefulWidget {
   final WoundManual wound;
 
   const AssessmentCreatePage({
-    super.key,
-    required this.patient,
-    required this.wound,
+    required this.patient, required this.wound, super.key,
   });
 
   @override
@@ -218,7 +216,6 @@ class _AssessmentCreatePageState extends State<AssessmentCreatePage> {
         quality: 80,
         minWidth: 1600,
         minHeight: 1200,
-        format: CompressFormat.jpeg,
       );
 
       if (compressed == null) {

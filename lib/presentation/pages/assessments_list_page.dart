@@ -12,9 +12,7 @@ class AssessmentsListPage extends StatefulWidget {
   final WoundManual wound;
 
   const AssessmentsListPage({
-    super.key,
-    required this.patient,
-    required this.wound,
+    required this.patient, required this.wound, super.key,
   });
 
   @override
@@ -279,7 +277,7 @@ class _StatusChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: _getStatusColor(status).withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _getStatusColor(status), width: 1),
+        border: Border.all(color: _getStatusColor(status)),
       ),
       child: Text(
         status,

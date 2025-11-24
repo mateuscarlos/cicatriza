@@ -36,7 +36,7 @@ void main() {
       });
 
       test('Deve converter int (milliseconds) para DateTime', () {
-        final dateTime = DateTime(2025, 11, 5, 12, 0);
+        final dateTime = DateTime(2025, 11, 5, 12);
         final millis = dateTime.millisecondsSinceEpoch;
 
         final result = converter.fromJson(millis);
@@ -99,7 +99,7 @@ void main() {
       });
 
       test('Deve converter datas antigas corretamente', () {
-        final oldDate = DateTime(1990, 1, 1);
+        final oldDate = DateTime(1990, 1);
         final result = converter.toJson(oldDate);
 
         expect(result, isA<Timestamp>());
@@ -139,7 +139,7 @@ void main() {
       });
 
       test('Deve ser reversível para int -> DateTime -> Timestamp', () {
-        final millis = DateTime(2025, 3, 20, 10, 0).millisecondsSinceEpoch;
+        final millis = DateTime(2025, 3, 20, 10).millisecondsSinceEpoch;
 
         final dateTime = converter.fromJson(millis);
         final timestamp = converter.toJson(dateTime) as Timestamp;

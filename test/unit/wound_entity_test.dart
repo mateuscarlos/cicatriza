@@ -13,7 +13,6 @@ void main() {
         type: WoundType.pressureUlcer,
         locationSimple: WoundLocation.footRight,
         onsetDays: 15,
-        status: WoundStatus.active,
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
       );
@@ -56,7 +55,6 @@ void main() {
         type: WoundType.pressureUlcer,
         locationSimple: WoundLocation.back,
         onsetDays: 20,
-        status: WoundStatus.active,
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
       );
@@ -129,7 +127,6 @@ void main() {
         type: WoundType.burn,
         locationSimple: WoundLocation.upperLimbRight,
         onsetDays: 5,
-        status: WoundStatus.active,
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
       );
@@ -140,7 +137,6 @@ void main() {
         type: WoundType.burn,
         locationSimple: WoundLocation.upperLimbRight,
         onsetDays: 5,
-        status: WoundStatus.active,
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
       );
@@ -151,7 +147,6 @@ void main() {
         type: WoundType.traumatic,
         locationSimple: WoundLocation.headNeck,
         onsetDays: 2,
-        status: WoundStatus.active,
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
       );
@@ -200,7 +195,6 @@ void main() {
           type: type,
           locationSimple: WoundLocation.other,
           onsetDays: 1,
-          status: WoundStatus.active,
           createdAt: testCreatedAt,
           updatedAt: testUpdatedAt,
         );

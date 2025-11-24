@@ -43,7 +43,6 @@ class StorageService {
         minWidth: maxWidth,
         minHeight: maxHeight,
         quality: quality,
-        format: CompressFormat.jpeg,
       );
 
       if (result == null) {
@@ -239,9 +238,8 @@ class CompressedImage {
     required this.bytes,
     required this.originalSize,
     required this.compressedSize,
-    this.width,
+    required this.mimeType, this.width,
     this.height,
-    required this.mimeType,
   });
 
   double get compressionRatio =>

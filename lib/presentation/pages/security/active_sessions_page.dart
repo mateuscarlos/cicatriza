@@ -7,7 +7,7 @@ import '../../../core/services/session_service.dart';
 class ActiveSessionsPage extends StatefulWidget {
   final String userId;
 
-  const ActiveSessionsPage({super.key, required this.userId});
+  const ActiveSessionsPage({required this.userId, super.key});
 
   @override
   State<ActiveSessionsPage> createState() => _ActiveSessionsPageState();

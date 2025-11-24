@@ -7,7 +7,7 @@ import 'dart:convert';
 class QrCodePage extends StatelessWidget {
   final UserProfile profile;
 
-  const QrCodePage({super.key, required this.profile});
+  const QrCodePage({required this.profile, super.key});
 
   String _generateQrData() {
     // Gera dados estruturados do perfil profissional
@@ -66,7 +66,6 @@ Instituição: ${profile.institution ?? 'Não informada'}
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Cabeçalho com foto e nome
               Column(
@@ -116,7 +115,6 @@ Instituição: ${profile.institution ?? 'Não informada'}
                     children: [
                       QrImageView(
                         data: qrData,
-                        version: QrVersions.auto,
                         size: 280,
                         backgroundColor: Colors.white,
                         eyeStyle: QrEyeStyle(

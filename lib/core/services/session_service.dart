@@ -62,9 +62,8 @@ class SessionService {
   final Uuid _uuid;
 
   SessionService({
-    FirebaseFirestore? firestore,
+    required SharedPreferences prefs, FirebaseFirestore? firestore,
     DeviceInfoPlugin? deviceInfo,
-    required SharedPreferences prefs,
     Uuid? uuid,
   }) : _firestore = firestore ?? FirebaseFirestore.instance,
        _deviceInfo = deviceInfo ?? DeviceInfoPlugin(),

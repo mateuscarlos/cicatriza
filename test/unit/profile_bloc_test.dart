@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:bloc_test/bloc_test.dart';
+import 'package:cicatriza/core/base/base_repository.dart';
 import 'package:cicatriza/domain/entities/user_profile.dart';
 import 'package:cicatriza/domain/repositories/auth_repository.dart';
 import 'package:cicatriza/presentation/blocs/profile/profile_bloc.dart';
@@ -105,7 +106,7 @@ void main() {
       build: () {
         when(
           () => mockAuthRepository.updateProfile(testUser),
-        ).thenAnswer((_) async {});
+        ).thenAnswer((_) async => const Result.success(null));
         return profileBloc;
       },
       act: (bloc) => bloc.add(ProfileUpdateRequested(testUser)),
@@ -121,7 +122,7 @@ void main() {
       build: () {
         when(
           () => mockAuthRepository.updateProfile(testUser),
-        ).thenThrow(Exception('Update failed'));
+        ).thenAnswer((_) async => const Result.failure('Update failed'));
         return profileBloc;
       },
       act: (bloc) => bloc.add(ProfileUpdateRequested(testUser)),
@@ -152,7 +153,7 @@ void main() {
 
         when(
           () => mockAuthRepository.updateProfile(any()),
-        ).thenAnswer((_) async {});
+        ).thenAnswer((_) async => const Result.success(null));
 
         return profileBloc;
       },

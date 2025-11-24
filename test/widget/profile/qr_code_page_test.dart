@@ -278,8 +278,6 @@ void main() {
       final partialProfile = UserProfile(
         uid: '123',
         email: 'test@example.com',
-        displayName: null,
-        crmCofen: null,
         specialty: 'Enfermagem',
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),

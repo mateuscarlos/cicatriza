@@ -161,8 +161,6 @@ void main() {
         uploadStatus: UploadStatus.pending,
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
-        uploadProgress: 0.0,
-        retryCount: 0,
       );
 
       final created = await repository.createMedia(media);
@@ -180,8 +178,6 @@ void main() {
         uploadStatus: UploadStatus.pending,
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
-        uploadProgress: 0.0,
-        retryCount: 0,
       );
 
       final created = await repository.createMedia(media);
@@ -197,8 +193,6 @@ void main() {
         uploadStatus: UploadStatus.pending,
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
-        uploadProgress: 0.0,
-        retryCount: 0,
       );
 
       await repository.createMedia(media);
@@ -223,8 +217,6 @@ void main() {
         uploadStatus: UploadStatus.pending,
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
-        uploadProgress: 0.0,
-        retryCount: 0,
       );
 
       await repository.createMedia(media);
@@ -244,8 +236,6 @@ void main() {
         uploadStatus: UploadStatus.pending,
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
-        uploadProgress: 0.0,
-        retryCount: 0,
       );
 
       await repository.createMedia(media);
@@ -263,8 +253,6 @@ void main() {
         uploadStatus: UploadStatus.pending,
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
-        uploadProgress: 0.0,
-        retryCount: 0,
       );
 
       final media2 = Media(
@@ -275,7 +263,6 @@ void main() {
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
         uploadProgress: 1.0,
-        retryCount: 0,
       );
 
       final media3 = Media(
@@ -285,8 +272,6 @@ void main() {
         uploadStatus: UploadStatus.pending,
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
-        uploadProgress: 0.0,
-        retryCount: 0,
       );
 
       await repository.createMedia(media1);
@@ -321,8 +306,6 @@ void main() {
         uploadStatus: UploadStatus.pending,
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
-        uploadProgress: 0.0,
-        retryCount: 0,
       );
 
       await repository.createMedia(media);
@@ -341,7 +324,6 @@ void main() {
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
         uploadProgress: 0.8,
-        retryCount: 0,
       );
 
       await repository.createMedia(media);
@@ -369,7 +351,6 @@ void main() {
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
         uploadProgress: 0.3,
-        retryCount: 0,
       );
 
       await repository.createMedia(media);
@@ -392,8 +373,6 @@ void main() {
         uploadStatus: UploadStatus.pending,
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
-        uploadProgress: 0.0,
-        retryCount: 0,
       );
 
       final completed = Media(
@@ -404,7 +383,6 @@ void main() {
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
         uploadProgress: 1.0,
-        retryCount: 0,
       );
 
       final pending2 = Media(
@@ -414,8 +392,6 @@ void main() {
         uploadStatus: UploadStatus.pending,
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
-        uploadProgress: 0.0,
-        retryCount: 0,
       );
 
       await repository.createMedia(pending1);
@@ -436,7 +412,6 @@ void main() {
         uploadStatus: UploadStatus.failed,
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
-        uploadProgress: 0.0,
         retryCount: 1,
         errorMessage: 'Error 1',
       );
@@ -449,7 +424,6 @@ void main() {
         createdAt: testCreatedAt,
         updatedAt: testUpdatedAt,
         uploadProgress: 1.0,
-        retryCount: 0,
       );
 
       await repository.createMedia(failed1);
@@ -512,7 +486,6 @@ void main() {
             createdAt: testCreatedAt,
             updatedAt: testUpdatedAt,
             uploadProgress: i == 2 ? 1.0 : 0.0,
-            retryCount: 0,
           ),
         );
       }
@@ -552,7 +525,6 @@ void main() {
           createdAt: testCreatedAt,
           updatedAt: testUpdatedAt,
           uploadProgress: 1.0,
-          retryCount: 0,
         ),
       );
 
@@ -564,8 +536,6 @@ void main() {
           uploadStatus: UploadStatus.pending,
           createdAt: testCreatedAt,
           updatedAt: testUpdatedAt,
-          uploadProgress: 0.0,
-          retryCount: 0,
         ),
       );
 

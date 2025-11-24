@@ -296,7 +296,6 @@ class AssessmentBloc extends Bloc<AssessmentEvent, AssessmentState> {
         AssessmentSavedSuccessfullyEvent(
           woundId: event.woundId,
           savedAssessment: createdAssessment,
-          shouldNavigateBack: true,
         ),
       );
 

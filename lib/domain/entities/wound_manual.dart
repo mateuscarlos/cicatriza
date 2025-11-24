@@ -50,11 +50,8 @@ class WoundManual {
     required this.patientId,
     required this.type,
     required this.location,
-    this.locationDescription,
-    required this.status,
+    required this.status, required this.createdAt, required this.updatedAt, this.locationDescription,
     this.causeDescription,
-    required this.createdAt,
-    required this.updatedAt,
   });
 
   factory WoundManual.create({

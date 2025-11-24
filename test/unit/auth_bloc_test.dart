@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:cicatriza/core/base/base_repository.dart';
 import 'package:cicatriza/core/services/analytics_service.dart';
 import 'package:cicatriza/domain/entities/user_profile.dart';
 import 'package:cicatriza/domain/repositories/auth_repository.dart';
@@ -70,7 +71,7 @@ void main() {
       build: () {
         when(
           () => mockAuthRepository.signInWithEmailAndPassword(email, password),
-        ).thenAnswer((_) async => testUser);
+        ).thenAnswer((_) async => Result.success(testUser));
         return authBloc;
       },
       act: (bloc) => bloc.add(
@@ -95,7 +96,7 @@ void main() {
       build: () {
         when(
           () => mockAuthRepository.signInWithEmailAndPassword(email, password),
-        ).thenThrow(Exception('Login failed'));
+        ).thenAnswer((_) async => const Result.failure('Login failed'));
         return authBloc;
       },
       act: (bloc) => bloc.add(
@@ -121,7 +122,7 @@ void main() {
             termsAccepted: true,
             privacyPolicyAccepted: true,
           ),
-        ).thenAnswer((_) async => testUser);
+        ).thenAnswer((_) async => Result.success(testUser));
         return authBloc;
       },
       act: (bloc) => bloc.add(
@@ -163,7 +164,7 @@ void main() {
             termsAccepted: false,
             privacyPolicyAccepted: false,
           ),
-        ).thenThrow(Exception('Signup failed'));
+        ).thenAnswer((_) async => const Result.failure('Signup failed'));
         return authBloc;
       },
       act: (bloc) => bloc.add(

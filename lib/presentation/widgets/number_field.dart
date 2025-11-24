@@ -18,10 +18,8 @@ class NumberField extends StatelessWidget {
   final FocusNode? focusNode;
 
   const NumberField({
-    super.key,
-    required this.label,
+    required this.label, required this.onChanged, super.key,
     this.value,
-    required this.onChanged,
     this.suffix,
     this.hint,
     this.min,

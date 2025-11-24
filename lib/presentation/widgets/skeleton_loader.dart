@@ -7,11 +7,9 @@ class SkeletonLoader extends StatefulWidget {
   final BorderRadius? borderRadius;
 
   const SkeletonLoader({
-    Key? key,
-    required this.width,
-    required this.height,
+    required this.width, required this.height, super.key,
     this.borderRadius,
-  }) : super(key: key);
+  });
 
   @override
   State<SkeletonLoader> createState() => _SkeletonLoaderState();
@@ -57,7 +55,6 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
           decoration: BoxDecoration(
             borderRadius: widget.borderRadius ?? BorderRadius.circular(4),
             gradient: LinearGradient(
-              begin: Alignment.centerLeft,
               end: Alignment.centerRight,
               colors: [baseColor, highlightColor, baseColor],
               stops: <double>[
@@ -77,7 +74,7 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
 class SkeletonAvatar extends StatelessWidget {
   final double size;
 
-  const SkeletonAvatar({Key? key, this.size = 80}) : super(key: key);
+  const SkeletonAvatar({super.key, this.size = 80});
 
   @override
   Widget build(BuildContext context) {
@@ -94,8 +91,7 @@ class SkeletonText extends StatelessWidget {
   final double width;
   final double height;
 
-  const SkeletonText({Key? key, required this.width, this.height = 16})
-    : super(key: key);
+  const SkeletonText({required this.width, super.key, this.height = 16});
 
   @override
   Widget build(BuildContext context) {
@@ -109,7 +105,7 @@ class SkeletonText extends StatelessWidget {
 
 /// Skeleton for profile page
 class ProfileSkeleton extends StatelessWidget {
-  const ProfileSkeleton({Key? key}) : super(key: key);
+  const ProfileSkeleton({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -128,7 +124,7 @@ class ProfileSkeleton extends StatelessWidget {
             const SizedBox(height: 8),
 
             // Email skeleton
-            const Center(child: SkeletonText(width: 250, height: 16)),
+            const Center(child: SkeletonText(width: 250)),
             const SizedBox(height: 32),
 
             // Form fields skeleton
@@ -148,9 +144,9 @@ class ProfileSkeleton extends StatelessWidget {
   }
 
   Widget _buildFieldSkeleton() {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         SkeletonText(width: 100, height: 14),
         SizedBox(height: 8),
         SkeletonText(width: double.infinity, height: 48),

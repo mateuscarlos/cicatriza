@@ -60,7 +60,6 @@ class _SplashPageState extends State<SplashPage> {
                 'assets/logos/logo_cicatriza.svg',
                 width: 110,
                 height: 110,
-                fit: BoxFit.contain,
                 colorFilter: ColorFilter.mode(
                   Theme.of(context).colorScheme.primary,
                   BlendMode.srcIn,

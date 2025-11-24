@@ -63,7 +63,7 @@ class AssessmentLocalStorage {
 
     if (jsonString == null) return [];
 
-    final List<dynamic> ids = jsonDecode(jsonString);
+    final List<dynamic> ids = jsonDecode(jsonString) as List<dynamic>;
     return ids.cast<String>();
   }
 

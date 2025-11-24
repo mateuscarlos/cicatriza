@@ -42,8 +42,8 @@ void main() {
       institution: institution ?? 'Hospital Test',
       address: 'Rua Test, 123',
       ownerId: 'test-uid',
-      createdAt: DateTime(2024, 1, 1),
-      updatedAt: DateTime(2024, 1, 1),
+      createdAt: DateTime(2024, 1),
+      updatedAt: DateTime(2024, 1),
     );
   }
 
@@ -81,7 +81,6 @@ void main() {
     ) async {
       final profile = createTestProfile(
         displayName: 'Dr. Test',
-        institution: null,
       );
 
       await tester.pumpWidgetBuilder(
@@ -260,7 +259,7 @@ void main() {
 
       await tester.pumpWidgetBuilder(
         MediaQuery(
-          data: const MediaQueryData(textScaleFactor: 2.0),
+          data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),
           child: createProfileWidget(ProfileLoaded(profile)),
         ),
         surfaceSize: const Size(375, 667),
@@ -274,7 +273,7 @@ void main() {
 
       await tester.pumpWidgetBuilder(
         MediaQuery(
-          data: const MediaQueryData(textScaleFactor: 3.0),
+          data: const MediaQueryData(textScaler: TextScaler.linear(3.0)),
           child: createProfileWidget(ProfileLoaded(profile)),
         ),
         surfaceSize: const Size(375, 667),

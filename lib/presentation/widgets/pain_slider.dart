@@ -10,9 +10,7 @@ class PainSlider extends StatelessWidget {
   final bool showTooltip;
 
   const PainSlider({
-    super.key,
-    required this.value,
-    required this.onChanged,
+    required this.value, required this.onChanged, super.key,
     this.label,
     this.enabled = true,
     this.showLabels = true,
@@ -134,14 +132,13 @@ class PainSlider extends StatelessWidget {
                   thumbColor: painColor,
                   overlayColor: painColor.withValues(alpha: 0.2),
                   valueIndicatorColor: painColor,
-                  valueIndicatorTextStyle: TextStyle(
+                  valueIndicatorTextStyle: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 child: Slider(
                   value: value.toDouble(),
-                  min: 0,
                   max: 10,
                   divisions: 10,
                   label: showTooltip ? value.toString() : null,

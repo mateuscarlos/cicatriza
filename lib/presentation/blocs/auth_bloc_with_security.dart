@@ -90,12 +90,13 @@ class AuthBlocWithSecurity extends Bloc<AuthEvent, AuthState> {
 
     try {
       // 2. AUTENTICAÇÃO: Tentar fazer login
-      final user = await _authRepository.signInWithEmailAndPassword(
+      final result = await _authRepository.signInWithEmailAndPassword(
         event.email,
         event.password,
       );
 
-      if (user != null) {
+      if (result.isSuccess && result.data != null) {
+        final user = result.data!;
         // ✅ LOGIN BEM-SUCEDIDO
 
         // 3. RATE LIMITING: Limpar tentativas após sucesso
@@ -141,9 +142,9 @@ class AuthBlocWithSecurity extends Bloc<AuthEvent, AuthState> {
           ),
         );
       } else {
-        throw Exception('Falha no login com email');
+        throw Exception(result.error ?? 'Falha no login com email');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       // ❌ LOGIN FALHOU
 
       // 1. RATE LIMITING: Registrar tentativa falha
@@ -189,14 +190,17 @@ class AuthBlocWithSecurity extends Bloc<AuthEvent, AuthState> {
       }
 
       // 3. AUTENTICAÇÃO: Fazer logout
-      await _authRepository.signOut();
+      final signOutResult = await _authRepository.signOut();
+      if (signOutResult.isFailure) {
+        throw Exception(signOutResult.error ?? 'Erro no logout');
+      }
 
       // 4. ANALYTICS: Registrar evento
       await _analytics.logLogout();
       await _analytics.setUserId(null);
 
       emit(AuthUnauthenticated());
-    } catch (e) {
+    } on Exception catch (e) {
       emit(AuthError('Erro no logout: $e'));
     }
   }
@@ -233,7 +237,14 @@ class AuthBlocWithSecurity extends Bloc<AuthEvent, AuthState> {
 
     try {
       // 2. Enviar email de reset
-      await _authRepository.sendPasswordResetEmail(event.email);
+      final resetResult = await _authRepository.sendPasswordResetEmail(
+        event.email,
+      );
+      if (resetResult.isFailure) {
+        throw Exception(
+          resetResult.error ?? 'Erro ao enviar email de recuperação',
+        );
+      }
 
       // 3. RATE LIMITING: Registrar tentativa
       await _rateLimiter.recordAttempt('password_reset');
@@ -246,7 +257,7 @@ class AuthBlocWithSecurity extends Bloc<AuthEvent, AuthState> {
       );
 
       emit(const AuthPasswordResetSent());
-    } catch (e) {
+    } on Exception catch (e) {
       final message = e.toString().replaceAll('Exception: ', '');
       emit(AuthError(message));
     }

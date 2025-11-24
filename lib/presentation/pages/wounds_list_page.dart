@@ -9,7 +9,7 @@ import '../blocs/wound_event.dart';
 class WoundsListPage extends StatefulWidget {
   final PatientManual patient;
 
-  const WoundsListPage({super.key, required this.patient});
+  const WoundsListPage({required this.patient, super.key});
 
   @override
   State<WoundsListPage> createState() => _WoundsListPageState();
@@ -389,7 +389,6 @@ class _WoundListTile extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: statusColor.withValues(alpha: 0.5),
-                    width: 1,
                   ),
                 ),
                 child: Text(

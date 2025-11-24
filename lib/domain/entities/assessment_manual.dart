@@ -53,7 +53,7 @@ class AssessmentManual {
     required this.id,
     required this.woundId,
     required this.date,
-    this.lengthCm,
+    required this.createdAt, required this.updatedAt, this.lengthCm,
     this.widthCm,
     this.depthCm,
     this.painScale,
@@ -62,8 +62,6 @@ class AssessmentManual {
     this.exudateType,
     this.exudateAmount,
     this.notes,
-    required this.createdAt,
-    required this.updatedAt,
   });
 
   factory AssessmentManual.create({

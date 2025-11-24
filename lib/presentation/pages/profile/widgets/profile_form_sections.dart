@@ -19,12 +19,7 @@ class IdentificationSection extends StatelessWidget {
   final Function(String)? onPhotoChanged;
 
   const IdentificationSection({
-    super.key,
-    required this.nameController,
-    required this.crmController,
-    required this.specialtyController,
-    required this.institutionController,
-    required this.roleController,
+    required this.nameController, required this.crmController, required this.specialtyController, required this.institutionController, required this.roleController, super.key,
     this.photoURL,
     this.onPhotoChanged,
   });
@@ -217,7 +212,7 @@ class IdentificationSection extends StatelessWidget {
               return 'Nome deve ter pelo menos 3 caracteres';
             }
             // Validar caracteres especiais (permitir letras, espaços e acentos)
-            if (!RegExp(r"^[a-zA-ZÀ-ÿ\s]+$").hasMatch(value.trim())) {
+            if (!RegExp(r'^[a-zA-ZÀ-ÿ\s]+$').hasMatch(value.trim())) {
               return 'Nome não pode conter números ou caracteres especiais';
             }
             return null;
@@ -235,7 +230,7 @@ class IdentificationSection extends StatelessWidget {
           inputFormatters: [
             MaskTextInputFormatter(
               mask: '######-AA',
-              filter: {"#": RegExp(r'[0-9]'), "A": RegExp(r'[A-Z]')},
+              filter: {'#': RegExp(r'[0-9]'), 'A': RegExp(r'[A-Z]')},
             ),
           ],
           validator: (value) {
@@ -296,11 +291,7 @@ class ContactSection extends StatefulWidget {
   final Dio? dio;
 
   const ContactSection({
-    super.key,
-    required this.emailController,
-    required this.phoneController,
-    required this.cepController,
-    required this.addressController,
+    required this.emailController, required this.phoneController, required this.cepController, required this.addressController, super.key,
     this.dio,
   });
 

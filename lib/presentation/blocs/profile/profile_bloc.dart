@@ -32,7 +32,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       } else {
         emit(const ProfileError('Usuário não autenticado'));
       }
-    } catch (e) {
+    } on Exception catch (e) {
       emit(ProfileError('Erro ao carregar perfil: $e'));
     }
   }
@@ -42,13 +42,15 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     Emitter<ProfileState> emit,
   ) async {
     emit(const ProfileLoading());
-    try {
-      await _authRepository.updateProfile(event.profile);
+
+    final result = await _authRepository.updateProfile(event.profile);
+
+    if (result.isSuccess) {
       emit(ProfileUpdateSuccess(event.profile));
       // Emit Loaded again to show the updated profile
       emit(ProfileLoaded(event.profile));
-    } catch (e) {
-      emit(ProfileError('Erro ao atualizar perfil: $e'));
+    } else {
+      emit(ProfileError(result.error ?? 'Erro ao atualizar perfil'));
     }
   }
 
@@ -78,11 +80,19 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
       // Atualizar perfil com nova URL da foto
       final updatedProfile = currentUser.copyWith(photoURL: downloadUrl);
-      await _authRepository.updateProfile(updatedProfile);
+      final updateResult = await _authRepository.updateProfile(updatedProfile);
 
-      emit(ProfileUpdateSuccess(updatedProfile));
-      emit(ProfileLoaded(updatedProfile));
-    } catch (e) {
+      if (updateResult.isSuccess) {
+        emit(ProfileUpdateSuccess(updatedProfile));
+        emit(ProfileLoaded(updatedProfile));
+      } else {
+        emit(
+          ProfileError(
+            updateResult.error ?? 'Erro ao atualizar perfil com nova foto',
+          ),
+        );
+      }
+    } on Exception catch (e) {
       emit(ProfileError('Erro ao fazer upload da imagem: $e'));
     }
   }

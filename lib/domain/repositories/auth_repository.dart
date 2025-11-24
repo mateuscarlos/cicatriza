@@ -1,3 +1,4 @@
+import '../../core/base/base_repository.dart';
 import '../entities/user_profile.dart';
 
 abstract class AuthRepository {
@@ -7,17 +8,20 @@ abstract class AuthRepository {
   /// Usuário atual autenticado
   UserProfile? get currentUser;
 
+  /// Verificar se usuário está autenticado
+  bool get isAuthenticated;
+
   /// Login com Google
-  Future<UserProfile?> signInWithGoogle();
+  Future<Result<UserProfile?>> signInWithGoogle();
 
   /// Login com Email e Senha
-  Future<UserProfile?> signInWithEmailAndPassword(
+  Future<Result<UserProfile?>> signInWithEmailAndPassword(
     String email,
     String password,
   );
 
   /// Cadastro com Email e Senha
-  Future<UserProfile?> signUpWithEmailAndPassword(
+  Future<Result<UserProfile?>> signUpWithEmailAndPassword(
     String email,
     String password, {
     bool termsAccepted,
@@ -25,14 +29,11 @@ abstract class AuthRepository {
   });
 
   /// Logout
-  Future<void> signOut();
+  Future<Result<void>> signOut();
 
   /// Atualizar perfil
-  Future<void> updateProfile(UserProfile profile);
-
-  /// Verificar se usuário está autenticado
-  bool get isAuthenticated;
+  Future<Result<void>> updateProfile(UserProfile profile);
 
   /// Enviar email de recuperação de senha
-  Future<void> sendPasswordResetEmail(String email);
+  Future<Result<void>> sendPasswordResetEmail(String email);
 }

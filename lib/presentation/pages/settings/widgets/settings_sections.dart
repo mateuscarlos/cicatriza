@@ -8,9 +8,7 @@ class PreferencesSettingsSection extends StatefulWidget {
   final Function(UserProfile) onProfileChanged;
 
   const PreferencesSettingsSection({
-    super.key,
-    required this.profile,
-    required this.onProfileChanged,
+    required this.profile, required this.onProfileChanged, super.key,
   });
 
   @override
@@ -207,9 +205,7 @@ class SecuritySettingsSection extends StatelessWidget {
   final VoidCallback onLogout;
 
   const SecuritySettingsSection({
-    super.key,
-    required this.profile,
-    required this.onLogout,
+    required this.profile, required this.onLogout, super.key,
   });
 
   @override

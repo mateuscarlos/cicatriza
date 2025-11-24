@@ -21,14 +21,9 @@ class AssessmentLocalModel {
     required this.painScale,
     required this.lengthCm,
     required this.widthCm,
-    this.depthCm,
-    required this.woundBed,
-    required this.exudateType,
-    required this.edgeAppearance,
+    required this.woundBed, required this.exudateType, required this.edgeAppearance, required this.createdAt, required this.updatedAt, this.depthCm,
     this.notes,
     this.isSynced = false,
-    required this.createdAt,
-    required this.updatedAt,
   });
 
   AssessmentLocalModel copyWith({

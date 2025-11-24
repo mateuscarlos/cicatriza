@@ -1,0 +1,84 @@
+rules_version = '2';
+
+/**
+ * Firestore Security Rules — Cicatriza (DESENVOLVIMENTO)
+ * 
+ * VERSÃO RELAXADA PARA TESTES E DESENVOLVIMENTO:
+ * - Autenticação obrigatória (mesmo em dev)
+ * - Validação básica de dados
+ * - Logs detalhados para debug
+ * - Algumas validações flexibilizadas para facilitar testes
+ */
+
+service cloud.firestore {
+  match /databases/{db}/documents {
+
+    // =============================================================================
+    // HELPER FUNCTIONS - Versões simplificadas para desenvolvimento
+    // =============================================================================
+    
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
+    }
+    
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+    
+    // Validação relaxada para desenvolvimento
+    function hasBasicFields(data) {
+      return 'ownerId' in data && data.ownerId is string;
+    }
+    
+    // String validation mais flexível para dev
+    function isValidString(value, maxLength) {
+      return value is string && value.size() <= maxLength;
+    }
+
+    // =============================================================================
+    // DEVELOPMENT RULES - Regras relaxadas para desenvolvimento
+    // =============================================================================
+    
+    // Perfis de usuário - validação básica
+    match /users/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+    
+    // Estrutura hierárquica com validação básica
+    match /users/{uid}/patients/{patientId} {
+      allow read, write: if isOwner(uid);
+      
+      match /wounds/{woundId} {
+        allow read, write: if isOwner(uid);
+        
+        match /assessments/{assessmentId} {
+          allow read, write: if isOwner(uid);
+          
+          match /media/{mediaId} {
+            allow read, write: if isOwner(uid);
+          }
+        }
+      }
+    }
+    
+    // Coleções auxiliares para desenvolvimento
+    match /audit/{auditId} {
+      allow create: if isAuthenticated();
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+    
+    match /userSettings/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+    
+    // Debug collection - apenas para desenvolvimento
+    match /debug/{debugId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Bloquear qualquer outro acesso
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
