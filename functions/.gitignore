@@ -8,3 +8,10 @@ typings/
 # Node.js dependency directory
 node_modules/
 *.local
+
+# Copilot Instructions files
+.copilot-instructions/
+
+# VSCode settings folder
+.vscode/
+
