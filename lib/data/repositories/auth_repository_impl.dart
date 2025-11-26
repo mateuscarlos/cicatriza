@@ -54,7 +54,30 @@ final class AuthRepositoryImpl extends BaseRepository
     final user = _firebaseAuth.currentUser;
     if (user == null) return null;
 
+    // Retorna um perfil básico baseado no Firebase Auth
+    // Para dados atualizados, use getCurrentUserAsync()
     return _createProfileFromFirebaseUser(user);
+  }
+
+  /// Busca o perfil completo do usuário atual do Firestore (assíncrono)
+  Future<UserProfile?> getCurrentUserAsync() async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) return null;
+
+    try {
+      final userDoc = await _firestore.doc('users/${user.uid}').get();
+      final data = userDoc.data();
+
+      if (data != null) {
+        return _mapUserProfile(user, data);
+      }
+
+      // Se não existe no Firestore, cria um perfil básico
+      return _createProfileFromFirebaseUser(user);
+    } catch (e) {
+      AppLogger.error('Erro ao buscar perfil atual do usuário', error: e);
+      return _createProfileFromFirebaseUser(user);
+    }
   }
 
   @override

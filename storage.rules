@@ -29,6 +29,14 @@ service firebase.storage {
       allow write: if isOwner(uid) && (resource == null || isValidImageUpload());
     }
     
+    // Fotos de perfil dos usuários - estrutura simplificada
+    match /user_profiles/{uid}/{fileName} {
+      // Leitura: qualquer usuário autenticado pode ver fotos de perfil
+      allow read: if isAuth();
+      // Escrita: apenas o dono do perfil pode fazer upload/atualizar
+      allow write: if isOwner(uid) && (resource == null || isValidImageUpload());
+    }
+    
     // Fallback para qualquer arquivo do usuário
     match /users/{uid}/{allPaths=**} {
       allow read, write: if isOwner(uid);

@@ -25,6 +25,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthEmailSignUpRequested>(_onEmailSignUpRequested);
     on<AuthSignOutRequested>(_onSignOutRequested);
     on<AuthPasswordResetRequested>(_onPasswordResetRequested);
+    on<AuthProfileUpdateRequested>(_onProfileUpdateRequested);
 
     // Escutar mudanças de autenticação
     _authSubscription = _authRepository.authStateChanges.listen((user) {
@@ -44,7 +45,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     try {
-      final user = _authRepository.currentUser;
+      // Usar getCurrentUserAsync para obter dados atualizados do Firestore
+      final user = await _authRepository.getCurrentUserAsync();
 
       if (user != null) {
         emit(
@@ -198,6 +200,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } else {
       emit(AuthError(result.error ?? 'Erro ao enviar email de recuperação'));
     }
+  }
+
+  /// Atualizar dados do perfil no estado de autenticação
+  Future<void> _onProfileUpdateRequested(
+    AuthProfileUpdateRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    // Recarregar dados atualizados após mudança no perfil
+    add(const AuthCheckRequested());
   }
 
   @override

@@ -16,10 +16,15 @@ class IdentificationSection extends StatelessWidget {
   final TextEditingController institutionController;
   final TextEditingController roleController;
   final String? photoURL;
-  final Function(String)? onPhotoChanged;
+  final void Function(String)? onPhotoChanged;
 
   const IdentificationSection({
-    required this.nameController, required this.crmController, required this.specialtyController, required this.institutionController, required this.roleController, super.key,
+    required this.nameController,
+    required this.crmController,
+    required this.specialtyController,
+    required this.institutionController,
+    required this.roleController,
+    super.key,
     this.photoURL,
     this.onPhotoChanged,
   });
@@ -62,34 +67,74 @@ class IdentificationSection extends StatelessWidget {
 
       if (image == null) return;
 
-      // Crop da imagem
-      final CroppedFile? croppedFile = await ImageCropper().cropImage(
-        sourcePath: image.path,
-        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: 'Ajustar Foto',
-            toolbarColor: Theme.of(context).colorScheme.primary,
-            toolbarWidgetColor: Theme.of(context).colorScheme.onPrimary,
-            initAspectRatio: CropAspectRatioPreset.square,
-            lockAspectRatio: true,
-            hideBottomControls: false,
-          ),
-          IOSUiSettings(
-            title: 'Ajustar Foto',
-            aspectRatioLockEnabled: true,
-            resetAspectRatioEnabled: false,
-            aspectRatioPickerButtonHidden: true,
-          ),
-        ],
-      );
+      // Verificar se o arquivo existe antes de fazer crop
+      final imageFile = File(image.path);
+      if (!await imageFile.exists()) {
+        throw Exception('Arquivo de imagem não foi encontrado');
+      }
 
-      if (croppedFile == null) return;
+      CroppedFile? croppedFile;
+      try {
+        // Crop da imagem com tratamento de erro específico
+        croppedFile = await ImageCropper().cropImage(
+          sourcePath: image.path,
+          aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+          compressFormat: ImageCompressFormat.jpg,
+          compressQuality: 85,
+          uiSettings: [
+            AndroidUiSettings(
+              toolbarTitle: 'Ajustar Foto',
+              toolbarColor: Theme.of(context).colorScheme.primary,
+              toolbarWidgetColor: Theme.of(context).colorScheme.onPrimary,
+              initAspectRatio: CropAspectRatioPreset.square,
+              lockAspectRatio: true,
+              hideBottomControls: false,
+              statusBarColor: Theme.of(context).colorScheme.primary,
+              activeControlsWidgetColor: Theme.of(context).colorScheme.primary,
+            ),
+            IOSUiSettings(
+              title: 'Ajustar Foto',
+              aspectRatioLockEnabled: true,
+              resetAspectRatioEnabled: false,
+              aspectRatioPickerButtonHidden: true,
+            ),
+          ],
+        );
+      } catch (cropError) {
+        // Se o crop falhar, usar a imagem original redimensionada
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Erro no crop da imagem. Usando imagem original.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+
+        // Usar a imagem original se o crop falhar
+        if (onPhotoChanged != null) {
+          onPhotoChanged!(image.path);
+        }
+        return;
+      }
+
+      if (croppedFile == null) {
+        // Usuário cancelou o crop, limpar arquivo temporário
+        try {
+          if (await imageFile.exists()) {
+            await imageFile.delete();
+          }
+        } catch (_) {
+          // Ignorar erro de limpeza
+        }
+        return;
+      }
 
       // Preview da imagem antes de confirmar
       if (context.mounted) {
         final bool? confirmed = await showDialog<bool>(
           context: context,
+          barrierDismissible: false,
           builder: (context) => AlertDialog(
             title: const Text('Confirmar foto'),
             content: Column(
@@ -97,10 +142,17 @@ class IdentificationSection extends StatelessWidget {
               children: [
                 ClipOval(
                   child: Image.file(
-                    File(croppedFile.path),
+                    File(croppedFile!.path),
                     width: 150,
                     height: 150,
                     fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(
+                        Icons.error,
+                        size: 150,
+                        color: Colors.red,
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -125,14 +177,37 @@ class IdentificationSection extends StatelessWidget {
 
         if (confirmed == true && onPhotoChanged != null) {
           onPhotoChanged!(croppedFile.path);
+        } else {
+          // Limpar arquivos temporários se não confirmado
+          try {
+            final files = [imageFile, File(croppedFile.path)];
+            for (final file in files) {
+              if (await file.exists()) {
+                await file.delete();
+              }
+            }
+          } catch (_) {
+            // Ignorar erros de limpeza
+          }
         }
       }
     } catch (e) {
       if (context.mounted) {
+        String errorMessage = 'Erro ao selecionar imagem';
+
+        if (e.toString().contains('UCropActivity')) {
+          errorMessage = 'Erro na edição da imagem. Tente novamente.';
+        } else if (e.toString().contains('Permission')) {
+          errorMessage = 'Permissão negada para acessar câmera ou galeria';
+        } else if (e.toString().contains('No Activity')) {
+          errorMessage = 'Recurso não disponível neste dispositivo';
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao selecionar imagem: $e'),
+            content: Text(errorMessage),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
           ),
         );
       }
@@ -291,7 +366,11 @@ class ContactSection extends StatefulWidget {
   final Dio? dio;
 
   const ContactSection({
-    required this.emailController, required this.phoneController, required this.cepController, required this.addressController, super.key,
+    required this.emailController,
+    required this.phoneController,
+    required this.cepController,
+    required this.addressController,
+    super.key,
     this.dio,
   });
 
@@ -312,12 +391,22 @@ class _ContactSectionState extends State<ContactSection> {
 
     try {
       final dio = widget.dio ?? Dio();
-      final response = await dio.get(
+      final response = await dio.get<Map<String, dynamic>>(
         'https://viacep.com.br/ws/$cleanCep/json/',
       );
 
       if (response.statusCode == 200 && mounted) {
         final data = response.data;
+
+        if (data == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Erro ao buscar dados do CEP'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
 
         if (data['erro'] == true) {
           ScaffoldMessenger.of(context).showSnackBar(

@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../domain/entities/user_profile.dart';
+import '../../blocs/auth_bloc.dart';
+import '../../blocs/auth_event.dart';
 import '../../blocs/profile/profile_bloc.dart';
 import '../../blocs/profile/profile_event.dart';
 import '../../blocs/profile/profile_state.dart';
@@ -142,7 +144,7 @@ Aplicativo Cicatriza - Gestão de Feridas
               if (_currentProfile != null) {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
+                  MaterialPageRoute<void>(
                     builder: (context) => QrCodePage(profile: _currentProfile!),
                   ),
                 );
@@ -182,6 +184,9 @@ Aplicativo Cicatriza - Gestão de Feridas
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(SnackBar(content: Text(message)));
+
+            // Atualizar o AuthBloc para refletir as mudanças na HomePage
+            context.read<AuthBloc>().add(const AuthProfileUpdateRequested());
           } else if (state is ProfileError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

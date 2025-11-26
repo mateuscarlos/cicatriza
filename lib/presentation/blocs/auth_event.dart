@@ -66,3 +66,8 @@ class AuthPasswordResetRequested extends AuthEvent {
   @override
   List<Object> get props => [email];
 }
+
+/// Forçar atualização dos dados do usuário (após mudanças no perfil)
+class AuthProfileUpdateRequested extends AuthEvent {
+  const AuthProfileUpdateRequested();
+}

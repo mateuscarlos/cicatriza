@@ -5,8 +5,11 @@ abstract class AuthRepository {
   /// Stream que monitora mudanças no estado de autenticação
   Stream<UserProfile?> get authStateChanges;
 
-  /// Usuário atual autenticado
+  /// Usuário atual autenticado (dados básicos do Firebase Auth)
   UserProfile? get currentUser;
+
+  /// Busca o perfil completo do usuário atual do Firestore (assíncrono)
+  Future<UserProfile?> getCurrentUserAsync();
 
   /// Verificar se usuário está autenticado
   bool get isAuthenticated;

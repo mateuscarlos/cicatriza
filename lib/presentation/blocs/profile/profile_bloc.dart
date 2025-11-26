@@ -26,7 +26,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   ) async {
     emit(const ProfileLoading());
     try {
-      final user = _authRepository.currentUser;
+      final user = await _authRepository.getCurrentUserAsync();
       if (user != null) {
         emit(ProfileLoaded(user));
       } else {
@@ -59,7 +59,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     Emitter<ProfileState> emit,
   ) async {
     try {
-      final currentUser = _authRepository.currentUser;
+      final currentUser = await _authRepository.getCurrentUserAsync();
       if (currentUser == null) {
         emit(const ProfileError('Usuário não autenticado'));
         return;
@@ -67,15 +67,31 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
       emit(const ProfileLoading());
 
-      // Upload da imagem para Firebase Storage
+      // Verificar se o arquivo existe
       final file = File(event.imagePath);
+      if (!await file.exists()) {
+        emit(const ProfileError('Arquivo de imagem não encontrado'));
+        return;
+      }
+
+      // Upload da imagem para Firebase Storage com timeout
       final storageRef = _firebaseStorage
           .ref()
           .child('user_profiles')
-          .child('${currentUser.uid}.jpg');
+          .child(currentUser.uid)
+          .child('profile.jpg');
 
       final uploadTask = storageRef.putFile(file);
-      final snapshot = await uploadTask;
+
+      // Adicionar timeout de 30 segundos
+      final snapshot = await uploadTask.timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          uploadTask.cancel();
+          throw Exception('Timeout no upload da imagem');
+        },
+      );
+
       final downloadUrl = await snapshot.ref.getDownloadURL();
 
       // Atualizar perfil com nova URL da foto
@@ -84,7 +100,13 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
       if (updateResult.isSuccess) {
         emit(ProfileUpdateSuccess(updatedProfile));
-        emit(ProfileLoaded(updatedProfile));
+        // Recarregar o perfil atual do Firestore para garantir dados atualizados
+        final refreshedProfile = await _authRepository.getCurrentUserAsync();
+        if (refreshedProfile != null) {
+          emit(ProfileLoaded(refreshedProfile));
+        } else {
+          emit(ProfileLoaded(updatedProfile));
+        }
       } else {
         emit(
           ProfileError(
@@ -93,7 +115,28 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         );
       }
     } on Exception catch (e) {
-      emit(ProfileError('Erro ao fazer upload da imagem: $e'));
+      // Limpar cache do arquivo se houver erro
+      try {
+        final file = File(event.imagePath);
+        if (await file.exists()) {
+          await file.delete();
+        }
+      } catch (_) {
+        // Ignorar erro de limpeza
+      }
+
+      String errorMessage = 'Erro ao fazer upload da imagem';
+
+      if (e.toString().contains('Permission denied') ||
+          e.toString().contains('-13021')) {
+        errorMessage = 'Erro de permissão. Verifique se você está logado.';
+      } else if (e.toString().contains('Timeout')) {
+        errorMessage = 'Upload cancelado por timeout. Verifique sua conexão.';
+      } else if (e.toString().contains('App attestation failed')) {
+        errorMessage = 'Erro de autenticação. Tente fazer login novamente.';
+      }
+
+      emit(ProfileError(errorMessage));
     }
   }
 }
