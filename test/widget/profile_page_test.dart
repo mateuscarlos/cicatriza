@@ -30,13 +30,13 @@ void main() {
       notifications: {'agendas': true},
       ownerId: 'test_uid',
       acl: {'read': [], 'write': []},
-      createdAt: DateTime(2025, 1),
-      updatedAt: DateTime(2025, 1),
+      createdAt: DateTime(2025),
+      updatedAt: DateTime(2025),
       lgpdConsent: true,
       termsAccepted: true,
-      termsAcceptedAt: DateTime(2025, 1),
+      termsAcceptedAt: DateTime(2025),
       privacyPolicyAccepted: true,
-      privacyPolicyAcceptedAt: DateTime(2025, 1),
+      privacyPolicyAcceptedAt: DateTime(2025),
     );
 
     when(() => mockProfileBloc.state).thenReturn(ProfileLoaded(testProfile));

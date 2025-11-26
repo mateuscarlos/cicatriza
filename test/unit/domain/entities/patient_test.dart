@@ -127,7 +127,7 @@ void main() {
         final birthDate = DateTime(1990, 5, 15);
         final patient = Patient.create(name: validName, birthDate: birthDate);
 
-        final pastDate = DateTime(1985, 1, 1);
+        final pastDate = DateTime(1985, 1);
 
         expect(
           () => patient.ageAt(pastDate),

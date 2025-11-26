@@ -296,9 +296,9 @@ class AssessmentManual {
   /// Gera resumo da avaliação
   String get summary {
     final measurements = hasCompleteMeasurements
-        ? '${lengthCm}x${widthCm}x${depthCm} cm'
+        ? '${lengthCm}x${widthCm}x$depthCm cm'
         : area != null
-        ? '${lengthCm}x${widthCm} cm (área: ${area!.toStringAsFixed(2)} cm²)'
+        ? '${lengthCm}x$widthCm cm (área: ${area!.toStringAsFixed(2)} cm²)'
         : 'Sem medidas';
 
     final painInfo = painScale != null ? 'Dor: $painScale/10' : 'Dor: N/I';

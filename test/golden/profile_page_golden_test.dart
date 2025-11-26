@@ -42,8 +42,8 @@ void main() {
       institution: institution ?? 'Hospital Test',
       address: 'Rua Test, 123',
       ownerId: 'test-uid',
-      createdAt: DateTime(2024, 1),
-      updatedAt: DateTime(2024, 1),
+      createdAt: DateTime(2024),
+      updatedAt: DateTime(2024),
     );
   }
 

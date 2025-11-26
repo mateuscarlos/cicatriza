@@ -24,7 +24,7 @@ void main() {
     id: '1',
     name: 'Test Patient',
     nameLowercase: 'test patient',
-    birthDate: DateTime(1990, 1),
+    birthDate: DateTime(1990),
     createdAt: DateTime.now(),
     updatedAt: DateTime.now(),
     notes: 'Test notes',

@@ -99,7 +99,7 @@ void main() {
       });
 
       test('Deve converter datas antigas corretamente', () {
-        final oldDate = DateTime(1990, 1);
+        final oldDate = DateTime(1990);
         final result = converter.toJson(oldDate);
 
         expect(result, isA<Timestamp>());

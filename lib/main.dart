@@ -132,7 +132,7 @@ void main() async {
                 children: [
                   const Icon(Icons.error, size: 64, color: Colors.red),
                   const SizedBox(height: 16),
-                  Text(
+                  const Text(
                     'Erro na inicialização:',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
