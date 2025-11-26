@@ -23,17 +23,19 @@ Wound _$WoundFromJson(Map<String, dynamic> json) {
 mixin _$Wound {
   String get id => throw _privateConstructorUsedError;
   String get patientId => throw _privateConstructorUsedError;
+  String get description => throw _privateConstructorUsedError;
   WoundType get type => throw _privateConstructorUsedError;
-  WoundLocation get locationSimple => throw _privateConstructorUsedError;
-  int get onsetDays => throw _privateConstructorUsedError;
+  WoundLocation get location => throw _privateConstructorUsedError;
   WoundStatus get status => throw _privateConstructorUsedError;
+  @TimestampConverter()
+  DateTime get identificationDate => throw _privateConstructorUsedError;
   @TimestampConverter()
   DateTime get createdAt => throw _privateConstructorUsedError;
   @TimestampConverter()
   DateTime get updatedAt => throw _privateConstructorUsedError;
-  String? get locationDescription => throw _privateConstructorUsedError;
+  DateTime? get healedDate => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
-  String? get causeDescription => throw _privateConstructorUsedError;
+  bool get archived => throw _privateConstructorUsedError;
 
   /// Serializes this Wound to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -52,15 +54,16 @@ abstract class $WoundCopyWith<$Res> {
   $Res call({
     String id,
     String patientId,
+    String description,
     WoundType type,
-    WoundLocation locationSimple,
-    int onsetDays,
+    WoundLocation location,
     WoundStatus status,
+    @TimestampConverter() DateTime identificationDate,
     @TimestampConverter() DateTime createdAt,
     @TimestampConverter() DateTime updatedAt,
-    String? locationDescription,
+    DateTime? healedDate,
     String? notes,
-    String? causeDescription,
+    bool archived,
   });
 }
 
@@ -81,15 +84,16 @@ class _$WoundCopyWithImpl<$Res, $Val extends Wound>
   $Res call({
     Object? id = null,
     Object? patientId = null,
+    Object? description = null,
     Object? type = null,
-    Object? locationSimple = null,
-    Object? onsetDays = null,
+    Object? location = null,
     Object? status = null,
+    Object? identificationDate = null,
     Object? createdAt = null,
     Object? updatedAt = null,
-    Object? locationDescription = freezed,
+    Object? healedDate = freezed,
     Object? notes = freezed,
-    Object? causeDescription = freezed,
+    Object? archived = null,
   }) {
     return _then(
       _value.copyWith(
@@ -101,22 +105,26 @@ class _$WoundCopyWithImpl<$Res, $Val extends Wound>
                 ? _value.patientId
                 : patientId // ignore: cast_nullable_to_non_nullable
                       as String,
+            description: null == description
+                ? _value.description
+                : description // ignore: cast_nullable_to_non_nullable
+                      as String,
             type: null == type
                 ? _value.type
                 : type // ignore: cast_nullable_to_non_nullable
                       as WoundType,
-            locationSimple: null == locationSimple
-                ? _value.locationSimple
-                : locationSimple // ignore: cast_nullable_to_non_nullable
+            location: null == location
+                ? _value.location
+                : location // ignore: cast_nullable_to_non_nullable
                       as WoundLocation,
-            onsetDays: null == onsetDays
-                ? _value.onsetDays
-                : onsetDays // ignore: cast_nullable_to_non_nullable
-                      as int,
             status: null == status
                 ? _value.status
                 : status // ignore: cast_nullable_to_non_nullable
                       as WoundStatus,
+            identificationDate: null == identificationDate
+                ? _value.identificationDate
+                : identificationDate // ignore: cast_nullable_to_non_nullable
+                      as DateTime,
             createdAt: null == createdAt
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
@@ -125,18 +133,18 @@ class _$WoundCopyWithImpl<$Res, $Val extends Wound>
                 ? _value.updatedAt
                 : updatedAt // ignore: cast_nullable_to_non_nullable
                       as DateTime,
-            locationDescription: freezed == locationDescription
-                ? _value.locationDescription
-                : locationDescription // ignore: cast_nullable_to_non_nullable
-                      as String?,
+            healedDate: freezed == healedDate
+                ? _value.healedDate
+                : healedDate // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
             notes: freezed == notes
                 ? _value.notes
                 : notes // ignore: cast_nullable_to_non_nullable
                       as String?,
-            causeDescription: freezed == causeDescription
-                ? _value.causeDescription
-                : causeDescription // ignore: cast_nullable_to_non_nullable
-                      as String?,
+            archived: null == archived
+                ? _value.archived
+                : archived // ignore: cast_nullable_to_non_nullable
+                      as bool,
           )
           as $Val,
     );
@@ -154,15 +162,16 @@ abstract class _$$WoundImplCopyWith<$Res> implements $WoundCopyWith<$Res> {
   $Res call({
     String id,
     String patientId,
+    String description,
     WoundType type,
-    WoundLocation locationSimple,
-    int onsetDays,
+    WoundLocation location,
     WoundStatus status,
+    @TimestampConverter() DateTime identificationDate,
     @TimestampConverter() DateTime createdAt,
     @TimestampConverter() DateTime updatedAt,
-    String? locationDescription,
+    DateTime? healedDate,
     String? notes,
-    String? causeDescription,
+    bool archived,
   });
 }
 
@@ -182,15 +191,16 @@ class __$$WoundImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? patientId = null,
+    Object? description = null,
     Object? type = null,
-    Object? locationSimple = null,
-    Object? onsetDays = null,
+    Object? location = null,
     Object? status = null,
+    Object? identificationDate = null,
     Object? createdAt = null,
     Object? updatedAt = null,
-    Object? locationDescription = freezed,
+    Object? healedDate = freezed,
     Object? notes = freezed,
-    Object? causeDescription = freezed,
+    Object? archived = null,
   }) {
     return _then(
       _$WoundImpl(
@@ -202,22 +212,26 @@ class __$$WoundImplCopyWithImpl<$Res>
             ? _value.patientId
             : patientId // ignore: cast_nullable_to_non_nullable
                   as String,
+        description: null == description
+            ? _value.description
+            : description // ignore: cast_nullable_to_non_nullable
+                  as String,
         type: null == type
             ? _value.type
             : type // ignore: cast_nullable_to_non_nullable
                   as WoundType,
-        locationSimple: null == locationSimple
-            ? _value.locationSimple
-            : locationSimple // ignore: cast_nullable_to_non_nullable
+        location: null == location
+            ? _value.location
+            : location // ignore: cast_nullable_to_non_nullable
                   as WoundLocation,
-        onsetDays: null == onsetDays
-            ? _value.onsetDays
-            : onsetDays // ignore: cast_nullable_to_non_nullable
-                  as int,
         status: null == status
             ? _value.status
             : status // ignore: cast_nullable_to_non_nullable
                   as WoundStatus,
+        identificationDate: null == identificationDate
+            ? _value.identificationDate
+            : identificationDate // ignore: cast_nullable_to_non_nullable
+                  as DateTime,
         createdAt: null == createdAt
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
@@ -226,18 +240,18 @@ class __$$WoundImplCopyWithImpl<$Res>
             ? _value.updatedAt
             : updatedAt // ignore: cast_nullable_to_non_nullable
                   as DateTime,
-        locationDescription: freezed == locationDescription
-            ? _value.locationDescription
-            : locationDescription // ignore: cast_nullable_to_non_nullable
-                  as String?,
+        healedDate: freezed == healedDate
+            ? _value.healedDate
+            : healedDate // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
         notes: freezed == notes
             ? _value.notes
             : notes // ignore: cast_nullable_to_non_nullable
                   as String?,
-        causeDescription: freezed == causeDescription
-            ? _value.causeDescription
-            : causeDescription // ignore: cast_nullable_to_non_nullable
-                  as String?,
+        archived: null == archived
+            ? _value.archived
+            : archived // ignore: cast_nullable_to_non_nullable
+                  as bool,
       ),
     );
   }
@@ -245,20 +259,21 @@ class __$$WoundImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$WoundImpl implements _Wound {
+class _$WoundImpl extends _Wound {
   const _$WoundImpl({
     required this.id,
     required this.patientId,
+    required this.description,
     required this.type,
-    required this.locationSimple,
-    required this.onsetDays,
-    this.status = WoundStatus.active,
+    required this.location,
+    required this.status,
+    @TimestampConverter() required this.identificationDate,
     @TimestampConverter() required this.createdAt,
     @TimestampConverter() required this.updatedAt,
-    this.locationDescription,
+    this.healedDate,
     this.notes,
-    this.causeDescription,
-  });
+    this.archived = false,
+  }) : super._();
 
   factory _$WoundImpl.fromJson(Map<String, dynamic> json) =>
       _$$WoundImplFromJson(json);
@@ -268,14 +283,16 @@ class _$WoundImpl implements _Wound {
   @override
   final String patientId;
   @override
+  final String description;
+  @override
   final WoundType type;
   @override
-  final WoundLocation locationSimple;
+  final WoundLocation location;
   @override
-  final int onsetDays;
-  @override
-  @JsonKey()
   final WoundStatus status;
+  @override
+  @TimestampConverter()
+  final DateTime identificationDate;
   @override
   @TimestampConverter()
   final DateTime createdAt;
@@ -283,15 +300,16 @@ class _$WoundImpl implements _Wound {
   @TimestampConverter()
   final DateTime updatedAt;
   @override
-  final String? locationDescription;
+  final DateTime? healedDate;
   @override
   final String? notes;
   @override
-  final String? causeDescription;
+  @JsonKey()
+  final bool archived;
 
   @override
   String toString() {
-    return 'Wound(id: $id, patientId: $patientId, type: $type, locationSimple: $locationSimple, onsetDays: $onsetDays, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, locationDescription: $locationDescription, notes: $notes, causeDescription: $causeDescription)';
+    return 'Wound(id: $id, patientId: $patientId, description: $description, type: $type, location: $location, status: $status, identificationDate: $identificationDate, createdAt: $createdAt, updatedAt: $updatedAt, healedDate: $healedDate, notes: $notes, archived: $archived)';
   }
 
   @override
@@ -302,21 +320,23 @@ class _$WoundImpl implements _Wound {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.patientId, patientId) ||
                 other.patientId == patientId) &&
+            (identical(other.description, description) ||
+                other.description == description) &&
             (identical(other.type, type) || other.type == type) &&
-            (identical(other.locationSimple, locationSimple) ||
-                other.locationSimple == locationSimple) &&
-            (identical(other.onsetDays, onsetDays) ||
-                other.onsetDays == onsetDays) &&
+            (identical(other.location, location) ||
+                other.location == location) &&
             (identical(other.status, status) || other.status == status) &&
+            (identical(other.identificationDate, identificationDate) ||
+                other.identificationDate == identificationDate) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
                 other.updatedAt == updatedAt) &&
-            (identical(other.locationDescription, locationDescription) ||
-                other.locationDescription == locationDescription) &&
+            (identical(other.healedDate, healedDate) ||
+                other.healedDate == healedDate) &&
             (identical(other.notes, notes) || other.notes == notes) &&
-            (identical(other.causeDescription, causeDescription) ||
-                other.causeDescription == causeDescription));
+            (identical(other.archived, archived) ||
+                other.archived == archived));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -325,15 +345,16 @@ class _$WoundImpl implements _Wound {
     runtimeType,
     id,
     patientId,
+    description,
     type,
-    locationSimple,
-    onsetDays,
+    location,
     status,
+    identificationDate,
     createdAt,
     updatedAt,
-    locationDescription,
+    healedDate,
     notes,
-    causeDescription,
+    archived,
   );
 
   /// Create a copy of Wound
@@ -350,20 +371,22 @@ class _$WoundImpl implements _Wound {
   }
 }
 
-abstract class _Wound implements Wound {
+abstract class _Wound extends Wound {
   const factory _Wound({
     required final String id,
     required final String patientId,
+    required final String description,
     required final WoundType type,
-    required final WoundLocation locationSimple,
-    required final int onsetDays,
-    final WoundStatus status,
+    required final WoundLocation location,
+    required final WoundStatus status,
+    @TimestampConverter() required final DateTime identificationDate,
     @TimestampConverter() required final DateTime createdAt,
     @TimestampConverter() required final DateTime updatedAt,
-    final String? locationDescription,
+    final DateTime? healedDate,
     final String? notes,
-    final String? causeDescription,
+    final bool archived,
   }) = _$WoundImpl;
+  const _Wound._() : super._();
 
   factory _Wound.fromJson(Map<String, dynamic> json) = _$WoundImpl.fromJson;
 
@@ -372,13 +395,16 @@ abstract class _Wound implements Wound {
   @override
   String get patientId;
   @override
+  String get description;
+  @override
   WoundType get type;
   @override
-  WoundLocation get locationSimple;
-  @override
-  int get onsetDays;
+  WoundLocation get location;
   @override
   WoundStatus get status;
+  @override
+  @TimestampConverter()
+  DateTime get identificationDate;
   @override
   @TimestampConverter()
   DateTime get createdAt;
@@ -386,11 +412,11 @@ abstract class _Wound implements Wound {
   @TimestampConverter()
   DateTime get updatedAt;
   @override
-  String? get locationDescription;
+  DateTime? get healedDate;
   @override
   String? get notes;
   @override
-  String? get causeDescription;
+  bool get archived;
 
   /// Create a copy of Wound
   /// with the given fields replaced by the non-null parameter values.

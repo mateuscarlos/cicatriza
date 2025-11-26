@@ -25,12 +25,12 @@ mixin _$Patient {
   String get name => throw _privateConstructorUsedError;
   @TimestampConverter()
   DateTime get birthDate => throw _privateConstructorUsedError;
-  bool get archived => throw _privateConstructorUsedError;
   @TimestampConverter()
   DateTime get createdAt => throw _privateConstructorUsedError;
   @TimestampConverter()
   DateTime get updatedAt => throw _privateConstructorUsedError;
   String get nameLowercase => throw _privateConstructorUsedError;
+  bool get archived => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
   String? get phone => throw _privateConstructorUsedError;
   String? get email => throw _privateConstructorUsedError;
@@ -53,10 +53,10 @@ abstract class $PatientCopyWith<$Res> {
     String id,
     String name,
     @TimestampConverter() DateTime birthDate,
-    bool archived,
     @TimestampConverter() DateTime createdAt,
     @TimestampConverter() DateTime updatedAt,
     String nameLowercase,
+    bool archived,
     String? notes,
     String? phone,
     String? email,
@@ -81,10 +81,10 @@ class _$PatientCopyWithImpl<$Res, $Val extends Patient>
     Object? id = null,
     Object? name = null,
     Object? birthDate = null,
-    Object? archived = null,
     Object? createdAt = null,
     Object? updatedAt = null,
     Object? nameLowercase = null,
+    Object? archived = null,
     Object? notes = freezed,
     Object? phone = freezed,
     Object? email = freezed,
@@ -103,10 +103,6 @@ class _$PatientCopyWithImpl<$Res, $Val extends Patient>
                 ? _value.birthDate
                 : birthDate // ignore: cast_nullable_to_non_nullable
                       as DateTime,
-            archived: null == archived
-                ? _value.archived
-                : archived // ignore: cast_nullable_to_non_nullable
-                      as bool,
             createdAt: null == createdAt
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
@@ -119,6 +115,10 @@ class _$PatientCopyWithImpl<$Res, $Val extends Patient>
                 ? _value.nameLowercase
                 : nameLowercase // ignore: cast_nullable_to_non_nullable
                       as String,
+            archived: null == archived
+                ? _value.archived
+                : archived // ignore: cast_nullable_to_non_nullable
+                      as bool,
             notes: freezed == notes
                 ? _value.notes
                 : notes // ignore: cast_nullable_to_non_nullable
@@ -149,10 +149,10 @@ abstract class _$$PatientImplCopyWith<$Res> implements $PatientCopyWith<$Res> {
     String id,
     String name,
     @TimestampConverter() DateTime birthDate,
-    bool archived,
     @TimestampConverter() DateTime createdAt,
     @TimestampConverter() DateTime updatedAt,
     String nameLowercase,
+    bool archived,
     String? notes,
     String? phone,
     String? email,
@@ -176,10 +176,10 @@ class __$$PatientImplCopyWithImpl<$Res>
     Object? id = null,
     Object? name = null,
     Object? birthDate = null,
-    Object? archived = null,
     Object? createdAt = null,
     Object? updatedAt = null,
     Object? nameLowercase = null,
+    Object? archived = null,
     Object? notes = freezed,
     Object? phone = freezed,
     Object? email = freezed,
@@ -198,10 +198,6 @@ class __$$PatientImplCopyWithImpl<$Res>
             ? _value.birthDate
             : birthDate // ignore: cast_nullable_to_non_nullable
                   as DateTime,
-        archived: null == archived
-            ? _value.archived
-            : archived // ignore: cast_nullable_to_non_nullable
-                  as bool,
         createdAt: null == createdAt
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
@@ -214,6 +210,10 @@ class __$$PatientImplCopyWithImpl<$Res>
             ? _value.nameLowercase
             : nameLowercase // ignore: cast_nullable_to_non_nullable
                   as String,
+        archived: null == archived
+            ? _value.archived
+            : archived // ignore: cast_nullable_to_non_nullable
+                  as bool,
         notes: freezed == notes
             ? _value.notes
             : notes // ignore: cast_nullable_to_non_nullable
@@ -233,19 +233,19 @@ class __$$PatientImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$PatientImpl implements _Patient {
+class _$PatientImpl extends _Patient {
   const _$PatientImpl({
     required this.id,
     required this.name,
     @TimestampConverter() required this.birthDate,
-    this.archived = false,
     @TimestampConverter() required this.createdAt,
     @TimestampConverter() required this.updatedAt,
     required this.nameLowercase,
+    this.archived = false,
     this.notes,
     this.phone,
     this.email,
-  });
+  }) : super._();
 
   factory _$PatientImpl.fromJson(Map<String, dynamic> json) =>
       _$$PatientImplFromJson(json);
@@ -258,9 +258,6 @@ class _$PatientImpl implements _Patient {
   @TimestampConverter()
   final DateTime birthDate;
   @override
-  @JsonKey()
-  final bool archived;
-  @override
   @TimestampConverter()
   final DateTime createdAt;
   @override
@@ -268,6 +265,9 @@ class _$PatientImpl implements _Patient {
   final DateTime updatedAt;
   @override
   final String nameLowercase;
+  @override
+  @JsonKey()
+  final bool archived;
   @override
   final String? notes;
   @override
@@ -277,7 +277,7 @@ class _$PatientImpl implements _Patient {
 
   @override
   String toString() {
-    return 'Patient(id: $id, name: $name, birthDate: $birthDate, archived: $archived, createdAt: $createdAt, updatedAt: $updatedAt, nameLowercase: $nameLowercase, notes: $notes, phone: $phone, email: $email)';
+    return 'Patient(id: $id, name: $name, birthDate: $birthDate, createdAt: $createdAt, updatedAt: $updatedAt, nameLowercase: $nameLowercase, archived: $archived, notes: $notes, phone: $phone, email: $email)';
   }
 
   @override
@@ -289,14 +289,14 @@ class _$PatientImpl implements _Patient {
             (identical(other.name, name) || other.name == name) &&
             (identical(other.birthDate, birthDate) ||
                 other.birthDate == birthDate) &&
-            (identical(other.archived, archived) ||
-                other.archived == archived) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
                 other.updatedAt == updatedAt) &&
             (identical(other.nameLowercase, nameLowercase) ||
                 other.nameLowercase == nameLowercase) &&
+            (identical(other.archived, archived) ||
+                other.archived == archived) &&
             (identical(other.notes, notes) || other.notes == notes) &&
             (identical(other.phone, phone) || other.phone == phone) &&
             (identical(other.email, email) || other.email == email));
@@ -309,10 +309,10 @@ class _$PatientImpl implements _Patient {
     id,
     name,
     birthDate,
-    archived,
     createdAt,
     updatedAt,
     nameLowercase,
+    archived,
     notes,
     phone,
     email,
@@ -332,19 +332,20 @@ class _$PatientImpl implements _Patient {
   }
 }
 
-abstract class _Patient implements Patient {
+abstract class _Patient extends Patient {
   const factory _Patient({
     required final String id,
     required final String name,
     @TimestampConverter() required final DateTime birthDate,
-    final bool archived,
     @TimestampConverter() required final DateTime createdAt,
     @TimestampConverter() required final DateTime updatedAt,
     required final String nameLowercase,
+    final bool archived,
     final String? notes,
     final String? phone,
     final String? email,
   }) = _$PatientImpl;
+  const _Patient._() : super._();
 
   factory _Patient.fromJson(Map<String, dynamic> json) = _$PatientImpl.fromJson;
 
@@ -356,8 +357,6 @@ abstract class _Patient implements Patient {
   @TimestampConverter()
   DateTime get birthDate;
   @override
-  bool get archived;
-  @override
   @TimestampConverter()
   DateTime get createdAt;
   @override
@@ -365,6 +364,8 @@ abstract class _Patient implements Patient {
   DateTime get updatedAt;
   @override
   String get nameLowercase;
+  @override
+  bool get archived;
   @override
   String? get notes;
   @override

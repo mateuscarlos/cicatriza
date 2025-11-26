@@ -9,63 +9,74 @@ part of 'wound.dart';
 _$WoundImpl _$$WoundImplFromJson(Map<String, dynamic> json) => _$WoundImpl(
   id: json['id'] as String,
   patientId: json['patientId'] as String,
+  description: json['description'] as String,
   type: $enumDecode(_$WoundTypeEnumMap, json['type']),
-  locationSimple: $enumDecode(_$WoundLocationEnumMap, json['locationSimple']),
-  onsetDays: (json['onsetDays'] as num).toInt(),
-  status:
-      $enumDecodeNullable(_$WoundStatusEnumMap, json['status']) ??
-      WoundStatus.active,
+  location: $enumDecode(_$WoundLocationEnumMap, json['location']),
+  status: $enumDecode(_$WoundStatusEnumMap, json['status']),
+  identificationDate: const TimestampConverter().fromJson(
+    json['identificationDate'] as Object,
+  ),
   createdAt: const TimestampConverter().fromJson(json['createdAt'] as Object),
   updatedAt: const TimestampConverter().fromJson(json['updatedAt'] as Object),
-  locationDescription: json['locationDescription'] as String?,
+  healedDate: json['healedDate'] == null
+      ? null
+      : DateTime.parse(json['healedDate'] as String),
   notes: json['notes'] as String?,
-  causeDescription: json['causeDescription'] as String?,
+  archived: json['archived'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$$WoundImplToJson(_$WoundImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
       'patientId': instance.patientId,
+      'description': instance.description,
       'type': _$WoundTypeEnumMap[instance.type]!,
-      'locationSimple': _$WoundLocationEnumMap[instance.locationSimple]!,
-      'onsetDays': instance.onsetDays,
+      'location': _$WoundLocationEnumMap[instance.location]!,
       'status': _$WoundStatusEnumMap[instance.status]!,
+      'identificationDate': const TimestampConverter().toJson(
+        instance.identificationDate,
+      ),
       'createdAt': const TimestampConverter().toJson(instance.createdAt),
       'updatedAt': const TimestampConverter().toJson(instance.updatedAt),
-      'locationDescription': instance.locationDescription,
+      'healedDate': instance.healedDate?.toIso8601String(),
       'notes': instance.notes,
-      'causeDescription': instance.causeDescription,
+      'archived': instance.archived,
     };
 
 const _$WoundTypeEnumMap = {
-  WoundType.pressureUlcer: 'pressure_ulcer',
-  WoundType.diabeticFoot: 'diabetic_foot',
-  WoundType.venousUlcer: 'venous_ulcer',
-  WoundType.arterialUlcer: 'arterial_ulcer',
-  WoundType.surgical: 'surgical',
-  WoundType.traumatic: 'traumatic',
-  WoundType.burn: 'burn',
-  WoundType.other: 'other',
+  WoundType.ulceraPressao: 'ULCERA_PRESSAO',
+  WoundType.ulceraVenosa: 'ULCERA_VENOSA',
+  WoundType.ulceraArterial: 'ULCERA_ARTERIAL',
+  WoundType.peDiabetico: 'PE_DIABETICO',
+  WoundType.queimadura: 'QUEIMADURA',
+  WoundType.feridaCirurgica: 'FERIDA_CIRURGICA',
+  WoundType.traumatica: 'TRAUMATICA',
+  WoundType.outras: 'OUTRAS',
 };
 
 const _$WoundLocationEnumMap = {
-  WoundLocation.headNeck: 'head_neck',
-  WoundLocation.upperLimbRight: 'upper_limb_right',
-  WoundLocation.upperLimbLeft: 'upper_limb_left',
-  WoundLocation.chest: 'chest',
-  WoundLocation.abdomen: 'abdomen',
-  WoundLocation.back: 'back',
-  WoundLocation.lowerLimbRight: 'lower_limb_right',
-  WoundLocation.lowerLimbLeft: 'lower_limb_left',
-  WoundLocation.footRight: 'foot_right',
-  WoundLocation.footLeft: 'foot_left',
-  WoundLocation.other: 'other',
+  WoundLocation.cabecaPescoco: 'CABECA_PESCOCO',
+  WoundLocation.torax: 'TORAX',
+  WoundLocation.abdomen: 'ABDOMEN',
+  WoundLocation.bracos: 'BRACOS',
+  WoundLocation.maos: 'MAOS',
+  WoundLocation.costas: 'COSTAS',
+  WoundLocation.quadrisNadegas: 'QUADRIS_NADEGAS',
+  WoundLocation.genitais: 'GENITAIS',
+  WoundLocation.coxas: 'COXAS',
+  WoundLocation.joelhos: 'JOELHOS',
+  WoundLocation.pernas: 'PERNAS',
+  WoundLocation.tornozelos: 'TORNOZELOS',
+  WoundLocation.pes: 'PES',
+  WoundLocation.calcanhares: 'CALCANHARES',
+  WoundLocation.sacro: 'SACRO',
+  WoundLocation.outras: 'OUTRAS',
 };
 
 const _$WoundStatusEnumMap = {
-  WoundStatus.active: 'active',
-  WoundStatus.healing: 'healing',
-  WoundStatus.healed: 'healed',
-  WoundStatus.worsening: 'worsening',
-  WoundStatus.inactive: 'inactive',
+  WoundStatus.ativa: 'ATIVA',
+  WoundStatus.emCicatrizacao: 'EM_CICATRIZACAO',
+  WoundStatus.cicatrizada: 'CICATRIZADA',
+  WoundStatus.infectada: 'INFECTADA',
+  WoundStatus.complicada: 'COMPLICADA',
 };

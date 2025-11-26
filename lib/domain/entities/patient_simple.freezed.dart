@@ -24,10 +24,10 @@ mixin _$PatientSimple {
   String get id => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
   DateTime get birthDate => throw _privateConstructorUsedError;
-  bool get archived => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
   DateTime get updatedAt => throw _privateConstructorUsedError;
   String get nameLowercase => throw _privateConstructorUsedError;
+  bool get archived => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
   String? get phone => throw _privateConstructorUsedError;
   String? get email => throw _privateConstructorUsedError;
@@ -53,10 +53,10 @@ abstract class $PatientSimpleCopyWith<$Res> {
     String id,
     String name,
     DateTime birthDate,
-    bool archived,
     DateTime createdAt,
     DateTime updatedAt,
     String nameLowercase,
+    bool archived,
     String? notes,
     String? phone,
     String? email,
@@ -81,10 +81,10 @@ class _$PatientSimpleCopyWithImpl<$Res, $Val extends PatientSimple>
     Object? id = null,
     Object? name = null,
     Object? birthDate = null,
-    Object? archived = null,
     Object? createdAt = null,
     Object? updatedAt = null,
     Object? nameLowercase = null,
+    Object? archived = null,
     Object? notes = freezed,
     Object? phone = freezed,
     Object? email = freezed,
@@ -103,10 +103,6 @@ class _$PatientSimpleCopyWithImpl<$Res, $Val extends PatientSimple>
                 ? _value.birthDate
                 : birthDate // ignore: cast_nullable_to_non_nullable
                       as DateTime,
-            archived: null == archived
-                ? _value.archived
-                : archived // ignore: cast_nullable_to_non_nullable
-                      as bool,
             createdAt: null == createdAt
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
@@ -119,6 +115,10 @@ class _$PatientSimpleCopyWithImpl<$Res, $Val extends PatientSimple>
                 ? _value.nameLowercase
                 : nameLowercase // ignore: cast_nullable_to_non_nullable
                       as String,
+            archived: null == archived
+                ? _value.archived
+                : archived // ignore: cast_nullable_to_non_nullable
+                      as bool,
             notes: freezed == notes
                 ? _value.notes
                 : notes // ignore: cast_nullable_to_non_nullable
@@ -150,10 +150,10 @@ abstract class _$$PatientSimpleImplCopyWith<$Res>
     String id,
     String name,
     DateTime birthDate,
-    bool archived,
     DateTime createdAt,
     DateTime updatedAt,
     String nameLowercase,
+    bool archived,
     String? notes,
     String? phone,
     String? email,
@@ -177,10 +177,10 @@ class __$$PatientSimpleImplCopyWithImpl<$Res>
     Object? id = null,
     Object? name = null,
     Object? birthDate = null,
-    Object? archived = null,
     Object? createdAt = null,
     Object? updatedAt = null,
     Object? nameLowercase = null,
+    Object? archived = null,
     Object? notes = freezed,
     Object? phone = freezed,
     Object? email = freezed,
@@ -199,10 +199,6 @@ class __$$PatientSimpleImplCopyWithImpl<$Res>
             ? _value.birthDate
             : birthDate // ignore: cast_nullable_to_non_nullable
                   as DateTime,
-        archived: null == archived
-            ? _value.archived
-            : archived // ignore: cast_nullable_to_non_nullable
-                  as bool,
         createdAt: null == createdAt
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
@@ -215,6 +211,10 @@ class __$$PatientSimpleImplCopyWithImpl<$Res>
             ? _value.nameLowercase
             : nameLowercase // ignore: cast_nullable_to_non_nullable
                   as String,
+        archived: null == archived
+            ? _value.archived
+            : archived // ignore: cast_nullable_to_non_nullable
+                  as bool,
         notes: freezed == notes
             ? _value.notes
             : notes // ignore: cast_nullable_to_non_nullable
@@ -239,10 +239,10 @@ class _$PatientSimpleImpl implements _PatientSimple {
     required this.id,
     required this.name,
     required this.birthDate,
-    this.archived = false,
     required this.createdAt,
     required this.updatedAt,
     required this.nameLowercase,
+    this.archived = false,
     this.notes,
     this.phone,
     this.email,
@@ -258,14 +258,14 @@ class _$PatientSimpleImpl implements _PatientSimple {
   @override
   final DateTime birthDate;
   @override
-  @JsonKey()
-  final bool archived;
-  @override
   final DateTime createdAt;
   @override
   final DateTime updatedAt;
   @override
   final String nameLowercase;
+  @override
+  @JsonKey()
+  final bool archived;
   @override
   final String? notes;
   @override
@@ -275,7 +275,7 @@ class _$PatientSimpleImpl implements _PatientSimple {
 
   @override
   String toString() {
-    return 'PatientSimple(id: $id, name: $name, birthDate: $birthDate, archived: $archived, createdAt: $createdAt, updatedAt: $updatedAt, nameLowercase: $nameLowercase, notes: $notes, phone: $phone, email: $email)';
+    return 'PatientSimple(id: $id, name: $name, birthDate: $birthDate, createdAt: $createdAt, updatedAt: $updatedAt, nameLowercase: $nameLowercase, archived: $archived, notes: $notes, phone: $phone, email: $email)';
   }
 
   @override
@@ -287,14 +287,14 @@ class _$PatientSimpleImpl implements _PatientSimple {
             (identical(other.name, name) || other.name == name) &&
             (identical(other.birthDate, birthDate) ||
                 other.birthDate == birthDate) &&
-            (identical(other.archived, archived) ||
-                other.archived == archived) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
                 other.updatedAt == updatedAt) &&
             (identical(other.nameLowercase, nameLowercase) ||
                 other.nameLowercase == nameLowercase) &&
+            (identical(other.archived, archived) ||
+                other.archived == archived) &&
             (identical(other.notes, notes) || other.notes == notes) &&
             (identical(other.phone, phone) || other.phone == phone) &&
             (identical(other.email, email) || other.email == email));
@@ -307,10 +307,10 @@ class _$PatientSimpleImpl implements _PatientSimple {
     id,
     name,
     birthDate,
-    archived,
     createdAt,
     updatedAt,
     nameLowercase,
+    archived,
     notes,
     phone,
     email,
@@ -335,10 +335,10 @@ abstract class _PatientSimple implements PatientSimple {
     required final String id,
     required final String name,
     required final DateTime birthDate,
-    final bool archived,
     required final DateTime createdAt,
     required final DateTime updatedAt,
     required final String nameLowercase,
+    final bool archived,
     final String? notes,
     final String? phone,
     final String? email,
@@ -354,13 +354,13 @@ abstract class _PatientSimple implements PatientSimple {
   @override
   DateTime get birthDate;
   @override
-  bool get archived;
-  @override
   DateTime get createdAt;
   @override
   DateTime get updatedAt;
   @override
   String get nameLowercase;
+  @override
+  bool get archived;
   @override
   String? get notes;
   @override
