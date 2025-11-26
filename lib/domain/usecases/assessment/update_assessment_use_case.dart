@@ -1,5 +1,5 @@
 import '../../entities/assessment_manual.dart';
-import '../../repositories/assessment_repository.dart';
+import '../../repositories/assessment_repository_manual.dart';
 import '../base/use_case.dart';
 
 /// Input para atualização de avaliação
@@ -65,24 +65,6 @@ class UpdateAssessmentUseCase
         return Failure(validationResult);
       }
 
-      // Buscar avaliação existente
-      final existingAssessment = await _assessmentRepository.getAssessmentById(
-        input.assessmentId,
-      );
-      if (existingAssessment == null) {
-        return Failure(NotFoundError.withId('Assessment', input.assessmentId));
-      }
-
-      // Verificar se avaliação pode ser atualizada
-      if (existingAssessment.archived) {
-        return const Failure(
-          ConflictError(
-            'Não é possível atualizar avaliação arquivada',
-            code: 'ASSESSMENT_ARCHIVED',
-          ),
-        );
-      }
-
       // Verificar se há atualizações
       if (!input.hasUpdates) {
         return const Failure(
@@ -93,16 +75,31 @@ class UpdateAssessmentUseCase
         );
       }
 
+      // Buscar avaliação existente
+      final existingAssessment = await _assessmentRepository.getAssessmentById(
+        input.assessmentId,
+      );
+      if (existingAssessment == null) {
+        return Failure(NotFoundError.withId('Assessment', input.assessmentId));
+      }
+
       // Aplicar atualizações usando método da entidade
-      final updatedAssessment = existingAssessment.updateAssessment(
-        assessmentData: input.assessmentData,
-        observations: input.observations?.trim().isEmpty == true
-            ? null
-            : input.observations?.trim(),
-        imageUrls: input.imageUrls
-            ?.where((url) => url.trim().isNotEmpty)
-            .toList(),
-        updatedBy: input.updatedBy,
+      final assessmentData = input.assessmentData ?? <String, dynamic>{};
+
+      final updatedAssessment = existingAssessment.updateInfo(
+        lengthCm: assessmentData['lengthCm'] as double?,
+        widthCm: assessmentData['widthCm'] as double?,
+        depthCm: assessmentData['depthCm'] as double?,
+        painScale: assessmentData['painScale'] as int?,
+        edgeAppearance: assessmentData['edgeAppearance'] as String?,
+        woundBed: assessmentData['woundBed'] as String?,
+        exudateType: assessmentData['exudateType'] as String?,
+        exudateAmount: assessmentData['exudateAmount'] as String?,
+        notes:
+            assessmentData['notes'] as String? ??
+            (input.observations?.trim().isEmpty == true
+                ? null
+                : input.observations?.trim()),
       );
 
       // Persistir alterações

@@ -8,14 +8,14 @@ class CreateWoundInput {
   final String patientId;
   final WoundType type;
   final WoundLocation location;
-  final String? description;
+  final String description;
   final String? notes;
 
   const CreateWoundInput({
     required this.patientId,
     required this.type,
     required this.location,
-    this.description,
+    required this.description,
     this.notes,
   });
 
@@ -83,14 +83,14 @@ class CreateWoundUseCase implements UseCase<CreateWoundInput, Wound> {
         patientId: input.patientId,
         type: input.type,
         location: input.location,
-        description: input.description?.trim().isEmpty == true
-            ? null
-            : input.description?.trim(),
+        description: input.description.trim().isEmpty
+            ? 'Sem descrição'
+            : input.description.trim(),
         notes: input.notes?.trim().isEmpty == true ? null : input.notes?.trim(),
       );
 
       // Persistir ferida
-      final savedWound = await _woundRepository.save(wound);
+      final savedWound = await _woundRepository.createWound(wound);
 
       return Success(savedWound);
     } catch (e) {
@@ -109,6 +109,13 @@ class CreateWoundUseCase implements UseCase<CreateWoundInput, Wound> {
       return const ValidationError(
         'ID do paciente é obrigatório',
         field: 'patientId',
+      );
+    }
+
+    if (input.description.trim().isEmpty) {
+      return const ValidationError(
+        'Descrição é obrigatória',
+        field: 'description',
       );
     }
 

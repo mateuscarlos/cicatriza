@@ -52,7 +52,7 @@ class UpdateWoundStatusUseCase
       }
 
       // Buscar ferida existente
-      final existingWound = await _woundRepository.findById(input.woundId);
+      final existingWound = await _woundRepository.getWoundById(input.woundId);
       if (existingWound == null) {
         return Failure(NotFoundError.withId('Wound', input.woundId));
       }
@@ -67,26 +67,16 @@ class UpdateWoundStatusUseCase
         );
       }
 
-      // Validar transição de status usando métodos da entidade
-      if (!existingWound.canTransitionTo(input.newStatus)) {
-        return Failure(
-          ConflictError(
-            'Transição de ${existingWound.status.displayName} para ${input.newStatus.displayName} não é permitida',
-            code: 'INVALID_STATUS_TRANSITION',
-          ),
-        );
-      }
-
-      // Aplicar mudança de status
+      // Aplicar mudança de status (validação será feita na entidade)
       final updatedWound = existingWound.updateStatus(
         input.newStatus,
-        reason: input.reason?.trim().isEmpty == true
-            ? null
-            : input.reason?.trim(),
+        healedDate: input.newStatus == WoundStatus.cicatrizada
+            ? DateTime.now()
+            : null,
       );
 
       // Persistir alterações
-      final savedWound = await _woundRepository.save(updatedWound);
+      final savedWound = await _woundRepository.updateWound(updatedWound);
 
       return Success(savedWound);
     } catch (e) {

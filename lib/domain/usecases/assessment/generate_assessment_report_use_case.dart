@@ -1,7 +1,7 @@
 import '../../entities/assessment_manual.dart';
 import '../../entities/wound.dart';
 import '../../entities/patient.dart';
-import '../../repositories/assessment_repository.dart';
+import '../../repositories/assessment_repository_manual.dart';
 import '../../repositories/wound_repository.dart';
 import '../../repositories/patient_repository.dart';
 import '../base/use_case.dart';
@@ -122,14 +122,14 @@ class GenerateAssessmentReportUseCase
       // Buscar paciente se solicitado
       Patient? patient;
       if (input.includePatientInfo) {
-        patient = await _patientRepository.getPatientById(assessment.patientId);
+        patient = await _patientRepository.getPatientById(wound.patientId);
       }
 
       // Buscar histórico da ferida se solicitado
       List<Wound>? woundHistory;
       if (input.includeWoundHistory) {
         woundHistory = await _woundRepository.getWoundsByPatient(
-          assessment.patientId,
+          wound.patientId,
         );
       }
 
@@ -145,6 +145,7 @@ class GenerateAssessmentReportUseCase
         patient,
         woundHistory,
         input,
+        recommendations,
       );
 
       // Gerar título
@@ -199,9 +200,7 @@ class GenerateAssessmentReportUseCase
     Patient? patient,
   ) {
     final patientName = patient?.name ?? 'Paciente';
-    final assessmentDate = assessment.assessedAt.toIso8601String().split(
-      'T',
-    )[0];
+    final assessmentDate = assessment.date.toIso8601String().split('T')[0];
 
     return 'Relatório de Avaliação - $patientName - $assessmentDate';
   }
@@ -213,6 +212,7 @@ class GenerateAssessmentReportUseCase
     Patient? patient,
     List<Wound>? woundHistory,
     GenerateAssessmentReportInput input,
+    List<String> recommendations,
   ) {
     final buffer = StringBuffer();
 
@@ -220,8 +220,8 @@ class GenerateAssessmentReportUseCase
     buffer.writeln('=== RELATÓRIO DE AVALIAÇÃO DE FERIDA ===\n');
 
     // Informações da avaliação
-    buffer.writeln('DATA DA AVALIAÇÃO: ${assessment.assessedAt}');
-    buffer.writeln('REALIZADA POR: ${assessment.performedBy}');
+    buffer.writeln('DATA DA AVALIAÇÃO: ${assessment.date}');
+    buffer.writeln('REALIZADA POR: Sistema Cicatriza');
     buffer.writeln('ID DA AVALIAÇÃO: ${assessment.id}');
     buffer.writeln();
 
@@ -252,27 +252,54 @@ class GenerateAssessmentReportUseCase
     buffer.writeln('=== DADOS DA AVALIAÇÃO ===');
     if (input.reportFormat == 'detailed') {
       // Exibir todos os dados da avaliação
-      assessment.assessmentData.forEach((key, value) {
-        buffer.writeln('${key.toUpperCase()}: $value');
-      });
+      buffer.writeln('COMPRIMENTO: ${assessment.lengthCm ?? "N/A"} cm');
+      buffer.writeln('LARGURA: ${assessment.widthCm ?? "N/A"} cm');
+      buffer.writeln('PROFUNDIDADE: ${assessment.depthCm ?? "N/A"} cm');
+      buffer.writeln('DOR (0-10): ${assessment.painScale ?? "N/A"}');
+      if (assessment.edgeAppearance != null)
+        buffer.writeln('BORDA: ${assessment.edgeAppearance}');
+      if (assessment.woundBed != null)
+        buffer.writeln('LEITO: ${assessment.woundBed}');
+      if (assessment.exudateType != null)
+        buffer.writeln('EXSUDATO: ${assessment.exudateType}');
+      if (assessment.exudateAmount != null)
+        buffer.writeln('QUANTIDADE: ${assessment.exudateAmount}');
     } else {
       // Exibir resumo
-      buffer.writeln('SCORE DE GRAVIDADE: ${assessment.severityScore}/10');
+      final volume =
+          (assessment.lengthCm ?? 0) *
+          (assessment.widthCm ?? 0) *
+          (assessment.depthCm ?? 0);
+      final severityScore = volume > 100
+          ? 8
+          : volume > 50
+          ? 6
+          : volume > 10
+          ? 4
+          : 2;
+      buffer.writeln('SCORE DE GRAVIDADE: $severityScore/10');
+      // Análise de infecção baseada em exsudato
+      final hasInfectionSigns =
+          assessment.exudateType?.contains('purulento') == true ||
+          assessment.exudateAmount == 'Abundante';
       buffer.writeln(
-        'SINAIS DE INFECÇÃO: ${assessment.hasInfectionSigns ? "SIM" : "NÃO"}',
+        'SINAIS DE INFECÇÃO: ${hasInfectionSigns ? "SIM" : "NÃO"}',
       );
       buffer.writeln(
         'TECIDO NECRÓTICO: ${assessment.hasNecroticTissue ? "SIM" : "NÃO"}',
       );
-      buffer.writeln('DOR SEVERA: ${assessment.hasSeverePain ? "SIM" : "NÃO"}');
+      final hasSeverePain = (assessment.painScale ?? 0) >= 7;
+      final hasPositiveHealingSigns =
+          assessment.woundBed?.contains('Granulação') == true;
+      buffer.writeln('DOR SEVERA: ${hasSeverePain ? "SIM" : "NÃO"}');
       buffer.writeln(
-        'SINAIS POSITIVOS: ${assessment.hasPositiveHealingSigns ? "SIM" : "NÃO"}',
+        'SINAIS POSITIVOS: ${hasPositiveHealingSigns ? "SIM" : "NÃO"}',
       );
     }
 
-    if (assessment.observations != null) {
+    if (assessment.notes != null && assessment.notes!.isNotEmpty) {
       buffer.writeln();
-      buffer.writeln('OBSERVAÇÕES: ${assessment.observations}');
+      buffer.writeln('OBSERVAÇÕES: ${assessment.notes}');
     }
     buffer.writeln();
 
@@ -289,6 +316,15 @@ class GenerateAssessmentReportUseCase
       buffer.writeln();
     }
 
+    // Incluir recomendações se solicitadas
+    if (input.includeRecommendations && recommendations.isNotEmpty) {
+      buffer.writeln('=== RECOMENDAÇÕES ===');
+      for (int i = 0; i < recommendations.length; i++) {
+        buffer.writeln('${i + 1}. ${recommendations[i]}');
+      }
+      buffer.writeln();
+    }
+
     return buffer.toString();
   }
 
@@ -301,50 +337,81 @@ class GenerateAssessmentReportUseCase
     final recommendations = <String>[];
 
     // Recomendações baseadas na avaliação
-    if (assessment.hasInfectionSigns) {
+    // Análise de infecção baseada em exsudato
+    final hasInfectionSigns =
+        assessment.exudateType?.contains('purulento') == true ||
+        assessment.exudateAmount == 'Abundante';
+    if (hasInfectionSigns) {
       recommendations.add(
         'Solicitar avaliação médica urgente para sinais de infecção',
       );
       recommendations.add('Considerar coleta de material para cultura');
     }
 
-    if (assessment.hasNecroticTissue) {
+    // Verificar se há menção de tecido necrótico nos campos disponíveis
+    final hasNecroticTissue =
+        assessment.woundBed?.contains('Necrótico') == true ||
+        assessment.notes?.toLowerCase().contains('necrótico') == true ||
+        assessment.notes?.toLowerCase().contains('necrose') == true;
+    if (hasNecroticTissue) {
       recommendations.add('Avaliar necessidade de desbridamento');
     }
 
-    if (assessment.hasSeverePain) {
+    // Dor severa baseada na escala
+    final hasSeverePain = (assessment.painScale ?? 0) >= 7;
+    if (hasSeverePain) {
       recommendations.add('Revisar protocolo de manejo da dor');
       recommendations.add('Investigar causas da dor excessiva');
     }
 
-    if (!assessment.hasPositiveHealingSigns) {
+    // Sinais positivos de cicatrização
+    final hasPositiveHealingSigns =
+        assessment.woundBed?.contains('Granulação') == true;
+    if (!hasPositiveHealingSigns) {
       recommendations.add('Revisar plano de tratamento atual');
       recommendations.add('Considerar ajustes na abordagem terapêutica');
     }
 
-    if (assessment.severityScore >= 7) {
+    // Cálculo de gravidade baseado no volume
+    final volume =
+        (assessment.lengthCm ?? 0) *
+        (assessment.widthCm ?? 0) *
+        (assessment.depthCm ?? 0);
+    final severityScore = volume > 100
+        ? 8
+        : volume > 50
+        ? 6
+        : volume > 10
+        ? 4
+        : 2;
+    if (severityScore >= 7) {
       recommendations.add('Monitoramento mais frequente devido à gravidade');
       recommendations.add('Considerar acompanhamento especializado');
     }
 
     // Recomendações baseadas na ferida
-    if (wound.isChronicWound) {
+    // Ferida crônica se identificada há mais de 30 dias
+    final daysSinceIdentification = DateTime.now()
+        .difference(wound.identificationDate)
+        .inDays;
+    if (daysSinceIdentification > 30) {
       recommendations.add(
         'Ferida crônica: avaliar fatores que impedem a cicatrização',
       );
     }
 
-    if (wound.requiresUrgentCare) {
+    // Feridas com status que requer atenção
+    if (wound.status == WoundStatus.infectada ||
+        wound.status == WoundStatus.complicada) {
       recommendations.add('Ferida requer atenção prioritária');
     }
 
     // Recomendações baseadas no paciente
     if (patient != null) {
-      if (patient.isHighRiskForHealing) {
+      // Paciente idoso (acima de 65 anos)
+      final age = patient.currentAge;
+      if (age >= 65) {
         recommendations.add('Paciente com alto risco: monitoramento reforçado');
-      }
-
-      if (patient.isElderly) {
         recommendations.add(
           'Paciente idoso: atenção especial à nutrição e mobilidade',
         );
@@ -373,12 +440,15 @@ class GenerateAssessmentReportUseCase
       'patientName': patient?.name,
       'woundType': wound.type.name,
       'woundStatus': wound.status.name,
-      'severityScore': assessment.severityScore,
-      'hasInfection': assessment.hasInfectionSigns,
+      'volume':
+          (assessment.lengthCm ?? 0) *
+          (assessment.widthCm ?? 0) *
+          (assessment.depthCm ?? 0),
+      'hasInfection': assessment.exudateType?.contains('purulento') == true,
       'isChronicWound': wound.isChronicWound,
       'requiresUrgentCare': wound.requiresUrgentCare,
-      'assessedAt': assessment.assessedAt.toIso8601String(),
-      'performedBy': assessment.performedBy,
+      'assessedAt': assessment.date.toIso8601String(),
+      'performedBy': 'Sistema Cicatriza',
     };
   }
 }
