@@ -4,6 +4,8 @@ part 'medidas_ferida.freezed.dart';
 part 'medidas_ferida.g.dart';
 
 /// Value object para medidas da ferida
+///
+/// **Padrão moderno:** Freezed + json_annotation para value objects simples
 @freezed
 class MedidasFerida with _$MedidasFerida {
   const factory MedidasFerida({

@@ -3,6 +3,10 @@ import 'package:equatable/equatable.dart';
 import '../exceptions/domain_exceptions.dart';
 
 /// Value Object representando consentimentos LGPD do paciente
+///
+/// **Padrão para VOs de negócio:** Equatable + factories + validações de domínio
+/// - Regras LGPD exigem validações específicas
+/// - Factories permitem criação controlada e validada
 class Consentimentos extends Equatable {
   const Consentimentos._({
     required this.coletaDados,

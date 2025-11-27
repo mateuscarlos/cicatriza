@@ -3,6 +3,10 @@ import 'package:equatable/equatable.dart';
 import '../exceptions/domain_exceptions.dart';
 
 /// Value Object representando endereço do paciente
+///
+/// **Padrão para VOs complexos:** Equatable + validações + toJson/fromJson manual
+/// - Mantém controle total sobre validações de domínio
+/// - Flexibilidade para lógicas de negócio complexas
 class Endereco extends Equatable {
   const Endereco._({
     required this.logradouro,

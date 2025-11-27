@@ -4,6 +4,10 @@ import '../../domain/entities/wound.dart';
 
 /// Modelo para serialização/deserialização do Wound no Firestore
 /// Segue o padrão de estrutura de dados compatível com o PatientModel
+///
+/// **Padrão de serialização:**
+/// - Models: Classe normal + toFirestore/fromFirestore + metadados ACL
+/// - Enums: Conversão manual string/enum para compatibilidade
 class WoundModel {
   final String feridaId;
   final String ownerId;

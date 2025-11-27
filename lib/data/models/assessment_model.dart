@@ -1,9 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../domain/entities/assessment.dart';
+import '../../domain/value_objects/medidas_ferida.dart';
+import '../../domain/value_objects/tecido_ferida.dart';
+import '../../domain/value_objects/exsudato_ferida.dart';
+import '../../domain/value_objects/dor_ferida.dart';
 
-/// Modelo simplificado para serialização/deserialização do Assessment no Firestore
+/// Modelo para serialização/deserialização do Assessment no Firestore
 /// Compatível com a estrutura de Assessment existente mas usando hierarquia V5
+///
+/// **Padrão de serialização adotado:**
+/// - Value Objects simples (medidas, tecido, exsudato, dor): **Freezed + json_annotation**
+/// - Value Objects complexos (endereco, contatos): **Equatable + toJson/fromJson manual**
+/// - Models: **Classes normais + toFirestore/fromFirestore**
+/// - Entities: **Freezed** para imutabilidade
 class AssessmentModel {
   final String assessmentId;
   final String ownerId;
@@ -11,17 +21,12 @@ class AssessmentModel {
   final String woundId;
   final DateTime criadoEm;
   final DateTime atualizadoEm;
-  final int pain;
-  final double lengthCm;
-  final double widthCm;
-  final double depthCm;
+  final MedidasFerida medidas;
+  final TecidoFerida tecido;
+  final ExsudatoFerida exsudato;
+  final DorFerida? dor;
   final String? observacoes;
-  final String? exudate;
-  final String? edgeAppearance;
-  final String? woundBed;
-  final String? periwoundSkin;
-  final String? odor;
-  final String? treatmentPlan;
+  final List<String> images;
   final bool archived;
 
   const AssessmentModel({
@@ -31,17 +36,12 @@ class AssessmentModel {
     required this.woundId,
     required this.criadoEm,
     required this.atualizadoEm,
-    required this.pain,
-    required this.lengthCm,
-    required this.widthCm,
-    required this.depthCm,
+    required this.medidas,
+    required this.tecido,
+    required this.exsudato,
+    this.dor,
     this.observacoes,
-    this.exudate,
-    this.edgeAppearance,
-    this.woundBed,
-    this.periwoundSkin,
-    this.odor,
-    this.treatmentPlan,
+    this.images = const <String>[],
     this.archived = false,
   });
 
@@ -68,14 +68,13 @@ class AssessmentModel {
       epitelizacao: assessment.edgeAppearance?.contains('epithelial') == true
           ? 10
           : 0,
-      outros: 0,
     );
 
     // Mapear exsudato
     final exsudato = ExsudatoFerida(
       tipo: _mapExudateType(assessment.exudate),
       quantidade: _mapExudateAmount(assessment.exudate),
-      aspecto: ExsudatoAspecto.claro,
+
       odor: assessment.odor?.isNotEmpty == true,
     );
 
@@ -100,7 +99,6 @@ class AssessmentModel {
       exsudato: exsudato,
       dor: dor,
       observacoes: assessment.notes,
-      images: const [],
     );
   }
 
@@ -156,7 +154,6 @@ class AssessmentModel {
       woundBed: _tissueToString(),
       periwoundSkin: 'Normal',
       odor: exsudato.odor ? 'Present' : 'Absent',
-      treatmentPlan: null,
     );
   }
 
@@ -176,6 +173,10 @@ class AssessmentModel {
       'observacoes': observacoes,
       'images': images,
       'archived': archived,
+      // Adiciona metadados de acesso
+      'acl': {
+        'roles': {ownerId: 'owner'},
+      },
     };
   }
 

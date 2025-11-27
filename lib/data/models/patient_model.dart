@@ -11,6 +11,11 @@ import '../../domain/value_objects/patient_clinical_data.dart';
 
 /// Modelo para serialização/deserialização do Patient no Firestore
 /// Utiliza compressão JSON para dados clínicos volumosos
+///
+/// **Padrão de serialização:**
+/// - Models: Classe normal + toFirestore/fromFirestore
+/// - Value Objects complexos: Equatable + toJson/fromJson manual
+/// - Compressão JSON para dados clínicos otimiza espaço no Firestore
 class PatientModel {
   final String id;
   final String ownerId;
@@ -134,9 +139,15 @@ class PatientModel {
         dadosDescomprimidos = _descomprimirDadosClinicosDeJson(
           dadosClinicosComprimidos!,
         );
-      } catch (e) {
+      } on FormatException catch (e) {
         // Log error but continue without clinical data
-        print('Erro ao descomprimir dados clínicos para paciente $id: $e');
+        // Usar logger do sistema em vez de print em produção
+        // Em produção, usar sistema de logging adequado
+        assert(() {
+          // ignore: avoid_print
+          print('Erro ao descomprimir dados clínicos para paciente $id: $e');
+          return true;
+        }());
       }
     }
 
