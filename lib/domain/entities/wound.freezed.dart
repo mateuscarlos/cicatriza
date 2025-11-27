@@ -21,18 +21,32 @@ Wound _$WoundFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Wound {
-  String get id => throw _privateConstructorUsedError;
+  // Campos obrigatórios conforme nova estrutura
+  String get feridaId => throw _privateConstructorUsedError;
   String get patientId => throw _privateConstructorUsedError;
-  String get description => throw _privateConstructorUsedError;
+  String get ownerId => throw _privateConstructorUsedError;
   WoundType get type => throw _privateConstructorUsedError;
-  WoundLocation get location => throw _privateConstructorUsedError;
+  String get localizacao => throw _privateConstructorUsedError;
   WoundStatus get status => throw _privateConstructorUsedError;
   @TimestampConverter()
-  DateTime get identificationDate => throw _privateConstructorUsedError;
+  DateTime get criadoEm => throw _privateConstructorUsedError;
   @TimestampConverter()
-  DateTime get createdAt => throw _privateConstructorUsedError;
+  DateTime get atualizadoEm => throw _privateConstructorUsedError; // Campos opcionais
   @TimestampConverter()
-  DateTime get updatedAt => throw _privateConstructorUsedError;
+  DateTime? get inicio => throw _privateConstructorUsedError;
+  String? get etiologia => throw _privateConstructorUsedError;
+  @TimestampConverter()
+  DateTime? get ultimaAvaliacaoEm => throw _privateConstructorUsedError;
+  int get contagemAvaliacoes =>
+      throw _privateConstructorUsedError; // Campos de compatibilidade com estrutura anterior (deprecated)
+  @Deprecated('Use feridaId instead')
+  String? get id => throw _privateConstructorUsedError;
+  @Deprecated('Use localizacao instead')
+  WoundLocation? get location => throw _privateConstructorUsedError;
+  @Deprecated('Use inicio instead')
+  DateTime? get identificationDate => throw _privateConstructorUsedError;
+  @Deprecated('Use etiologia instead')
+  String? get description => throw _privateConstructorUsedError;
   DateTime? get healedDate => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
   bool get archived => throw _privateConstructorUsedError;
@@ -52,15 +66,22 @@ abstract class $WoundCopyWith<$Res> {
       _$WoundCopyWithImpl<$Res, Wound>;
   @useResult
   $Res call({
-    String id,
+    String feridaId,
     String patientId,
-    String description,
+    String ownerId,
     WoundType type,
-    WoundLocation location,
+    String localizacao,
     WoundStatus status,
-    @TimestampConverter() DateTime identificationDate,
-    @TimestampConverter() DateTime createdAt,
-    @TimestampConverter() DateTime updatedAt,
+    @TimestampConverter() DateTime criadoEm,
+    @TimestampConverter() DateTime atualizadoEm,
+    @TimestampConverter() DateTime? inicio,
+    String? etiologia,
+    @TimestampConverter() DateTime? ultimaAvaliacaoEm,
+    int contagemAvaliacoes,
+    @Deprecated('Use feridaId instead') String? id,
+    @Deprecated('Use localizacao instead') WoundLocation? location,
+    @Deprecated('Use inicio instead') DateTime? identificationDate,
+    @Deprecated('Use etiologia instead') String? description,
     DateTime? healedDate,
     String? notes,
     bool archived,
@@ -82,57 +103,92 @@ class _$WoundCopyWithImpl<$Res, $Val extends Wound>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = null,
+    Object? feridaId = null,
     Object? patientId = null,
-    Object? description = null,
+    Object? ownerId = null,
     Object? type = null,
-    Object? location = null,
+    Object? localizacao = null,
     Object? status = null,
-    Object? identificationDate = null,
-    Object? createdAt = null,
-    Object? updatedAt = null,
+    Object? criadoEm = null,
+    Object? atualizadoEm = null,
+    Object? inicio = freezed,
+    Object? etiologia = freezed,
+    Object? ultimaAvaliacaoEm = freezed,
+    Object? contagemAvaliacoes = null,
+    Object? id = freezed,
+    Object? location = freezed,
+    Object? identificationDate = freezed,
+    Object? description = freezed,
     Object? healedDate = freezed,
     Object? notes = freezed,
     Object? archived = null,
   }) {
     return _then(
       _value.copyWith(
-            id: null == id
-                ? _value.id
-                : id // ignore: cast_nullable_to_non_nullable
+            feridaId: null == feridaId
+                ? _value.feridaId
+                : feridaId // ignore: cast_nullable_to_non_nullable
                       as String,
             patientId: null == patientId
                 ? _value.patientId
                 : patientId // ignore: cast_nullable_to_non_nullable
                       as String,
-            description: null == description
-                ? _value.description
-                : description // ignore: cast_nullable_to_non_nullable
+            ownerId: null == ownerId
+                ? _value.ownerId
+                : ownerId // ignore: cast_nullable_to_non_nullable
                       as String,
             type: null == type
                 ? _value.type
                 : type // ignore: cast_nullable_to_non_nullable
                       as WoundType,
-            location: null == location
-                ? _value.location
-                : location // ignore: cast_nullable_to_non_nullable
-                      as WoundLocation,
+            localizacao: null == localizacao
+                ? _value.localizacao
+                : localizacao // ignore: cast_nullable_to_non_nullable
+                      as String,
             status: null == status
                 ? _value.status
                 : status // ignore: cast_nullable_to_non_nullable
                       as WoundStatus,
-            identificationDate: null == identificationDate
+            criadoEm: null == criadoEm
+                ? _value.criadoEm
+                : criadoEm // ignore: cast_nullable_to_non_nullable
+                      as DateTime,
+            atualizadoEm: null == atualizadoEm
+                ? _value.atualizadoEm
+                : atualizadoEm // ignore: cast_nullable_to_non_nullable
+                      as DateTime,
+            inicio: freezed == inicio
+                ? _value.inicio
+                : inicio // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
+            etiologia: freezed == etiologia
+                ? _value.etiologia
+                : etiologia // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            ultimaAvaliacaoEm: freezed == ultimaAvaliacaoEm
+                ? _value.ultimaAvaliacaoEm
+                : ultimaAvaliacaoEm // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
+            contagemAvaliacoes: null == contagemAvaliacoes
+                ? _value.contagemAvaliacoes
+                : contagemAvaliacoes // ignore: cast_nullable_to_non_nullable
+                      as int,
+            id: freezed == id
+                ? _value.id
+                : id // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            location: freezed == location
+                ? _value.location
+                : location // ignore: cast_nullable_to_non_nullable
+                      as WoundLocation?,
+            identificationDate: freezed == identificationDate
                 ? _value.identificationDate
                 : identificationDate // ignore: cast_nullable_to_non_nullable
-                      as DateTime,
-            createdAt: null == createdAt
-                ? _value.createdAt
-                : createdAt // ignore: cast_nullable_to_non_nullable
-                      as DateTime,
-            updatedAt: null == updatedAt
-                ? _value.updatedAt
-                : updatedAt // ignore: cast_nullable_to_non_nullable
-                      as DateTime,
+                      as DateTime?,
+            description: freezed == description
+                ? _value.description
+                : description // ignore: cast_nullable_to_non_nullable
+                      as String?,
             healedDate: freezed == healedDate
                 ? _value.healedDate
                 : healedDate // ignore: cast_nullable_to_non_nullable
@@ -160,15 +216,22 @@ abstract class _$$WoundImplCopyWith<$Res> implements $WoundCopyWith<$Res> {
   @override
   @useResult
   $Res call({
-    String id,
+    String feridaId,
     String patientId,
-    String description,
+    String ownerId,
     WoundType type,
-    WoundLocation location,
+    String localizacao,
     WoundStatus status,
-    @TimestampConverter() DateTime identificationDate,
-    @TimestampConverter() DateTime createdAt,
-    @TimestampConverter() DateTime updatedAt,
+    @TimestampConverter() DateTime criadoEm,
+    @TimestampConverter() DateTime atualizadoEm,
+    @TimestampConverter() DateTime? inicio,
+    String? etiologia,
+    @TimestampConverter() DateTime? ultimaAvaliacaoEm,
+    int contagemAvaliacoes,
+    @Deprecated('Use feridaId instead') String? id,
+    @Deprecated('Use localizacao instead') WoundLocation? location,
+    @Deprecated('Use inicio instead') DateTime? identificationDate,
+    @Deprecated('Use etiologia instead') String? description,
     DateTime? healedDate,
     String? notes,
     bool archived,
@@ -189,57 +252,92 @@ class __$$WoundImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = null,
+    Object? feridaId = null,
     Object? patientId = null,
-    Object? description = null,
+    Object? ownerId = null,
     Object? type = null,
-    Object? location = null,
+    Object? localizacao = null,
     Object? status = null,
-    Object? identificationDate = null,
-    Object? createdAt = null,
-    Object? updatedAt = null,
+    Object? criadoEm = null,
+    Object? atualizadoEm = null,
+    Object? inicio = freezed,
+    Object? etiologia = freezed,
+    Object? ultimaAvaliacaoEm = freezed,
+    Object? contagemAvaliacoes = null,
+    Object? id = freezed,
+    Object? location = freezed,
+    Object? identificationDate = freezed,
+    Object? description = freezed,
     Object? healedDate = freezed,
     Object? notes = freezed,
     Object? archived = null,
   }) {
     return _then(
       _$WoundImpl(
-        id: null == id
-            ? _value.id
-            : id // ignore: cast_nullable_to_non_nullable
+        feridaId: null == feridaId
+            ? _value.feridaId
+            : feridaId // ignore: cast_nullable_to_non_nullable
                   as String,
         patientId: null == patientId
             ? _value.patientId
             : patientId // ignore: cast_nullable_to_non_nullable
                   as String,
-        description: null == description
-            ? _value.description
-            : description // ignore: cast_nullable_to_non_nullable
+        ownerId: null == ownerId
+            ? _value.ownerId
+            : ownerId // ignore: cast_nullable_to_non_nullable
                   as String,
         type: null == type
             ? _value.type
             : type // ignore: cast_nullable_to_non_nullable
                   as WoundType,
-        location: null == location
-            ? _value.location
-            : location // ignore: cast_nullable_to_non_nullable
-                  as WoundLocation,
+        localizacao: null == localizacao
+            ? _value.localizacao
+            : localizacao // ignore: cast_nullable_to_non_nullable
+                  as String,
         status: null == status
             ? _value.status
             : status // ignore: cast_nullable_to_non_nullable
                   as WoundStatus,
-        identificationDate: null == identificationDate
+        criadoEm: null == criadoEm
+            ? _value.criadoEm
+            : criadoEm // ignore: cast_nullable_to_non_nullable
+                  as DateTime,
+        atualizadoEm: null == atualizadoEm
+            ? _value.atualizadoEm
+            : atualizadoEm // ignore: cast_nullable_to_non_nullable
+                  as DateTime,
+        inicio: freezed == inicio
+            ? _value.inicio
+            : inicio // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
+        etiologia: freezed == etiologia
+            ? _value.etiologia
+            : etiologia // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        ultimaAvaliacaoEm: freezed == ultimaAvaliacaoEm
+            ? _value.ultimaAvaliacaoEm
+            : ultimaAvaliacaoEm // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
+        contagemAvaliacoes: null == contagemAvaliacoes
+            ? _value.contagemAvaliacoes
+            : contagemAvaliacoes // ignore: cast_nullable_to_non_nullable
+                  as int,
+        id: freezed == id
+            ? _value.id
+            : id // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        location: freezed == location
+            ? _value.location
+            : location // ignore: cast_nullable_to_non_nullable
+                  as WoundLocation?,
+        identificationDate: freezed == identificationDate
             ? _value.identificationDate
             : identificationDate // ignore: cast_nullable_to_non_nullable
-                  as DateTime,
-        createdAt: null == createdAt
-            ? _value.createdAt
-            : createdAt // ignore: cast_nullable_to_non_nullable
-                  as DateTime,
-        updatedAt: null == updatedAt
-            ? _value.updatedAt
-            : updatedAt // ignore: cast_nullable_to_non_nullable
-                  as DateTime,
+                  as DateTime?,
+        description: freezed == description
+            ? _value.description
+            : description // ignore: cast_nullable_to_non_nullable
+                  as String?,
         healedDate: freezed == healedDate
             ? _value.healedDate
             : healedDate // ignore: cast_nullable_to_non_nullable
@@ -261,15 +359,22 @@ class __$$WoundImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$WoundImpl extends _Wound {
   const _$WoundImpl({
-    required this.id,
+    required this.feridaId,
     required this.patientId,
-    required this.description,
+    required this.ownerId,
     required this.type,
-    required this.location,
+    required this.localizacao,
     required this.status,
-    @TimestampConverter() required this.identificationDate,
-    @TimestampConverter() required this.createdAt,
-    @TimestampConverter() required this.updatedAt,
+    @TimestampConverter() required this.criadoEm,
+    @TimestampConverter() required this.atualizadoEm,
+    @TimestampConverter() this.inicio,
+    this.etiologia,
+    @TimestampConverter() this.ultimaAvaliacaoEm,
+    this.contagemAvaliacoes = 0,
+    @Deprecated('Use feridaId instead') this.id,
+    @Deprecated('Use localizacao instead') this.location,
+    @Deprecated('Use inicio instead') this.identificationDate,
+    @Deprecated('Use etiologia instead') this.description,
     this.healedDate,
     this.notes,
     this.archived = false,
@@ -278,27 +383,50 @@ class _$WoundImpl extends _Wound {
   factory _$WoundImpl.fromJson(Map<String, dynamic> json) =>
       _$$WoundImplFromJson(json);
 
+  // Campos obrigatórios conforme nova estrutura
   @override
-  final String id;
+  final String feridaId;
   @override
   final String patientId;
   @override
-  final String description;
+  final String ownerId;
   @override
   final WoundType type;
   @override
-  final WoundLocation location;
+  final String localizacao;
   @override
   final WoundStatus status;
   @override
   @TimestampConverter()
-  final DateTime identificationDate;
+  final DateTime criadoEm;
   @override
   @TimestampConverter()
-  final DateTime createdAt;
+  final DateTime atualizadoEm;
+  // Campos opcionais
   @override
   @TimestampConverter()
-  final DateTime updatedAt;
+  final DateTime? inicio;
+  @override
+  final String? etiologia;
+  @override
+  @TimestampConverter()
+  final DateTime? ultimaAvaliacaoEm;
+  @override
+  @JsonKey()
+  final int contagemAvaliacoes;
+  // Campos de compatibilidade com estrutura anterior (deprecated)
+  @override
+  @Deprecated('Use feridaId instead')
+  final String? id;
+  @override
+  @Deprecated('Use localizacao instead')
+  final WoundLocation? location;
+  @override
+  @Deprecated('Use inicio instead')
+  final DateTime? identificationDate;
+  @override
+  @Deprecated('Use etiologia instead')
+  final String? description;
   @override
   final DateTime? healedDate;
   @override
@@ -309,7 +437,7 @@ class _$WoundImpl extends _Wound {
 
   @override
   String toString() {
-    return 'Wound(id: $id, patientId: $patientId, description: $description, type: $type, location: $location, status: $status, identificationDate: $identificationDate, createdAt: $createdAt, updatedAt: $updatedAt, healedDate: $healedDate, notes: $notes, archived: $archived)';
+    return 'Wound(feridaId: $feridaId, patientId: $patientId, ownerId: $ownerId, type: $type, localizacao: $localizacao, status: $status, criadoEm: $criadoEm, atualizadoEm: $atualizadoEm, inicio: $inicio, etiologia: $etiologia, ultimaAvaliacaoEm: $ultimaAvaliacaoEm, contagemAvaliacoes: $contagemAvaliacoes, id: $id, location: $location, identificationDate: $identificationDate, description: $description, healedDate: $healedDate, notes: $notes, archived: $archived)';
   }
 
   @override
@@ -317,21 +445,33 @@ class _$WoundImpl extends _Wound {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$WoundImpl &&
-            (identical(other.id, id) || other.id == id) &&
+            (identical(other.feridaId, feridaId) ||
+                other.feridaId == feridaId) &&
             (identical(other.patientId, patientId) ||
                 other.patientId == patientId) &&
-            (identical(other.description, description) ||
-                other.description == description) &&
+            (identical(other.ownerId, ownerId) || other.ownerId == ownerId) &&
             (identical(other.type, type) || other.type == type) &&
+            (identical(other.localizacao, localizacao) ||
+                other.localizacao == localizacao) &&
+            (identical(other.status, status) || other.status == status) &&
+            (identical(other.criadoEm, criadoEm) ||
+                other.criadoEm == criadoEm) &&
+            (identical(other.atualizadoEm, atualizadoEm) ||
+                other.atualizadoEm == atualizadoEm) &&
+            (identical(other.inicio, inicio) || other.inicio == inicio) &&
+            (identical(other.etiologia, etiologia) ||
+                other.etiologia == etiologia) &&
+            (identical(other.ultimaAvaliacaoEm, ultimaAvaliacaoEm) ||
+                other.ultimaAvaliacaoEm == ultimaAvaliacaoEm) &&
+            (identical(other.contagemAvaliacoes, contagemAvaliacoes) ||
+                other.contagemAvaliacoes == contagemAvaliacoes) &&
+            (identical(other.id, id) || other.id == id) &&
             (identical(other.location, location) ||
                 other.location == location) &&
-            (identical(other.status, status) || other.status == status) &&
             (identical(other.identificationDate, identificationDate) ||
                 other.identificationDate == identificationDate) &&
-            (identical(other.createdAt, createdAt) ||
-                other.createdAt == createdAt) &&
-            (identical(other.updatedAt, updatedAt) ||
-                other.updatedAt == updatedAt) &&
+            (identical(other.description, description) ||
+                other.description == description) &&
             (identical(other.healedDate, healedDate) ||
                 other.healedDate == healedDate) &&
             (identical(other.notes, notes) || other.notes == notes) &&
@@ -341,21 +481,28 @@ class _$WoundImpl extends _Wound {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     runtimeType,
-    id,
+    feridaId,
     patientId,
-    description,
+    ownerId,
     type,
-    location,
+    localizacao,
     status,
+    criadoEm,
+    atualizadoEm,
+    inicio,
+    etiologia,
+    ultimaAvaliacaoEm,
+    contagemAvaliacoes,
+    id,
+    location,
     identificationDate,
-    createdAt,
-    updatedAt,
+    description,
     healedDate,
     notes,
     archived,
-  );
+  ]);
 
   /// Create a copy of Wound
   /// with the given fields replaced by the non-null parameter values.
@@ -373,15 +520,22 @@ class _$WoundImpl extends _Wound {
 
 abstract class _Wound extends Wound {
   const factory _Wound({
-    required final String id,
+    required final String feridaId,
     required final String patientId,
-    required final String description,
+    required final String ownerId,
     required final WoundType type,
-    required final WoundLocation location,
+    required final String localizacao,
     required final WoundStatus status,
-    @TimestampConverter() required final DateTime identificationDate,
-    @TimestampConverter() required final DateTime createdAt,
-    @TimestampConverter() required final DateTime updatedAt,
+    @TimestampConverter() required final DateTime criadoEm,
+    @TimestampConverter() required final DateTime atualizadoEm,
+    @TimestampConverter() final DateTime? inicio,
+    final String? etiologia,
+    @TimestampConverter() final DateTime? ultimaAvaliacaoEm,
+    final int contagemAvaliacoes,
+    @Deprecated('Use feridaId instead') final String? id,
+    @Deprecated('Use localizacao instead') final WoundLocation? location,
+    @Deprecated('Use inicio instead') final DateTime? identificationDate,
+    @Deprecated('Use etiologia instead') final String? description,
     final DateTime? healedDate,
     final String? notes,
     final bool archived,
@@ -390,27 +544,47 @@ abstract class _Wound extends Wound {
 
   factory _Wound.fromJson(Map<String, dynamic> json) = _$WoundImpl.fromJson;
 
+  // Campos obrigatórios conforme nova estrutura
   @override
-  String get id;
+  String get feridaId;
   @override
   String get patientId;
   @override
-  String get description;
+  String get ownerId;
   @override
   WoundType get type;
   @override
-  WoundLocation get location;
+  String get localizacao;
   @override
   WoundStatus get status;
   @override
   @TimestampConverter()
-  DateTime get identificationDate;
+  DateTime get criadoEm;
   @override
   @TimestampConverter()
-  DateTime get createdAt;
+  DateTime get atualizadoEm; // Campos opcionais
   @override
   @TimestampConverter()
-  DateTime get updatedAt;
+  DateTime? get inicio;
+  @override
+  String? get etiologia;
+  @override
+  @TimestampConverter()
+  DateTime? get ultimaAvaliacaoEm;
+  @override
+  int get contagemAvaliacoes; // Campos de compatibilidade com estrutura anterior (deprecated)
+  @override
+  @Deprecated('Use feridaId instead')
+  String? get id;
+  @override
+  @Deprecated('Use localizacao instead')
+  WoundLocation? get location;
+  @override
+  @Deprecated('Use inicio instead')
+  DateTime? get identificationDate;
+  @override
+  @Deprecated('Use etiologia instead')
+  String? get description;
   @override
   DateTime? get healedDate;
   @override

@@ -12,7 +12,7 @@ class OfflineDatabase {
   static final OfflineDatabase instance = OfflineDatabase._();
 
   static const _dbName = 'cicatriza_offline.db';
-  static const _dbVersion = 4;
+  static const _dbVersion = 5;
 
   Database? _database;
 
@@ -94,38 +94,189 @@ class OfflineDatabase {
         'UPDATE media SET updated_at = created_at WHERE updated_at = 0;',
       );
     }
+
+    if (oldVersion < 5) {
+      // Migração para nova estrutura de dados clínicos completa
+      await _migrateToV5(db);
+    }
   }
 
-  Future<void> _onCreate(Database db, int version) async {
-    // Patients are the root entity scoped by Firebase owner id (uid).
+  /// Migração para V5: Nova estrutura de dados clínicos completa
+  Future<void> _migrateToV5(Database db) async {
+    // Backup dos dados existentes
+    await db.execute('CREATE TABLE patients_backup AS SELECT * FROM patients');
+    await db.execute('CREATE TABLE wounds_backup AS SELECT * FROM wounds');
+
+    // Criar nova estrutura de pacientes com campos clínicos
+    await db.execute('DROP TABLE patients');
     await db.execute('''
       CREATE TABLE patients (
         id TEXT PRIMARY KEY,
         owner_id TEXT NOT NULL,
+        paciente_id TEXT NOT NULL,
         name TEXT NOT NULL,
         name_lowercase TEXT NOT NULL,
         birth_date TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'ativo',
+        versao INTEGER NOT NULL DEFAULT 1,
+        
+        -- Campos básicos opcionais
         archived INTEGER NOT NULL DEFAULT 0,
-        notes TEXT,
-        phone TEXT,
+        identificador TEXT,
+        nome_social TEXT,
+        idade INTEGER,
+        sexo TEXT,
+        genero TEXT,
+        cpf_ou_id TEXT,
         email TEXT,
+        phone TEXT,
+        notes TEXT,
+        
+        -- Dados clínicos como JSON comprimido (Base64 + GZIP)
+        clinical_data_compressed TEXT,
+        
+        -- Metadados
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
       );
     ''');
 
+    // Criar nova estrutura de feridas
+    await db.execute('DROP TABLE wounds');
     await db.execute('''
       CREATE TABLE wounds (
-        id TEXT PRIMARY KEY,
+        ferida_id TEXT PRIMARY KEY,
         patient_id TEXT NOT NULL,
         owner_id TEXT NOT NULL,
         type TEXT NOT NULL,
-        location TEXT NOT NULL,
-        location_description TEXT,
+        localizacao TEXT NOT NULL,
         status TEXT NOT NULL,
+        
+        -- Campos opcionais
+        inicio INTEGER,
+        etiologia TEXT,
+        ultima_avaliacao_em INTEGER,
+        contagem_avaliacoes INTEGER NOT NULL DEFAULT 0,
+        
+        -- Campos de compatibilidade (deprecated)
+        id TEXT,
+        location TEXT,
+        location_description TEXT,
         cause_description TEXT,
+        
+        -- Metadados
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
+        
+        FOREIGN KEY(patient_id) REFERENCES patients(id) ON DELETE CASCADE
+      );
+    ''');
+
+    // Migrar dados existentes preservando informações
+    await db.execute('''
+      INSERT INTO patients (
+        id, owner_id, paciente_id, name, name_lowercase, birth_date,
+        archived, email, phone, notes, created_at, updated_at
+      )
+      SELECT 
+        id, owner_id, 'PAC_' || substr(id, 1, 8), name, name_lowercase, birth_date,
+        archived, email, phone, notes, created_at, updated_at
+      FROM patients_backup
+    ''');
+
+    await db.execute('''
+      INSERT INTO wounds (
+        ferida_id, patient_id, owner_id, type, localizacao, status,
+        etiologia, id, location, location_description, cause_description,
+        created_at, updated_at
+      )
+      SELECT 
+        'FER_' || substr(id, 1, 8), patient_id, owner_id, type, 
+        COALESCE(location_description, location), status,
+        cause_description, id, location, location_description, cause_description,
+        created_at, updated_at
+      FROM wounds_backup
+    ''');
+
+    // Criar novos índices otimizados
+    await db.execute(
+      'CREATE INDEX idx_patients_owner_status ON patients(owner_id, status, updated_at DESC);',
+    );
+    await db.execute(
+      'CREATE INDEX idx_patients_search ON patients(owner_id, name_lowercase);',
+    );
+    await db.execute(
+      'CREATE INDEX idx_wounds_patient_status ON wounds(patient_id, status, updated_at DESC);',
+    );
+    await db.execute(
+      'CREATE INDEX idx_wounds_owner ON wounds(owner_id, ultima_avaliacao_em DESC);',
+    );
+
+    // Remover tabelas de backup
+    await db.execute('DROP TABLE patients_backup');
+    await db.execute('DROP TABLE wounds_backup');
+  }
+
+  Future<void> _onCreate(Database db, int version) async {
+    // Nova estrutura de pacientes com dados clínicos completos
+    await db.execute('''
+      CREATE TABLE patients (
+        id TEXT PRIMARY KEY,
+        owner_id TEXT NOT NULL,
+        paciente_id TEXT NOT NULL,
+        name TEXT NOT NULL,
+        name_lowercase TEXT NOT NULL,
+        birth_date TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'ativo',
+        versao INTEGER NOT NULL DEFAULT 1,
+        
+        -- Campos básicos opcionais
+        archived INTEGER NOT NULL DEFAULT 0,
+        identificador TEXT,
+        nome_social TEXT,
+        idade INTEGER,
+        sexo TEXT,
+        genero TEXT,
+        cpf_ou_id TEXT,
+        email TEXT,
+        phone TEXT,
+        notes TEXT,
+        
+        -- Dados clínicos como JSON comprimido (Base64 + GZIP)
+        clinical_data_compressed TEXT,
+        
+        -- Metadados
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      );
+    ''');
+
+    // Nova estrutura de feridas
+    await db.execute('''
+      CREATE TABLE wounds (
+        ferida_id TEXT PRIMARY KEY,
+        patient_id TEXT NOT NULL,
+        owner_id TEXT NOT NULL,
+        type TEXT NOT NULL,
+        localizacao TEXT NOT NULL,
+        status TEXT NOT NULL,
+        
+        -- Campos opcionais
+        inicio INTEGER,
+        etiologia TEXT,
+        ultima_avaliacao_em INTEGER,
+        contagem_avaliacoes INTEGER NOT NULL DEFAULT 0,
+        
+        -- Campos de compatibilidade (deprecated)
+        id TEXT,
+        location TEXT,
+        location_description TEXT,
+        cause_description TEXT,
+        
+        -- Metadados
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        
         FOREIGN KEY(patient_id) REFERENCES patients(id) ON DELETE CASCADE
       );
     ''');
@@ -190,10 +341,16 @@ class OfflineDatabase {
     ''');
 
     await db.execute(
-      'CREATE INDEX idx_patients_owner ON patients(owner_id, updated_at DESC);',
+      'CREATE INDEX idx_patients_owner_status ON patients(owner_id, status, updated_at DESC);',
     );
     await db.execute(
-      'CREATE INDEX idx_wounds_patient ON wounds(patient_id, updated_at DESC);',
+      'CREATE INDEX idx_patients_search ON patients(owner_id, name_lowercase);',
+    );
+    await db.execute(
+      'CREATE INDEX idx_wounds_patient_status ON wounds(patient_id, status, updated_at DESC);',
+    );
+    await db.execute(
+      'CREATE INDEX idx_wounds_owner ON wounds(owner_id, ultima_avaliacao_em DESC);',
     );
     await db.execute(
       'CREATE INDEX idx_assessments_wound ON assessments(wound_id, date DESC);',

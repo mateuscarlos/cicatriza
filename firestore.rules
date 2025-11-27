@@ -6,14 +6,16 @@ rules_version = '2';
  * PRINCÍPIOS DE SEGURANÇA:
  * - Autenticação obrigatória para todas as operações
  * - Acesso baseado em proprietário (owner-based access)
- * - Validação rigorosa de dados
- * - Estrutura hierárquica: users/{uid}/patients/{pid}/wounds/{wid}/assessments/{aid}/media/{mid}
+ * - Validação rigorosa de dados com compliance LGPD
+ * - Estrutura hierárquica: estomaterapeutas/{uid}/pacientes/{pid}/feridas/{wid}/avaliacoes/{aid}/media/{mid}
  * 
- * ESTRUTURA DE DADOS:
+ * ESTRUTURA DE DADOS V5:
  * - Todos os documentos devem ter 'ownerId' igual ao uid do usuário autenticado
- * - Campos obrigatórios são validados
- * - Strings são sanitizadas (sem HTML/scripts)
- * - Timestamps são controlados pelo servidor
+ * - Campos obrigatórios com versioning (versao >= 5)
+ * - Dados clínicos comprimidos para otimização
+ * - Consentimentos LGPD obrigatórios
+ * - Strings sanitizadas (sem HTML/scripts)
+ * - Timestamps controlados pelo servidor
  */
 
 service cloud.firestore {
@@ -93,39 +95,123 @@ service cloud.firestore {
              ('lgpdConsent' in data) && data.lgpdConsent is bool;
     }
     
-    // Validação de paciente
+    // Validação de paciente com estrutura V5
     function isValidPatient(data) {
       return hasRequiredSystemFields(data) &&
              isSafeString(data.name, 200) &&
              isSafeString(data.nameLowercase, 200) &&
-             isNumberInRange(data.age, 0, 150) &&
-             data.gender in ['M', 'F', 'O'] &&
-             isOptionalSafeString(data, 'notes', 2000);
+             isSafeString(data.pacienteId, 100) &&
+             'consentimentos' in data &&
+             isValidConsentimentos(data.consentimentos) &&
+             'status' in data && data.status in ['ativo', 'inativo', 'transferido'] &&
+             'versao' in data && data.versao is int && data.versao >= 5 &&
+             ('birthDate' in data) && data.birthDate is timestamp &&
+             isOptionalSafeString(data, 'notes', 2000) &&
+             isOptionalSafeString(data, 'identificador', 50) &&
+             isOptionalSafeString(data, 'nomeSocial', 200) &&
+             isOptionalSafeString(data, 'genero', 50) &&
+             isOptionalSafeString(data, 'cpfOuId', 20) &&
+             isOptionalSafeString(data, 'email', 255) &&
+             isOptionalSafeString(data, 'phone', 20) &&
+             isValidClinicalData(data);
+    }
+
+    // Validação de consentimentos LGPD
+    function isValidConsentimentos(consentimentos) {
+      return consentimentos is map &&
+             'coletaDados' in consentimentos &&
+             consentimentos.coletaDados is bool &&
+             consentimentos.coletaDados == true && // Obrigatório para uso do sistema
+             'compartilhamentoInformacoes' in consentimentos &&
+             consentimentos.compartilhamentoInformacoes is bool &&
+             'comunicacaoEletronica' in consentimentos &&
+             consentimentos.comunicacaoEletronica is bool &&
+             'dataConsentimento' in consentimentos &&
+             consentimentos.dataConsentimento is timestamp;
+    }
+
+    // Validação de dados clínicos comprimidos
+    function isValidClinicalData(data) {
+      // Se tem dados clínicos comprimidos, deve ter metadados
+      return !('dadosClinicosComprimidos' in data) ||
+             (('usaCompressao' in data) && data.usaCompressao is bool &&
+              ('versaoEstrutura' in data) && data.versaoEstrutura is int &&
+              data.versaoEstrutura >= 5 &&
+              isSafeString(data.dadosClinicosComprimidos, 50000)); // Limite para dados JSON
     }
     
-    // Validação de ferida
+    // Validação de ferida com estrutura V5
     function isValidWound(data, patientId) {
       return hasRequiredSystemFields(data) &&
              'patientId' in data && data.patientId == patientId &&
-             isSafeString(data.type, 100) &&
-             isSafeString(data.location, 200) &&
-             data.status in ['active', 'healing', 'healed', 'infected'] &&
-             isOptionalSafeString(data, 'locationDescription', 500) &&
-             isOptionalSafeString(data, 'causeDescription', 500) &&
-             isOptionalSafeString(data, 'notes', 2000);
+             'feridaId' in data && isSafeString(data.feridaId, 100) &&
+             'type' in data && data.type in [
+               'ULCERA_PRESSAO', 'ULCERA_VENOSA', 'ULCERA_ARTERIAL', 'PE_DIABETICO',
+               'QUEIMADURA', 'FERIDA_CIRURGICA', 'TRAUMATICA', 'OUTRAS'
+             ] &&
+             'localizacao' in data && isSafeString(data.localizacao, 200) &&
+             'status' in data && data.status in [
+               'ATIVA', 'EM_CICATRIZACAO', 'CICATRIZADA', 'INFECTADA', 'COMPLICADA'
+             ] &&
+             'criadoEm' in data && data.criadoEm is timestamp &&
+             'atualizadoEm' in data && data.atualizadoEm is timestamp &&
+             isOptionalSafeString(data, 'etiologia', 500) &&
+             isOptionalSafeString(data, 'notes', 2000) &&
+             ('contagemAvaliacoes' in data ? data.contagemAvaliacoes is int : true) &&
+             ('archived' in data ? data.archived is bool : true);
     }
     
-    // Validação de avaliação
+    // Validação de avaliação com estrutura V5
     function isValidAssessment(data, patientId, woundId) {
       return hasRequiredSystemFields(data) &&
              'patientId' in data && data.patientId == patientId &&
              'woundId' in data && data.woundId == woundId &&
-             'date' in data && data.date is timestamp &&
-             'painScale' in data && isNumberInRange(data.painScale, 0, 10) &&
-             'lengthCm' in data && data.lengthCm is number && data.lengthCm > 0 &&
-             'widthCm' in data && data.widthCm is number && data.widthCm > 0 &&
-             'depthCm' in data && data.depthCm is number && data.depthCm >= 0 &&
-             isOptionalSafeString(data, 'notes', 2000);
+             'assessmentId' in data && isSafeString(data.assessmentId, 100) &&
+             'criadoEm' in data && data.criadoEm is timestamp &&
+             'atualizadoEm' in data && data.atualizadoEm is timestamp &&
+             'medidas' in data && isValidMedidas(data.medidas) &&
+             'tecido' in data && isValidTecido(data.tecido) &&
+             'exsudato' in data && isValidExsudato(data.exsudato) &&
+             ('dor' in data ? isValidDor(data.dor) : true) &&
+             isOptionalSafeString(data, 'observacoes', 2000) &&
+             ('images' in data ? data.images is list : true);
+    }
+
+    // Validação de medidas da avaliação
+    function isValidMedidas(medidas) {
+      return medidas is map &&
+             'comprimento' in medidas && medidas.comprimento is number && medidas.comprimento > 0 &&
+             'largura' in medidas && medidas.largura is number && medidas.largura > 0 &&
+             ('profundidade' in medidas ? medidas.profundidade is number && medidas.profundidade >= 0 : true) &&
+             ('area' in medidas ? medidas.area is number && medidas.area >= 0 : true) &&
+             ('volume' in medidas ? medidas.volume is number && medidas.volume >= 0 : true);
+    }
+
+    // Validação de tecido da ferida
+    function isValidTecido(tecido) {
+      return tecido is map &&
+             ('granulacao' in tecido ? tecido.granulacao is int && tecido.granulacao >= 0 && tecido.granulacao <= 100 : true) &&
+             ('fibrina' in tecido ? tecido.fibrina is int && tecido.fibrina >= 0 && tecido.fibrina <= 100 : true) &&
+             ('necrose' in tecido ? tecido.necrose is int && tecido.necrose >= 0 && tecido.necrose <= 100 : true) &&
+             ('epitelizacao' in tecido ? tecido.epitelizacao is int && tecido.epitelizacao >= 0 && tecido.epitelizacao <= 100 : true) &&
+             ('outros' in tecido ? tecido.outros is int && tecido.outros >= 0 && tecido.outros <= 100 : true);
+    }
+
+    // Validação de exsudato da ferida
+    function isValidExsudato(exsudato) {
+      return exsudato is map &&
+             ('tipo' in exsudato ? exsudato.tipo in ['SEROSO', 'SEROPURULENTO', 'PURULENTO', 'SANGUINOLENTO', 'OUTRO'] : true) &&
+             ('quantidade' in exsudato ? exsudato.quantidade in ['AUSENTE', 'PEQUENA', 'MODERADA', 'GRANDE'] : true) &&
+             ('aspecto' in exsudato ? exsudato.aspecto in ['CLARO', 'TURVO', 'ESPESSO', 'VISCOSO'] : true) &&
+             ('odor' in exsudato ? exsudato.odor is bool : true);
+    }
+
+    // Validação de dor da ferida
+    function isValidDor(dor) {
+      return dor is map &&
+             ('intensidade' in dor ? dor.intensidade is int && dor.intensidade >= 0 && dor.intensidade <= 10 : true) &&
+             ('tipo' in dor ? dor.tipo in ['AUSENTE', 'LEVE', 'MODERADA', 'INTENSA', 'INSUPORTAVEL'] : true) &&
+             ('localizacao' in dor ? isSafeString(dor.localizacao, 200) : true);
     }
     
     // Validação de mídia
@@ -144,8 +230,8 @@ service cloud.firestore {
     // SECURITY RULES - Regras de acesso por coleção
     // =============================================================================
     
-    // Perfis de usuário - apenas o próprio usuário
-    match /users/{uid} {
+    // Estomaterapeutas - apenas o próprio usuário
+    match /estomaterapeutas/{uid} {
       allow read: if isOwner(uid);
       allow create: if isOwner(uid) && isValidUserProfile(request.resource.data);
       allow update: if isOwner(uid) && 
@@ -153,8 +239,8 @@ service cloud.firestore {
                        request.resource.data.ownerId == resource.data.ownerId; // Não pode alterar ownerId
       allow delete: if isOwner(uid);
       
-      // Pacientes do usuário
-      match /patients/{patientId} {
+      // Pacientes do estomaterapeuta
+      match /pacientes/{patientId} {
         allow read: if isOwner(uid);
         allow create: if isOwner(uid) && isValidPatient(request.resource.data);
         allow update: if isOwner(uid) && 
@@ -163,7 +249,7 @@ service cloud.firestore {
         allow delete: if isOwner(uid);
         
         // Feridas do paciente
-        match /wounds/{woundId} {
+        match /feridas/{woundId} {
           allow read: if isOwner(uid);
           allow create: if isOwner(uid) && isValidWound(request.resource.data, patientId);
           allow update: if isOwner(uid) && 
@@ -172,7 +258,7 @@ service cloud.firestore {
           allow delete: if isOwner(uid);
           
           // Avaliações da ferida
-          match /assessments/{assessmentId} {
+          match /avaliacoes/{assessmentId} {
             allow read: if isOwner(uid);
             allow create: if isOwner(uid) && isValidAssessment(request.resource.data, patientId, woundId);
             allow update: if isOwner(uid) && 
@@ -181,7 +267,7 @@ service cloud.firestore {
             allow delete: if isOwner(uid);
             
             // Mídia da avaliação
-            match /media/{mediaId} {
+            match /midias/{mediaId} {
               allow read: if isOwner(uid);
               allow create: if isOwner(uid) && isValidMedia(request.resource.data, patientId, woundId, assessmentId);
               allow update: if isOwner(uid) && 

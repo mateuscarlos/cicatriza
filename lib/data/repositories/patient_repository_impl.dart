@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../domain/entities/patient.dart';
 import '../../domain/repositories/patient_repository.dart';
+import '../models/patient_model.dart';
 
 class PatientRepositoryImpl implements PatientRepository {
   final FirebaseFirestore _firestore;
@@ -17,7 +18,10 @@ class PatientRepositoryImpl implements PatientRepository {
   CollectionReference<Map<String, dynamic>> get _collection {
     final userId = _auth.currentUser?.uid;
     if (userId == null) throw Exception('User not authenticated');
-    return _firestore.collection('users').doc(userId).collection('patients');
+    return _firestore
+        .collection('estomaterapeutas')
+        .doc(userId)
+        .collection('pacientes');
   }
 
   @override
@@ -29,9 +33,8 @@ class PatientRepositoryImpl implements PatientRepository {
           .get();
 
       return snapshot.docs.map((doc) {
-        final data = doc.data();
-        data['id'] = doc.id;
-        return Patient.fromJson(data);
+        final model = PatientModel.fromFirestore(doc);
+        return model.toEntity();
       }).toList();
     } catch (e) {
       throw Exception('Erro ao buscar pacientes: $e');
@@ -50,9 +53,8 @@ class PatientRepositoryImpl implements PatientRepository {
           .get();
 
       return snapshot.docs.map((doc) {
-        final data = doc.data();
-        data['id'] = doc.id;
-        return Patient.fromJson(data);
+        final model = PatientModel.fromFirestore(doc);
+        return model.toEntity();
       }).toList();
     } catch (e) {
       throw Exception('Erro ao buscar pacientes: $e');
@@ -65,9 +67,8 @@ class PatientRepositoryImpl implements PatientRepository {
       final doc = await _collection.doc(id).get();
       if (!doc.exists) return null;
 
-      final data = doc.data()!;
-      data['id'] = doc.id;
-      return Patient.fromJson(data);
+      final model = PatientModel.fromFirestore(doc);
+      return model.toEntity();
     } catch (e) {
       throw Exception('Erro ao buscar paciente: $e');
     }
@@ -76,11 +77,17 @@ class PatientRepositoryImpl implements PatientRepository {
   @override
   Future<Patient> createPatient(Patient patient) async {
     try {
-      final data = patient.toJson();
+      final userId = _auth.currentUser?.uid;
+      if (userId == null) throw Exception('User not authenticated');
+
+      // Garantir que o patient tem ownerId antes da conversão
+      final patientWithOwner = patient.copyWith(ownerId: userId);
+      final model = PatientModel.fromEntity(patientWithOwner);
+      final data = model.toFirestore();
       data.remove('id'); // Remove o ID para deixar o Firestore gerar
 
       final docRef = await _collection.add(data);
-      return patient.copyWith(id: docRef.id);
+      return patientWithOwner.copyWith(id: docRef.id);
     } catch (e) {
       throw Exception('Erro ao criar paciente: $e');
     }
@@ -89,12 +96,18 @@ class PatientRepositoryImpl implements PatientRepository {
   @override
   Future<Patient> updatePatient(Patient patient) async {
     try {
-      final data = patient.toJson();
+      final userId = _auth.currentUser?.uid;
+      if (userId == null) throw Exception('User not authenticated');
+
+      // Garantir que o patient tem ownerId antes da conversão
+      final patientWithOwner = patient.copyWith(ownerId: userId);
+      final model = PatientModel.fromEntity(patientWithOwner);
+      final data = model.toFirestore();
       data.remove('id');
       data['updatedAt'] = FieldValue.serverTimestamp();
 
       await _collection.doc(patient.id).update(data);
-      return patient.copyWith(updatedAt: DateTime.now());
+      return patientWithOwner.copyWith(updatedAt: DateTime.now());
     } catch (e) {
       throw Exception('Erro ao atualizar paciente: $e');
     }
@@ -138,9 +151,8 @@ class PatientRepositoryImpl implements PatientRepository {
         .snapshots()
         .map((snapshot) {
           return snapshot.docs.map((doc) {
-            final data = doc.data();
-            data['id'] = doc.id;
-            return Patient.fromJson(data);
+            final model = PatientModel.fromFirestore(doc);
+            return model.toEntity();
           }).toList();
         });
   }
@@ -149,9 +161,8 @@ class PatientRepositoryImpl implements PatientRepository {
   Stream<Patient?> watchPatient(String patientId) {
     return _collection.doc(patientId).snapshots().map((doc) {
       if (!doc.exists) return null;
-      final data = doc.data()!;
-      data['id'] = doc.id;
-      return Patient.fromJson(data);
+      final model = PatientModel.fromFirestore(doc);
+      return model.toEntity();
     });
   }
 }

@@ -234,15 +234,27 @@ enum WoundStatus {
 @freezed
 class Wound with _$Wound {
   const factory Wound({
-    required String id,
+    // Campos obrigatórios conforme nova estrutura
+    required String feridaId,
     required String patientId,
-    required String description,
+    required String ownerId,
     required WoundType type,
-    required WoundLocation location,
+    required String localizacao,
     required WoundStatus status,
-    @TimestampConverter() required DateTime identificationDate,
-    @TimestampConverter() required DateTime createdAt,
-    @TimestampConverter() required DateTime updatedAt,
+    @TimestampConverter() required DateTime criadoEm,
+    @TimestampConverter() required DateTime atualizadoEm,
+
+    // Campos opcionais
+    @TimestampConverter() DateTime? inicio,
+    String? etiologia,
+    @TimestampConverter() DateTime? ultimaAvaliacaoEm,
+    @Default(0) int contagemAvaliacoes,
+
+    // Campos de compatibilidade com estrutura anterior (deprecated)
+    @Deprecated('Use feridaId instead') String? id,
+    @Deprecated('Use localizacao instead') WoundLocation? location,
+    @Deprecated('Use inicio instead') DateTime? identificationDate,
+    @Deprecated('Use etiologia instead') String? description,
     DateTime? healedDate,
     String? notes,
     @Default(false) bool archived,
@@ -255,36 +267,45 @@ class Wound with _$Wound {
   /// Factory para criar uma nova ferida com validações de domínio
   factory Wound.create({
     required String patientId,
-    required String description,
+    required String ownerId,
     required WoundType type,
-    required WoundLocation location,
-    DateTime? identificationDate,
+    required String localizacao,
+    String? etiologia,
+    DateTime? inicio,
     String? notes,
   }) {
     // Validações de domínio
     _validatePatientId(patientId);
-    _validateDescription(description);
-    _validateIdentificationDate(identificationDate);
+    _validateLocalizacao(localizacao);
+    if (inicio != null) {
+      _validateInicioDate(inicio);
+    }
 
     final now = DateTime.now();
+    final feridaId = 'FER_${now.millisecondsSinceEpoch}';
+
     return Wound(
-      id: '',
+      feridaId: feridaId,
       patientId: patientId.trim(),
-      description: description.trim(),
+      ownerId: ownerId.trim(),
       type: type,
-      location: location,
+      localizacao: localizacao.trim(),
+      etiologia: etiologia?.trim(),
       status: WoundStatus.ativa,
-      identificationDate: identificationDate ?? now,
+      inicio: inicio ?? now,
       notes: notes?.trim(),
-      createdAt: now,
-      updatedAt: now,
+      criadoEm: now,
+      atualizadoEm: now,
+      ultimaAvaliacaoEm: now,
+      contagemAvaliacoes: 0,
     );
   }
 
   /// Calcula há quantos dias a ferida foi identificada
   int get daysSinceIdentification {
     final today = DateTime.now();
-    return today.difference(identificationDate).inDays;
+    final inicioDate = inicio ?? criadoEm;
+    return today.difference(inicioDate).inDays;
   }
 
   /// Calcula há quantos dias a ferida foi cicatrizada (se aplicável)
@@ -437,6 +458,37 @@ class Wound with _$Wound {
     if (description.trim().length > 500) {
       throw const ValidationException(
         'Descrição não pode ter mais de 500 caracteres',
+      );
+    }
+  }
+
+  static void _validateLocalizacao(String localizacao) {
+    if (localizacao.trim().isEmpty) {
+      throw const ValidationException('Localização da ferida é obrigatória');
+    }
+    if (localizacao.trim().length < 3) {
+      throw const ValidationException(
+        'Localização deve ter pelo menos 3 caracteres',
+      );
+    }
+    if (localizacao.trim().length > 200) {
+      throw const ValidationException(
+        'Localização não pode ter mais de 200 caracteres',
+      );
+    }
+  }
+
+  static void _validateInicioDate(DateTime inicioDate) {
+    final today = DateTime.now();
+    if (inicioDate.isAfter(today)) {
+      throw const ValidationException('Data de início não pode ser no futuro');
+    }
+
+    // Não pode ser muito antiga (10 anos)
+    final maxPast = today.subtract(const Duration(days: 365 * 10));
+    if (inicioDate.isBefore(maxPast)) {
+      throw const ValidationException(
+        'Data de início não pode ser anterior a 10 anos',
       );
     }
   }

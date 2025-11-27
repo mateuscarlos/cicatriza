@@ -5,24 +5,126 @@ import '../../core/utils/timestamp_converter.dart';
 import '../value_objects/email.dart';
 import '../value_objects/patient_name.dart';
 import '../value_objects/phone.dart';
+import '../value_objects/contato_emergencia.dart';
+import '../value_objects/endereco.dart';
+import '../value_objects/consentimentos.dart';
+import '../value_objects/estado_nutricional.dart';
+import '../value_objects/habitos.dart';
+import '../value_objects/patient_clinical_data.dart';
 import '../exceptions/domain_exceptions.dart';
 
 part 'patient.freezed.dart';
 part 'patient.g.dart';
 
+/// Enums para classificação de pacientes
+enum Sexo {
+  feminino,
+  masculino,
+  intersexo,
+  naoInformado;
+
+  String get displayName {
+    switch (this) {
+      case Sexo.feminino:
+        return 'Feminino';
+      case Sexo.masculino:
+        return 'Masculino';
+      case Sexo.intersexo:
+        return 'Intersexo';
+      case Sexo.naoInformado:
+        return 'Não informado';
+    }
+  }
+}
+
+enum Mobilidade {
+  independente,
+  assistida,
+  restrita;
+
+  String get displayName {
+    switch (this) {
+      case Mobilidade.independente:
+        return 'Independente';
+      case Mobilidade.assistida:
+        return 'Assistida';
+      case Mobilidade.restrita:
+        return 'Restrita';
+    }
+  }
+}
+
+enum StatusPaciente {
+  ativo,
+  inativo,
+  transferido;
+
+  String get displayName {
+    switch (this) {
+      case StatusPaciente.ativo:
+        return 'Ativo';
+      case StatusPaciente.inativo:
+        return 'Inativo';
+      case StatusPaciente.transferido:
+        return 'Transferido';
+    }
+  }
+}
+
 @freezed
 class Patient with _$Patient {
   const factory Patient({
+    // Campos básicos obrigatórios
     required String id,
+    required String ownerId,
+    required String pacienteId,
     required String name,
     @TimestampConverter() required DateTime birthDate,
     @TimestampConverter() required DateTime createdAt,
     @TimestampConverter() required DateTime updatedAt,
     required String nameLowercase,
+    required Consentimentos consentimentos,
+    required StatusPaciente status,
+    required int versao,
+
+    // Campos básicos opcionais
     @Default(false) bool archived,
-    String? notes,
-    String? phone,
+    String? identificador,
+    String? nomeSocial,
+    int? idade,
+    Sexo? sexo,
+    String? genero,
+    String? cpfOuId,
     String? email,
+    String? phone,
+    String? notes,
+
+    // Dados de contato e endereço
+    ContatoEmergencia? contatoEmergencia,
+    Endereco? endereco,
+
+    // Dados clínicos
+    @Default([]) List<String> alergias,
+    @Default([]) List<MedicacaoAtual> medicacoesAtuais,
+    @Default([]) List<String> comorbidades,
+    @Default([]) List<CirurgiaPrevias> cirurgiasPrevias,
+    @Default([]) List<Vacina> vacinas,
+    EstadoNutricional? estadoNutricional,
+    Habitos? habitos,
+    Mobilidade? mobilidade,
+    @Default([]) List<String> tags,
+
+    // Dados de risco e avaliações clínicas (opcionais)
+    RiscoPressao? riscoPressao,
+    RiscoInfeccao? riscosInfeccao,
+    DorCronica? dorCronica,
+    PerfilPele? pele,
+    PerfilVascular? vascular,
+    ResponsavelLegal? responsavelLegal,
+    PreferenciasComunicacao? preferenciasComunicacao,
+
+    // Metadados
+    @Default([]) List<FotoPerfil> fotosPerfil,
   }) = _Patient;
 
   const Patient._();
@@ -32,6 +134,7 @@ class Patient with _$Patient {
 
   /// Factory para criar um novo paciente com validações de domínio
   factory Patient.create({
+    required String ownerId,
     required String name,
     required DateTime birthDate,
     String? notes,
@@ -55,14 +158,20 @@ class Patient with _$Patient {
     _validateAge(birthDate);
 
     final now = DateTime.now();
+    final pacienteId = 'PAC_${now.millisecondsSinceEpoch}';
 
     return Patient(
       id: '',
+      ownerId: ownerId,
+      pacienteId: pacienteId,
       name: patientName.value,
       birthDate: birthDate,
       nameLowercase: patientName.value.toLowerCase(),
       createdAt: now,
       updatedAt: now,
+      consentimentos: Consentimentos.padrao(),
+      status: StatusPaciente.ativo,
+      versao: 1,
       notes: notes?.trim(),
       phone: phone?.trim(),
       email: email?.trim(),
